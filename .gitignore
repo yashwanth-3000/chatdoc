@@ -10,6 +10,8 @@ backend/dist/
 backend/build/
 
 # Playwright and local QA artifacts
+.playwright-cli/
+output/playwright/
 frontend/.playwright-mcp/
 frontend/playwright-report/
 frontend/test-results/
