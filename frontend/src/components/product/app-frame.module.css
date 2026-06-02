@@ -1,0 +1,65 @@
+.page {
+  --token-bg: #ffffff;
+  --token-bg-soft: #fcfbfa;
+  --token-ink: #0d1221;
+  --token-copy: #37373d;
+  --token-accent: #f75c30;
+  position: relative;
+  min-height: 100vh;
+  overflow: clip;
+  background: var(--token-bg);
+  color: var(--token-ink);
+}
+
+.gridBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(13, 18, 33, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 18, 33, 0.05) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: radial-gradient(circle at 50% 14%, black 22%, transparent 72%);
+  opacity: 0.52;
+}
+
+.heroGlowOrange,
+.heroGlowViolet {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 999px;
+  filter: blur(72px);
+}
+
+.heroGlowOrange {
+  top: 120px;
+  right: 160px;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(247, 92, 48, 0.14), transparent 72%);
+}
+
+.heroGlowViolet {
+  top: 170px;
+  right: 290px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(77, 83, 255, 0.1), transparent 72%);
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  width: min(calc(100% - 2rem), 1180px);
+  margin-inline: auto;
+  padding: 22px 24px 44px;
+}
+
+@media (max-width: 767px) {
+  .main {
+    width: min(calc(100% - 1rem), 1180px);
+    padding: 18px 16px 34px;
+  }
+}
