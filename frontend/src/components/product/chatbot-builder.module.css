@@ -1,0 +1,370 @@
+.builder {
+  display: grid;
+  gap: 18px;
+}
+
+.header,
+.workspace,
+.outputSection {
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 28px rgba(13, 18, 33, 0.05);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.kicker {
+  color: #f75c30;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header h1,
+.outputHeader h2 {
+  margin-top: 6px;
+  max-width: 820px;
+  color: #0d1221;
+  font-family: var(--font-host-grotesk), sans-serif;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.header p {
+  max-width: 760px;
+  margin-top: 8px;
+  color: #5b5a66;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.statusPanel {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 180px;
+  padding: 10px 12px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 14px;
+  background: #fcfbfa;
+}
+
+.statusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #f1c04d;
+}
+
+.status_ready { background: #14523d; }
+.status_offline { background: #f75c30; }
+.status_checking { background: #f1c04d; }
+
+.statusPanel strong {
+  display: block;
+  color: #0d1221;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+
+.statusPanel small {
+  display: block;
+  margin-top: 2px;
+  color: #5b5a66;
+  font-size: 11px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 16px;
+  padding: 16px;
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+}
+
+.formSection,
+.widgetCard,
+.summaryCard {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 16px;
+  background: #fcfbfa;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionHeader span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 24px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #f75c30;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sectionHeader h2 {
+  color: #0d1221;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.field,
+.optionBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.field span,
+.optionBlock p {
+  color: #0d1221;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  border: 1px solid rgba(13, 18, 33, 0.1);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #0d1221;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: none;
+  border-color: rgba(247, 92, 48, 0.42);
+  box-shadow: 0 0 0 3px rgba(247, 92, 48, 0.1);
+}
+
+.fieldGrid,
+.optionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.checkOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 8px 9px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 12px;
+  background: #ffffff;
+  color: #5b5a66;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.checkOption input {
+  accent-color: #f75c30;
+}
+
+.checkOptionOn {
+  border-color: rgba(247, 92, 48, 0.26);
+  color: #0d1221;
+  background: rgba(247, 92, 48, 0.06);
+}
+
+.previewColumn {
+  position: sticky;
+  top: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.widgetHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.widgetHeader span,
+.summaryCard span {
+  display: block;
+  color: #5b5a66;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.widgetHeader strong,
+.summaryCard strong {
+  display: block;
+  margin-top: 4px;
+  color: #0d1221;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.widgetHeader em {
+  color: #4d53ff;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.websiteMock {
+  position: relative;
+  min-height: 230px;
+  overflow: hidden;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 14px;
+  background:
+    linear-gradient(rgba(13, 18, 33, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(13, 18, 33, 0.05) 1px, transparent 1px),
+    #ffffff;
+  background-size: 32px 32px;
+}
+
+.websiteMock > span {
+  display: block;
+  height: 14px;
+  margin: 14px;
+  border-radius: 6px;
+  background: rgba(13, 18, 33, 0.08);
+}
+
+.websiteMock > span:nth-child(1) {
+  width: 62%;
+  height: 26px;
+}
+
+.websiteMock > span:nth-child(2) {
+  width: 82%;
+}
+
+.websiteMock > span:nth-child(3) {
+  width: 44%;
+}
+
+.messageMock {
+  position: absolute;
+  right: 14px;
+  bottom: 54px;
+  width: min(80%, 238px);
+  padding: 11px;
+  border: 1px solid rgba(13, 18, 33, 0.1);
+  border-radius: 14px;
+  background: #151322;
+  box-shadow: 0 14px 28px rgba(13, 18, 33, 0.14);
+}
+
+.messageMock p {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.messageMock small {
+  display: block;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.launcherMock {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #f75c30;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.summaryCard {
+  gap: 10px;
+}
+
+.summaryCard > div + div {
+  padding-top: 10px;
+  border-top: 1px solid rgba(13, 18, 33, 0.08);
+}
+
+.outputSection {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.outputHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.outputHeader h2 {
+  max-width: 720px;
+  font-size: clamp(22px, 2.6vw, 30px);
+}
+
+@media (max-width: 1050px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .previewColumn {
+    position: static;
+  }
+}
+
+@media (max-width: 680px) {
+  .header,
+  .outputHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fieldGrid,
+  .optionGrid {
+    grid-template-columns: 1fr;
+  }
+}
