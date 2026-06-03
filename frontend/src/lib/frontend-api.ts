@@ -1,10 +1,16 @@
 import type {
+  ExistingFoundryConnectPayload,
+  ExistingFoundryConnectResponse,
   GenerateBotResponse,
   GenerateMode,
   HealthResponse,
 } from "./chatbot-types";
 
 type JsonBody = Record<string, unknown>;
+
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL?.replace(/\/+$/, "") ??
+  "http://localhost:4000";
 
 function waitForDemoData() {
   return new Promise((resolve) => window.setTimeout(resolve, 250));
@@ -36,6 +42,45 @@ export async function fetchHealth() {
     service: "chatdock-frontend-demo",
     version: "static",
   } satisfies HealthResponse;
+}
+
+async function fetchBackend<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${BACKEND_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
+    },
+  });
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      typeof payload?.error === "string"
+        ? payload.error
+        : "The ChatDock backend did not accept the request.";
+    throw new Error(message);
+  }
+
+  return payload as T;
+}
+
+export async function connectExistingFoundryUser(
+  payload: ExistingFoundryConnectPayload,
+) {
+  return fetchBackend<ExistingFoundryConnectResponse>(
+    "/api/existing-foundry-user/connect",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function fetchSavedExistingFoundryInventory() {
+  return fetchBackend<ExistingFoundryConnectResponse>(
+    "/api/existing-foundry-user/saved-inventory",
+  );
 }
 
 export async function generateBot(mode: GenerateMode, payload: JsonBody) {

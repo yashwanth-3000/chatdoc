@@ -12,6 +12,7 @@ backend/build/
 # Playwright and local QA artifacts
 .playwright-cli/
 output/playwright/
+foundry-saved-layout.png
 frontend/.playwright-mcp/
 frontend/playwright-report/
 frontend/test-results/
@@ -32,6 +33,9 @@ test-results/
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
+
+# local API snapshots
+backend/data/
 
 # env and system files
 .env*

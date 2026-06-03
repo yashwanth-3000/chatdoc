@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { CSSProperties, FormEvent } from "react";
+import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./widget-designer.module.css";
 
@@ -10,6 +10,7 @@ type PanelSize = "compact" | "standard" | "wide";
 type AnimationStyle = "slide" | "pop" | "fade" | "spring" | "drawer" | "flip" | "zoom";
 type ShadowStyle = "soft" | "deep" | "flat";
 type SurfaceStyle = "solid" | "matte" | "glass";
+type ControlSection = "content" | "behavior" | "theme" | "advanced";
 
 type ChatMessage = {
   id: number;
@@ -82,8 +83,6 @@ const colorPresets: ThemePreset[] = [
   { name: "Berry", accent: "#be185d", panel: "#fffafe", message: "#4c0519", messageText: "#ffffff", user: "#ffffff", userText: "#3b1020", launcher: "#be185d", stage: "#fff1f6", surface: "matte" },
   { name: "Midnight", accent: "#312e81", panel: "#ffffff", message: "#11113f", messageText: "#ffffff", user: "#f8f8ff", userText: "#16163a", launcher: "#312e81", stage: "#f3f4ff", surface: "solid" },
 ];
-
-const animationOptions: AnimationStyle[] = ["slide", "spring", "drawer", "pop", "zoom", "flip", "fade"];
 
 const initialWidget: WidgetState = {
   assistantName: "Acme Support Copilot",
@@ -239,11 +238,92 @@ function buildAssistantReply(message: string, assistantName: string) {
   return `${assistantName || "The assistant"} can answer this with the configured tone, scoped tools, and guardrails.`;
 }
 
+type SidebarSectionProps = {
+  children: ReactNode;
+  delay?: number;
+  icon: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  title: string;
+};
+
+function SidebarSection({
+  children,
+  delay = 0,
+  icon,
+  isExpanded,
+  onToggle,
+  title,
+}: SidebarSectionProps) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      className={styles.sidebarSection}
+      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.22, delay, ease: "easeOut" }}
+    >
+      <motion.button
+        type="button"
+        className={styles.sectionToggle}
+        onClick={onToggle}
+        aria-expanded={isExpanded}
+        whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
+      >
+        <span className={styles.sectionToggleMeta}>
+          <motion.span
+            className={styles.sectionIcon}
+            animate={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    scale: isExpanded ? 1.05 : 1,
+                    boxShadow: isExpanded
+                      ? "0 8px 18px rgba(247, 92, 48, 0.22)"
+                      : "0 0 0 rgba(247, 92, 48, 0)",
+                  }
+            }
+            transition={{ type: "spring", stiffness: 420, damping: 28 }}
+          >
+            {icon}
+          </motion.span>
+          <span>{title}</span>
+        </span>
+        <motion.span
+          className={styles.sectionChevron}
+          aria-hidden="true"
+          animate={shouldReduceMotion ? undefined : { rotate: isExpanded ? 90 : 0 }}
+          transition={{ type: "spring", stiffness: 520, damping: 30 }}
+        >
+          &gt;
+        </motion.span>
+      </motion.button>
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            className={styles.sectionContent}
+            initial={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0, y: -4 }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { height: "auto", opacity: 1, y: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { height: 0, opacity: 0, y: -4 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 export function WidgetDesigner() {
   const [widget, setWidget] = useState<WidgetState>(initialWidget);
   const [isOpen, setIsOpen] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [draft, setDraft] = useState("");
+  const [expandedSections, setExpandedSections] = useState<Set<ControlSection>>(
+    () => new Set(["content"]),
+  );
   const messageListRef = useRef<HTMLDivElement>(null);
   const shouldReduceMotion = useReducedMotion();
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -329,6 +409,18 @@ export function WidgetDesigner() {
     }));
   }
 
+  function toggleSection(section: ControlSection) {
+    setExpandedSections((current) => {
+      const next = new Set(current);
+      if (next.has(section)) {
+        next.delete(section);
+      } else {
+        next.add(section);
+      }
+      return next;
+    });
+  }
+
   const panelClass = [
     styles.chatPanel,
     styles[`size_${widget.panelSize}`],
@@ -384,182 +476,181 @@ export function WidgetDesigner() {
 
       <section className={styles.workspace}>
         <form className={styles.controls} onSubmit={(event) => event.preventDefault()}>
-          <div className={`${styles.controlCard} ${styles.contentCard}`}>
-            <div className={styles.sectionTitle}>
-              <span>01</span>
-              <h2>Content</h2>
-            </div>
-            <label className={styles.field}>
-              <span>Assistant name</span>
-              <input
-                value={widget.assistantName}
-                onChange={(event) => updateField(setWidget, "assistantName", event.target.value)}
-              />
-            </label>
-            <label className={styles.field}>
-              <span>Launcher label</span>
-              <input
-                maxLength={14}
-                value={widget.launcherLabel}
-                onChange={(event) => updateField(setWidget, "launcherLabel", event.target.value)}
-              />
-            </label>
-            <label className={styles.field}>
-              <span>Opening message</span>
-              <input
-                value={widget.greeting}
-                onChange={(event) => {
-                  updateField(setWidget, "greeting", event.target.value);
-                }}
-              />
-            </label>
-            <label className={styles.field}>
-              <span>Helper copy</span>
-              <textarea
-                rows={3}
-                value={widget.subGreeting}
-                onChange={(event) => {
-                  updateField(setWidget, "subGreeting", event.target.value);
-                  setMessages((current) =>
-                    current.map((message) =>
-                      message.id === 1 ? { ...message, text: event.target.value } : message,
-                    ),
-                  );
-                }}
-              />
-            </label>
+          <div className={styles.controlsHeader}>
+            <h2>Chatbot Builder</h2>
+            <p>Step 1: Design</p>
           </div>
 
-          <div className={`${styles.controlCard} ${styles.behaviorCard}`}>
-            <div className={styles.sectionTitle}>
-              <span>02</span>
-              <h2>Behavior</h2>
-            </div>
-            <div className={styles.segmentGroup}>
-              <p>Panel size</p>
-              <div>
-                {(["compact", "standard", "wide"] as PanelSize[]).map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    className={widget.panelSize === size ? styles.segmentActive : ""}
-                    onClick={() => updateField(setWidget, "panelSize", size)}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className={styles.segmentGroup}>
-              <p>Open animation</p>
-              <div>
-                {animationOptions.map((animation) => (
-                  <button
-                    key={animation}
-                    type="button"
-                    className={widget.animation === animation ? styles.segmentActive : ""}
-                    onClick={() => {
-                      updateField(setWidget, "animation", animation);
-                      setIsOpen(false);
-                      window.setTimeout(() => setIsOpen(true), 80);
+          <div className={styles.controlsScroller}>
+            <SidebarSection
+              title="Content"
+              icon="01"
+              delay={0}
+              isExpanded={expandedSections.has("content")}
+              onToggle={() => toggleSection("content")}
+            >
+              <div className={`${styles.sectionBody} ${styles.contentCard}`}>
+                <label className={styles.field}>
+                  <span>Assistant name</span>
+                  <input
+                    value={widget.assistantName}
+                    onChange={(event) => updateField(setWidget, "assistantName", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Launcher label</span>
+                  <input
+                    maxLength={14}
+                    value={widget.launcherLabel}
+                    onChange={(event) => updateField(setWidget, "launcherLabel", event.target.value)}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Opening message</span>
+                  <input
+                    value={widget.greeting}
+                    onChange={(event) => {
+                      updateField(setWidget, "greeting", event.target.value);
                     }}
-                  >
-                    {animation}
-                  </button>
-                ))}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Helper copy</span>
+                  <textarea
+                    rows={3}
+                    value={widget.subGreeting}
+                    onChange={(event) => {
+                      updateField(setWidget, "subGreeting", event.target.value);
+                      setMessages((current) =>
+                        current.map((message) =>
+                          message.id === 1 ? { ...message, text: event.target.value } : message,
+                        ),
+                      );
+                    }}
+                  />
+                </label>
               </div>
-            </div>
-            <div className={styles.segmentGroup}>
-              <p>Panel surface</p>
-              <div>
-                {(["solid", "matte", "glass"] as SurfaceStyle[]).map((surface) => (
-                  <button
-                    key={surface}
-                    type="button"
-                    className={widget.surfaceStyle === surface ? styles.segmentActive : ""}
-                    onClick={() => updateField(setWidget, "surfaceStyle", surface)}
-                  >
-                    {surface}
-                  </button>
-                ))}
+            </SidebarSection>
+
+            <SidebarSection
+              title="Behavior"
+              icon="02"
+              delay={0.04}
+              isExpanded={expandedSections.has("behavior")}
+              onToggle={() => toggleSection("behavior")}
+            >
+              <div className={`${styles.sectionBody} ${styles.behaviorCard}`}>
+                <div className={styles.segmentGroup}>
+                  <p>Panel size</p>
+                  <div>
+                    {(["compact", "standard", "wide"] as PanelSize[]).map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        className={widget.panelSize === size ? styles.segmentActive : ""}
+                        onClick={() => updateField(setWidget, "panelSize", size)}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={styles.segmentGroup}>
+                  <p>Panel shadow</p>
+                  <div>
+                    {(["soft", "deep", "flat"] as ShadowStyle[]).map((shadow) => (
+                      <button
+                        key={shadow}
+                        type="button"
+                        className={widget.shadow === shadow ? styles.segmentActive : ""}
+                        onClick={() => updateField(setWidget, "shadow", shadow)}
+                      >
+                        {shadow}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className={styles.segmentGroup}>
-              <p>Panel shadow</p>
-              <div>
-                {(["soft", "deep", "flat"] as ShadowStyle[]).map((shadow) => (
-                  <button
-                    key={shadow}
-                    type="button"
-                    className={widget.shadow === shadow ? styles.segmentActive : ""}
-                    onClick={() => updateField(setWidget, "shadow", shadow)}
-                  >
-                    {shadow}
-                  </button>
-                ))}
+            </SidebarSection>
+
+            <SidebarSection
+              title="Theme"
+              icon="03"
+              delay={0.08}
+              isExpanded={expandedSections.has("theme")}
+              onToggle={() => toggleSection("theme")}
+            >
+              <div className={`${styles.sectionBody} ${styles.themeCard}`}>
+                <div className={styles.swatchGrid}>
+                  {colorPresets.map((color) => (
+                    <button
+                      key={color.name}
+                      type="button"
+                      className={widget.accentColor === color.accent ? styles.swatchActive : ""}
+                      onClick={() => applyPreset(color)}
+                    >
+                      <i style={{ background: color.accent }} />
+                      <span>
+                        <strong>{color.name}</strong>
+                        <small>{color.surface}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Advanced Colors"
+              icon="04"
+              delay={0.12}
+              isExpanded={expandedSections.has("advanced")}
+              onToggle={() => toggleSection("advanced")}
+            >
+              <div className={`${styles.sectionBody} ${styles.advancedCard}`}>
+                <div className={styles.colorGrid}>
+                  {([
+                    ["Accent", "accentColor"],
+                    ["Panel", "panelColor"],
+                    ["Assistant", "messageColor"],
+                    ["Assistant text", "messageTextColor"],
+                    ["Visitor bubble", "userBubbleColor"],
+                    ["Visitor text", "userTextColor"],
+                    ["Launcher", "launcherColor"],
+                    ["Preview bg", "stageBackground"],
+                  ] as Array<[string, keyof WidgetState]>).map(([label, key]) => (
+                    <label key={key} className={styles.colorField}>
+                      <span>{label}</span>
+                      <input
+                        type="color"
+                        value={widget[key] as string}
+                        onInput={(event) => updateField(setWidget, key, event.currentTarget.value)}
+                        onChange={(event) => updateField(setWidget, key, event.target.value)}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <label className={styles.rangeField}>
+                  <span>Corner radius</span>
+                  <input
+                    type="range"
+                    min="8"
+                    max="28"
+                    value={widget.cornerRadius}
+                    onChange={(event) =>
+                      updateField(setWidget, "cornerRadius", Number(event.target.value))
+                    }
+                  />
+                  <strong>{widget.cornerRadius}px</strong>
+                </label>
+              </div>
+            </SidebarSection>
           </div>
 
-          <div className={`${styles.controlCard} ${styles.themeCard}`}>
-            <div className={styles.sectionTitle}>
-              <span>03</span>
-              <h2>Theme</h2>
-            </div>
-            <div className={styles.swatchGrid}>
-              {colorPresets.map((color) => (
-                <button
-                  key={color.name}
-                  type="button"
-                  className={widget.accentColor === color.accent ? styles.swatchActive : ""}
-                  onClick={() => applyPreset(color)}
-                >
-                  <i style={{ background: color.accent }} />
-                  <span>
-                    <strong>{color.name}</strong>
-                    <small>{color.surface}</small>
-                  </span>
-                </button>
-              ))}
-            </div>
-            <details className={styles.advancedTheme}>
-              <summary>Advanced colors</summary>
-              <div className={styles.colorGrid}>
-                {([
-                  ["Accent", "accentColor"],
-                  ["Panel", "panelColor"],
-                  ["Assistant", "messageColor"],
-                  ["Assistant text", "messageTextColor"],
-                  ["Visitor bubble", "userBubbleColor"],
-                  ["Visitor text", "userTextColor"],
-                  ["Launcher", "launcherColor"],
-                  ["Preview bg", "stageBackground"],
-                ] as Array<[string, keyof WidgetState]>).map(([label, key]) => (
-                  <label key={key} className={styles.colorField}>
-                    <span>{label}</span>
-                    <input
-                      type="color"
-                      value={widget[key] as string}
-                      onInput={(event) => updateField(setWidget, key, event.currentTarget.value)}
-                      onChange={(event) => updateField(setWidget, key, event.target.value)}
-                    />
-                  </label>
-                ))}
-              </div>
-              <label className={styles.rangeField}>
-                <span>Corner radius</span>
-                <input
-                  type="range"
-                  min="8"
-                  max="28"
-                  value={widget.cornerRadius}
-                  onChange={(event) =>
-                    updateField(setWidget, "cornerRadius", Number(event.target.value))
-                  }
-                />
-                <strong>{widget.cornerRadius}px</strong>
-              </label>
-            </details>
+          <div className={styles.controlsFooter}>
+            <Link className={styles.primaryButton} href="/builder/step-two">
+              Continue to Step 2
+            </Link>
           </div>
         </form>
 

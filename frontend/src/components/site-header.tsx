@@ -37,15 +37,6 @@ export function SiteHeader({ currentPage }: SiteHeaderProps) {
           </Link>
         ))}
       </nav>
-
-      <div className={styles.headerActions}>
-        <Link className={styles.secondaryLink} href="/demo">
-          Judge demo
-        </Link>
-        <Link className={styles.button} href="/builder">
-          Open builder
-        </Link>
-      </div>
     </header>
   );
 }
