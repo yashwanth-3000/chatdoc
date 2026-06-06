@@ -213,31 +213,39 @@ function TraceChip({ children, color = "neutral", variant = "soft", icon, style:
 type StoredEntryProp = TraceEntry & { receivedAt?: number };
 
 function deriveDisplayTitle(icon: string, text: string): string {
+  // Backend text format: "Done — {model} ({ms}ms, ...)" — uses U+2014 em-dash
   if (icon === "✅") {
-    const m = text.match(/Done\s*[→-]\s*(.+?)\s*\(/);
+    const m = text.match(/Done\s*—\s*(.+?)\s*\(/);
     return m ? m[1] : "Request complete";
   }
+  // Backend text format: "Calling {model}…" — uses U+2026 horizontal ellipsis
   if (icon === "⚡") {
-    const m = text.match(/Calling\s+(.+?)[…\.]/);
+    const m = text.match(/Calling\s+(.+)…/);
     return m ? m[1] : "Gateway request";
   }
+  // Backend text format: "Model requested N tool call(s)"
   if (icon === "🤖") {
-    const m = text.match(/requested\s+(\d+\s+tool[^)]*)/i);
+    const m = text.match(/requested\s+(\d+ tool call\(s\))/i);
     return m ? `Model: ${m[1]}` : "Model response";
   }
   if (icon === "💬") return "Generating answer";
+  // Backend text format: "MCP call → {name}({args}) [auth injected]?"
   if (icon === "🔧") {
-    const m = text.match(/MCP call\s*[→-]\s*(.+)/);
+    const m = text.match(/MCP call\s*→\s*(.+?)(?:\s*\[|$)/);
     return m ? m[1].trim() : "Tool call";
   }
+  // Backend text format: "MCP: {name} → N chars returned" or "→ access denied (...)"
   if (icon === "📄") {
-    const m = text.match(/MCP:\s*(.+?)\s*[→-]/);
+    const m = text.match(/MCP:\s*(.+?)\s*→/);
     return m ? m[1].trim() : "Tool result";
   }
+  // Backend text format: "MCP tools loaded: [...] — N require auth: [...]"
   if (icon === "🔩" || icon === "🔌") {
-    const count = (text.match(/\[([^\]]+)\]/)?.[1]?.split(",").length) ?? 0;
-    return count ? `${count} tools loaded` : "MCP tools";
+    const total = text.match(/\[([^\]]+)\]/)?.[1]?.split(",").length ?? 0;
+    const auth  = text.match(/(\d+) require auth/)?.[1] ?? "0";
+    return total ? `${total} tools, ${auth} need auth` : "MCP tools";
   }
+  // Backend text format: "User tier: {tier} → TrueFoundry rule: "{ruleId}""
   if (icon === "👤") {
     const m = text.match(/rule:\s*"([^"]+)"/);
     return m ? `Tier: ${m[1]}` : "Tier resolved";
