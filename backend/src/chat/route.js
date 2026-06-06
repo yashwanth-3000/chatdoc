@@ -393,12 +393,28 @@ router.post("/", async (req, res) => {
     sse(res, "done",  { model: first.usedModel, latencyMs });
 
   } catch (err) {
-    const lc = (err.statusText ?? "").toLowerCase();
+    const rawMsg = err.message || "Gateway request failed.";
+    const lc = (err.statusText ?? rawMsg).toLowerCase();
+
+    // Extract the meaningful part of a JSON error body embedded in the message
+    let cleanMsg = rawMsg;
+    try {
+      const jsonMatch = rawMsg.match(/\{[\s\S]+\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        cleanMsg = parsed.message || parsed.error?.message || rawMsg;
+      }
+    } catch { /* keep rawMsg */ }
+
     const gp2 = await getGuardrailPolicy().catch(() => ({ input: [] }));
     if (gp2.input.length > 0 && (lc.includes("guardrail") || lc.includes("blocked") || lc.includes("content"))) {
       sse(res, "trace", { icon: "🚫", text: `Input blocked by guardrail: ${gp2.input.join(", ")}`, ms: Date.now() - t0 });
+    } else {
+      // Always emit a trace row so the error is visible in the timeline
+      const is429 = rawMsg.includes("429") || lc.includes("rate limit");
+      sse(res, "trace", { icon: "🚫", text: `${is429 ? "Rate limit: " : "Error: "}${cleanMsg}`, ms: Date.now() - t0 });
     }
-    sse(res, "error", { message: err.message || "Gateway request failed." });
+    sse(res, "error", { message: cleanMsg });
   } finally {
     res.end();
   }
