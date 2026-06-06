@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MiniWidget, BACKEND_URL } from "./mini-widget";
 import type { LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
 import styles from "./live-test-page.module.css";
@@ -81,10 +81,7 @@ function readApiKey(): string {
 }
 
 function truncateUrl(url: string): string {
-  try {
-    const u = new URL(url);
-    return u.hostname;
-  } catch {
+  try { return new URL(url).hostname; } catch {
     return url.length > 35 ? url.slice(0, 35) + "…" : url;
   }
 }
@@ -105,6 +102,17 @@ const RULE_TO_TIER: Record<string, TierKey> = {
   pro: "pro",
 };
 
+// ── Sample prompts (tier-tagged) ──────────────────────────────────────────────
+
+const SAMPLE_PROMPTS: { tier: TierKey; text: string }[] = [
+  { tier: "guest",    text: "What is this chatbot and how do I embed it?" },
+  { tier: "guest",    text: "How do I get started quickly?" },
+  { tier: "loggedIn", text: "What widget animation options are available?" },
+  { tier: "loggedIn", text: "Generate a purple-themed chatbot config called Aria" },
+  { tier: "pro",      text: "Explain the SSE streaming protocol in detail" },
+  { tier: "pro",      text: "Give me a complete integration blueprint with code" },
+];
+
 // ── Live test page ────────────────────────────────────────────────────────────
 
 export function LiveTestPage() {
@@ -114,10 +122,15 @@ export function LiveTestPage() {
   const [activeTier, setActiveTier] = useState<TierKey>("guest");
   const [traceLog, setTraceLog] = useState<TraceEntry[]>([]);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  const traceEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll trace to bottom when new entries arrive
+  useEffect(() => {
+    traceEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [traceLog]);
 
   useEffect(() => {
     const saved = readTierConfig();
-
     const ctrl = new AbortController();
     const timeoutId = setTimeout(() => ctrl.abort(), 5000);
 
@@ -130,7 +143,6 @@ export function LiveTestPage() {
         const gwUrl: string = saved?.gatewayUrl ?? data.connection?.gatewayBaseUrl ?? "";
         const allSections: Array<{ key: string; records?: unknown[] }> = data.sections ?? [];
 
-        // ── Rate limit overlay — map rule IDs to tier keys ──
         const rlSection = allSections.find((s) => s.key === "rateLimitConfigs");
         const rlRecords = (rlSection?.records ?? []) as Array<Record<string, unknown>>;
         const rateLimitByTier: Partial<Record<TierKey, TierItemRef>> = {};
@@ -145,11 +157,8 @@ export function LiveTestPage() {
           }
         }
 
-        // ── Model — only needed if saved config has no model ──
         const hasModel =
-          saved?.tiers.guest.model ||
-          saved?.tiers.loggedIn.model ||
-          saved?.tiers.pro.model;
+          saved?.tiers.guest.model || saved?.tiers.loggedIn.model || saved?.tiers.pro.model;
         let modelRef: TierItemRef | null = null;
         if (!hasModel && gwUrl) {
           for (const sectionKey of ["providerAccounts", "availableModels"]) {
@@ -169,7 +178,6 @@ export function LiveTestPage() {
         setTierCfg((prev) => {
           const gw = gwUrl || prev?.gatewayUrl;
           if (!gw) return prev;
-
           const emptyTier: TierConfig = { model: null, rateLimitPolicy: null, guardrails: [], mcpTools: [] };
           const base: NonNullable<SavedTierConfig> = prev ?? {
             tiers: { guest: emptyTier, loggedIn: emptyTier, pro: emptyTier },
@@ -177,7 +185,6 @@ export function LiveTestPage() {
             controlPlaneUrl: data.connection?.controlPlaneUrl ?? "",
             savedAt: new Date().toISOString(),
           };
-
           return {
             ...base,
             gatewayUrl: gw,
@@ -194,34 +201,23 @@ export function LiveTestPage() {
         if (err instanceof Error && err.name === "AbortError") return;
       });
 
-    return () => {
-      ctrl.abort();
-      clearTimeout(timeoutId);
-    };
+    return () => { ctrl.abort(); clearTimeout(timeoutId); };
   }, []);
 
-  // ── Derived values ────────────────────────────────────────────────────────
+  // ── Derived ───────────────────────────────────────────────────────────────
 
   const liveGatewayUrl = tierCfg?.gatewayUrl ?? null;
-
-  // The first available model across any tier (for fallback)
   const firstModel =
-    tierCfg?.tiers.guest.model ??
-    tierCfg?.tiers.loggedIn.model ??
-    tierCfg?.tiers.pro.model ??
-    null;
-
-  // Active tier's model — falls back to firstModel so chat always has something to use
+    tierCfg?.tiers.guest.model ?? tierCfg?.tiers.loggedIn.model ?? tierCfg?.tiers.pro.model ?? null;
   const activeTierData = tierCfg?.tiers[activeTier] ?? null;
   const activeModel = activeTierData?.model ?? firstModel;
 
-  // Build system prompt from the user's own widget config — no hardcoding
   const builtSystemPrompt = [
     `You are ${cfg.assistantName}.`,
     cfg.greeting,
     cfg.subGreeting,
     `You have tools available — use them whenever they can help answer the user's question accurately.`,
-    `If a tool tells you the user doesn't have access at their current tier, relay that information clearly.`,
+    `If a tool tells you the user doesn't have access at their current tier, relay that clearly.`,
   ].filter(Boolean).join(" ");
 
   const liveConfig: LiveConfig | null =
@@ -240,7 +236,8 @@ export function LiveTestPage() {
       : null;
 
   function addTrace(entry: TraceEntry) {
-    setTraceLog((prev) => [entry, ...prev.slice(0, 29)]);
+    // Append (chronological) — newest at bottom, auto-scroll keeps it visible
+    setTraceLog((prev) => [...prev.slice(-49), entry]);
   }
 
   function copyPrompt(text: string) {
@@ -249,11 +246,8 @@ export function LiveTestPage() {
     setTimeout(() => setCopiedPrompt(null), 1500);
   }
 
-  const botSlug = cfg.assistantName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "my-assistant";
+  const botSlug = cfg.assistantName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-assistant";
+  const canSwitchTier = !!(liveGatewayUrl && liveKey);
 
   return (
     <div className={stepStyles.designer}>
@@ -269,7 +263,7 @@ export function LiveTestPage() {
         </div>
         <div>
           <h1>Test your chatbot live</h1>
-          <p>Switch user tiers to see how each policy set shapes the chatbot experience.</p>
+          <p>Click a tier card to simulate that user's access level, then chat on the right.</p>
         </div>
         <div className={stepStyles.headerActions}>
           <Link className={stepStyles.secondaryButton} href="/builder/step-two/existing-foundry-user">Back</Link>
@@ -282,213 +276,158 @@ export function LiveTestPage() {
         {/* ── Left: controls ── */}
         <div className={styles.controlsCol}>
 
-          {/* Connection status */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Connection</h3>
+          {/* ── Status bar ── */}
+          <div className={styles.statusBar}>
             {liveConfig ? (
-              <div className={styles.connCard}>
-                <div className={styles.connRow}>
-                  <span className={styles.connKey}>Model</span>
-                  <span className={styles.connVal}>{activeModel?.name}</span>
-                </div>
-                <div className={styles.connRow}>
-                  <span className={styles.connKey}>Gateway</span>
-                  <span className={styles.connVal}>{truncateUrl(liveGatewayUrl ?? "")}</span>
-                </div>
-                <div className={styles.connStatus}>
-                  <span className={styles.connDot} />
-                  <span>Ready — send a message to test</span>
-                </div>
-              </div>
+              <>
+                <span className={styles.statusDot} />
+                <span className={styles.statusText}>Connected</span>
+                <span className={styles.statusSep}>·</span>
+                <code className={styles.statusCode}>{activeModel?.name}</code>
+                <span className={styles.statusSep}>·</span>
+                <span className={styles.statusText}>{truncateUrl(liveGatewayUrl ?? "")}</span>
+              </>
             ) : (
-              <div className={styles.connCard}>
-                <p className={styles.connEmpty}>
+              <>
+                <span className={styles.statusDotOff} />
+                <span className={styles.statusTextOff}>
                   {liveGatewayUrl && !liveKey
-                    ? "API key not found. Go back to Step 2 and reconnect."
-                    : "Go back to Step 2 to connect your TrueFoundry gateway."}
-                </p>
-              </div>
+                    ? "API key missing — reconnect in Step 2"
+                    : "Not connected — go back to Step 2"}
+                </span>
+              </>
             )}
+            <span
+              className={styles.statusTierPill}
+              style={{ background: TIER_COLORS[activeTier] }}
+            >
+              {TIER_LABELS[activeTier]}
+            </span>
           </div>
 
-          {/* ── Break It — redesigned ── */}
+          {/* ── Tier simulator — cards ARE the selector ── */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>
-              Break It
-              <span className={styles.sectionSub}> — simulate user tiers</span>
+              Simulate user tier
+              <span className={styles.sectionSub}> — click a card to switch</span>
             </h3>
 
-            {/* Part 1: Tier policy display — reads from tierCfg, nothing hardcoded */}
             {tierCfg ? (
-              <div className={styles.tierPolicyGrid}>
+              <div className={styles.tierGrid}>
                 {TIER_KEYS.map((tier) => {
                   const t = tierCfg.tiers[tier];
                   const isActive = activeTier === tier;
                   return (
-                    <div
+                    <button
                       key={tier}
-                      className={`${styles.tierPolicyCard} ${isActive ? styles.tierPolicyCardActive : ""}`}
+                      className={`${styles.tierCard} ${isActive ? styles.tierCardActive : ""}`}
                       style={isActive ? { borderColor: TIER_COLORS[tier] } : undefined}
+                      onClick={() => canSwitchTier && setActiveTier(tier)}
+                      disabled={!canSwitchTier}
+                      aria-pressed={isActive}
                     >
-                      <span
-                        className={styles.tierPolicyBadge}
-                        style={{ background: TIER_COLORS[tier] }}
-                      >
-                        {TIER_LABELS[tier]}
-                      </span>
-                      <div className={styles.tierPolicyRows}>
-                        <div className={styles.tierPolicyRow}>
+                      <div className={styles.tierCardHead}>
+                        <span
+                          className={styles.tierCardBadge}
+                          style={{ background: TIER_COLORS[tier] }}
+                        >
+                          {isActive && <span className={styles.tierCardCheck}>✓ </span>}
+                          {TIER_LABELS[tier]}
+                        </span>
+                      </div>
+                      <div className={styles.tierCardRows}>
+                        <div className={styles.tierCardRow}>
                           <span>Model</span>
                           <strong style={!t.model ? { color: "#c8c7d4" } : undefined}>
                             {t.model?.name ?? "—"}
                           </strong>
                         </div>
-                        <div className={styles.tierPolicyRow}>
-                          <span>Rate limit</span>
+                        <div className={styles.tierCardRow}>
+                          <span>Rate</span>
                           <strong style={!t.rateLimitPolicy ? { color: "#c8c7d4" } : undefined}>
                             {t.rateLimitPolicy?.name ?? "—"}
                           </strong>
                         </div>
-                        {t.guardrails.length > 0 ? (
-                          <div className={styles.tierPolicyRow}>
+                        {t.guardrails.length > 0 && (
+                          <div className={styles.tierCardRow}>
                             <span>Guardrails</span>
                             <strong>{t.guardrails.length}</strong>
                           </div>
-                        ) : null}
-                        {t.mcpTools.length > 0 ? (
-                          <div className={styles.tierPolicyRow}>
+                        )}
+                        {t.mcpTools.length > 0 && (
+                          <div className={styles.tierCardRow}>
                             <span>MCP tools</span>
                             <strong>{t.mcpTools.length}</strong>
                           </div>
-                        ) : null}
+                        )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             ) : (
-              <p className={styles.connEmpty}>
-                Connect gateway in Step 2 to load tier policies.
-              </p>
+              <p className={styles.emptyNote}>Connect gateway in Step 2 to load tier policies.</p>
             )}
-
-            {/* Divider */}
-            <div className={styles.tierDivider} />
-
-            {/* Part 2: Tier simulator buttons */}
-            <div className={styles.tierBtnRow}>
-              {TIER_KEYS.map((tier) => {
-                const isActive = activeTier === tier;
-                return (
-                  <button
-                    key={tier}
-                    className={`${styles.tierBtn} ${isActive ? styles.tierBtnActive : ""}`}
-                    style={isActive ? { borderColor: TIER_COLORS[tier], color: TIER_COLORS[tier] } : undefined}
-                    onClick={() => setActiveTier(tier)}
-                    disabled={!liveGatewayUrl || !liveKey}
-                  >
-                    {isActive && <span className={styles.tierBtnCheck}>✓</span>}
-                    {TIER_LABELS[tier]}
-                  </button>
-                );
-              })}
-            </div>
-
-            <p className={styles.tierActiveNote}>
-              Active:{" "}
-              <span
-                className={styles.tierBadgeInline}
-                style={{ background: TIER_COLORS[activeTier] }}
-              >
-                {TIER_LABELS[activeTier]}
-              </span>
-              {" "}→ model:{" "}
-              <code>{activeModel?.name ?? "not configured"}</code>
-            </p>
           </div>
 
-          {/* ── Try these prompts ── */}
+          {/* ── Sample prompts (compact flat list) ── */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>
-              Try these prompts
-              <span className={styles.sectionSub}> — click to copy, paste in chatbot</span>
+              Sample prompts
+              <span className={styles.sectionSub}> — click to copy</span>
             </h3>
-            <div className={styles.promptGroups}>
-              {([
-                {
-                  tier: "guest" as TierKey,
-                  prompts: [
-                    "What is ChatDock and how does it work?",
-                    "How do I add the chatbot widget to my site?",
-                  ],
-                },
-                {
-                  tier: "loggedIn" as TierKey,
-                  prompts: [
-                    "What widget animation and design options are available?",
-                    "Generate a config for a purple-themed chatbot called Aria",
-                  ],
-                },
-                {
-                  tier: "pro" as TierKey,
-                  prompts: [
-                    "Explain the TrueFoundry SSE streaming protocol in detail",
-                    "Give me a complete integration blueprint with code examples",
-                  ],
-                },
-              ] as { tier: TierKey; prompts: string[] }[]).map(({ tier, prompts }) => (
-                <div key={tier} className={styles.promptGroup}>
-                  <span className={styles.promptGroupLabel} style={{ background: TIER_COLORS[tier] }}>
-                    {TIER_LABELS[tier]}
+            <div className={styles.promptList}>
+              {SAMPLE_PROMPTS.map((p) => (
+                <button
+                  key={p.text}
+                  className={`${styles.promptChip} ${copiedPrompt === p.text ? styles.promptChipCopied : ""}`}
+                  onClick={() => copyPrompt(p.text)}
+                  title="Click to copy"
+                >
+                  <span
+                    className={styles.promptDot}
+                    style={{ background: TIER_COLORS[p.tier] }}
+                    title={TIER_LABELS[p.tier]}
+                  />
+                  <span className={styles.promptChipText}>{p.text}</span>
+                  <span className={styles.promptChipAction}>
+                    {copiedPrompt === p.text ? "✓" : "⎘"}
                   </span>
-                  <div className={styles.promptList}>
-                    {prompts.map((p) => (
-                      <button
-                        key={p}
-                        className={`${styles.promptChip} ${copiedPrompt === p ? styles.promptChipCopied : ""}`}
-                        onClick={() => copyPrompt(p)}
-                        title="Click to copy"
-                      >
-                        <span className={styles.promptChipText}>{p}</span>
-                        <span className={styles.promptChipAction}>
-                          {copiedPrompt === p ? "✓" : "⎘"}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                </button>
               ))}
-            </div>
-
-            <div className={styles.testChecklist}>
-              <p className={styles.testChecklistTitle}>What to watch for</p>
-              <ul className={styles.testChecklistItems}>
-                <li>Switch tiers → model badge at the chatbot footer updates</li>
-                <li>Rate limits enforced by TrueFoundry (Guest 5 · Logged-in 20 · Pro 40 req/hr)</li>
-                <li>Docs questions trigger MCP tools — check Gateway trace below</li>
-                <li>Unsafe inputs stopped by guardrails before reaching the model</li>
-              </ul>
             </div>
           </div>
 
-          {/* Trace log */}
-          {traceLog.length > 0 && (
-            <div className={styles.section}>
-              <div className={styles.traceHead}>
-                <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Gateway trace</h3>
+          {/* ── Gateway trace (always visible, chronological) ── */}
+          <div className={styles.section}>
+            <div className={styles.traceHead}>
+              <h3 className={styles.sectionTitle} style={{ margin: 0 }}>
+                Gateway trace
+                {traceLog.length > 0 && (
+                  <span className={styles.traceCount}>{traceLog.length}</span>
+                )}
+              </h3>
+              {traceLog.length > 0 && (
                 <button className={styles.traceClearBtn} onClick={() => setTraceLog([])}>Clear</button>
-              </div>
-              <div className={styles.traceList}>
-                {traceLog.map((e, i) => (
+              )}
+            </div>
+            <div className={styles.traceList}>
+              {traceLog.length === 0 ? (
+                <div className={styles.traceEmpty}>
+                  Send a message to see the full gateway request trace — model routing, MCP tool calls, guardrail checks, and latency.
+                </div>
+              ) : (
+                traceLog.map((e, i) => (
                   <div key={i} className={styles.traceRow}>
                     <span className={styles.traceIcon}>{e.icon}</span>
                     <span className={styles.traceText}>{e.text}</span>
                     <span className={styles.traceMs}>{e.ms}ms</span>
                   </div>
-                ))}
-              </div>
+                ))
+              )}
+              <div ref={traceEndRef} />
             </div>
-          )}
+          </div>
 
         </div>
 

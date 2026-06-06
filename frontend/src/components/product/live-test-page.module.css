@@ -1,4 +1,4 @@
-/* ── Two-column layout — mirrors the step 1 / publish page pattern ── */
+/* ── Two-column layout ──────────────────────────────────── */
 
 .layout {
   display: grid;
@@ -7,7 +7,7 @@
   align-items: start;
 }
 
-/* ── Left: controls col ─────────────────────────────── */
+/* ── Left column ─────────────────────────────────────────── */
 
 .controlsCol {
   display: grid;
@@ -16,76 +16,40 @@
 
 .section {
   display: grid;
-  gap: 12px;
-  padding: 22px 0;
+  gap: 10px;
+  padding: 18px 0;
   border-bottom: 1px solid rgba(13, 18, 33, 0.07);
 }
 
 .section:last-child { border-bottom: none; }
 
 .sectionTitle {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   color: #0d1221;
   line-height: 1.2;
 }
 
 .sectionSub {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  color: #7b7785;
+  color: #9b9aa6;
 }
 
-/* ── Connection card ────────────────────────────────── */
+/* ── Status bar ──────────────────────────────────────────── */
 
-.connCard {
-  border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 12px;
-  padding: 14px 16px;
-  background: #fcfbfa;
-  display: grid;
-  gap: 8px;
-}
-
-.connRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-}
-
-.connKey {
-  color: #7b7785;
-  font-size: 12px;
-  font-weight: 700;
-  flex-shrink: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  font-size: 10px;
-}
-
-.connVal {
-  color: #0d1221;
-  font-size: 12px;
-  font-weight: 700;
-  font-family: ui-monospace, monospace;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: right;
-}
-
-.connStatus {
+.statusBar {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-top: 2px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #0f6b54;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fcfbfa;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  flex-wrap: wrap;
 }
 
-.connDot {
+.statusDot {
   width: 7px;
   height: 7px;
   border-radius: 999px;
@@ -93,35 +57,95 @@
   flex-shrink: 0;
 }
 
-.connEmpty {
-  font-size: 13px;
-  color: #9b9aa6;
-  line-height: 1.6;
+.statusDotOff {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #c8c7d4;
+  flex-shrink: 0;
 }
 
-/* ── Tier policy grid (Break It — Part 1) ───────────── */
+.statusText {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3b3a45;
+}
 
-.tierPolicyGrid {
+.statusTextOff {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9b9aa6;
+}
+
+.statusCode {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0d1221;
+  background: rgba(13, 18, 33, 0.06);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+
+.statusSep {
+  color: #c8c7d4;
+  font-size: 12px;
+}
+
+.statusTierPill {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+/* ── Tier cards ──────────────────────────────────────────── */
+
+.tierGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
-.tierPolicyCard {
+.tierCard {
   display: grid;
   gap: 8px;
   border: 1.5px solid rgba(13, 18, 33, 0.09);
   border-radius: 12px;
   padding: 11px 12px;
   background: #fcfbfa;
-  transition: border-color 140ms, background 140ms;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 140ms, background 140ms, box-shadow 140ms;
 }
 
-.tierPolicyCardActive {
+.tierCard:hover:not(:disabled) {
+  background: #f8f7f4;
+  border-color: rgba(13, 18, 33, 0.18);
+  box-shadow: 0 2px 8px rgba(13, 18, 33, 0.06);
+}
+
+.tierCard:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tierCardActive {
   background: #ffffff;
+  box-shadow: 0 2px 12px rgba(13, 18, 33, 0.08);
 }
 
-.tierPolicyBadge {
+.tierCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tierCardBadge {
   display: inline-flex;
   align-items: center;
   padding: 2px 9px;
@@ -129,31 +153,36 @@
   color: #ffffff;
   font-size: 10px;
   font-weight: 900;
-  width: fit-content;
+  white-space: nowrap;
 }
 
-.tierPolicyRows {
+.tierCardCheck {
+  font-size: 9px;
+  opacity: 0.9;
+}
+
+.tierCardRows {
   display: grid;
   gap: 4px;
 }
 
-.tierPolicyRow {
+.tierCardRow {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 6px;
+  gap: 4px;
 }
 
-.tierPolicyRow > span {
+.tierCardRow > span {
   color: #9b9aa6;
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.3px;
   flex-shrink: 0;
 }
 
-.tierPolicyRow > strong {
+.tierCardRow > strong {
   color: #0d1221;
   font-size: 11px;
   font-weight: 700;
@@ -161,138 +190,36 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 110px;
   font-family: ui-monospace, monospace;
 }
 
-/* ── Tier simulator buttons (Break It — Part 2) ─────── */
-
-.tierDivider {
-  height: 1px;
-  background: rgba(13, 18, 33, 0.07);
-}
-
-.tierBtnRow {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.tierBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 9px 10px;
-  border: 1.5px solid rgba(13, 18, 33, 0.12);
-  border-radius: 10px;
-  background: #ffffff;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: #5b5a66;
-  transition: border-color 120ms, color 120ms, background 120ms;
-  white-space: nowrap;
-}
-
-.tierBtn:hover:not(:disabled) {
-  border-color: rgba(13, 18, 33, 0.25);
-  color: #0d1221;
-  background: #fafafa;
-}
-
-.tierBtn:disabled {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-.tierBtnActive {
-  background: #fcfcff;
-}
-
-.tierBtnCheck {
-  font-size: 10px;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.tierActiveNote {
-  font-size: 12px;
-  color: #5b5a66;
-  line-height: 1.7;
-}
-
-.tierActiveNote code {
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  background: rgba(13, 18, 33, 0.06);
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #0d1221;
-}
-
-.tierBadgeInline {
-  display: inline-flex;
-  align-items: center;
-  padding: 1px 7px;
-  border-radius: 999px;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 900;
-  vertical-align: middle;
-  margin: 0 1px;
-}
-
-/* ── Prompts ─────────────────────────────────────────── */
-
-.promptGroups {
-  display: grid;
-  gap: 12px;
-}
-
-.promptGroup {
-  display: grid;
-  gap: 6px;
-}
-
-.promptGroupLabel {
-  display: inline-flex;
-  align-self: start;
-  width: fit-content;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4px;
-  color: #fff;
-  text-transform: uppercase;
-}
+/* ── Prompts ─────────────────────────────────────────────── */
 
 .promptList {
   display: grid;
-  gap: 6px;
+  gap: 5px;
 }
 
 .promptChip {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 12px;
+  padding: 8px 11px;
   border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 10px;
-  font-size: 13px;
+  border-radius: 9px;
+  font-size: 12.5px;
   color: #5b5a66;
   background: #fcfbfa;
   line-height: 1.4;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.12s, background 0.12s, color 0.12s;
   width: 100%;
+  font-family: inherit;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 
 .promptChip:hover {
-  border-color: rgba(13, 18, 33, 0.2);
+  border-color: rgba(13, 18, 33, 0.18);
   background: #f4f3f0;
   color: #0d1221;
 }
@@ -303,69 +230,51 @@
   color: #16a34a !important;
 }
 
+.promptDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
 .promptChipText {
   flex: 1;
 }
 
 .promptChipAction {
   flex-shrink: 0;
-  font-size: 14px;
-  opacity: 0.5;
+  font-size: 13px;
+  opacity: 0.4;
   transition: opacity 0.12s;
 }
 
-.promptChip:hover .promptChipAction {
-  opacity: 1;
-}
-
+.promptChip:hover .promptChipAction,
 .promptChipCopied .promptChipAction {
   opacity: 1;
 }
 
-.promptArrow {
-  color: #9b9aa6;
-  font-size: 16px;
-  line-height: 1;
-  flex-shrink: 0;
-}
-
-/* ── Test checklist ─────────────────────────────────── */
-
-.testChecklist {
-  border-top: 1px dashed rgba(13, 18, 33, 0.1);
-  padding-top: 12px;
-  display: grid;
-  gap: 6px;
-}
-
-.testChecklistTitle {
-  font-size: 11px;
-  font-weight: 800;
-  color: #0d1221;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin: 0;
-}
-
-.testChecklistItems {
-  margin: 0;
-  padding: 0 0 0 16px;
-  display: grid;
-  gap: 4px;
-}
-
-.testChecklistItems li {
-  font-size: 12px;
-  color: #7b7785;
-  line-height: 1.5;
-}
-
-/* ── Trace log ──────────────────────────────────────── */
+/* ── Gateway trace ───────────────────────────────────────── */
 
 .traceHead {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.traceCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: rgba(13, 18, 33, 0.07);
+  color: #5b5a66;
+  font-size: 10px;
+  font-weight: 800;
+  vertical-align: middle;
 }
 
 .traceClearBtn {
@@ -386,14 +295,22 @@
 .traceList {
   border: 1px solid rgba(13, 18, 33, 0.08);
   border-radius: 10px;
-  overflow: hidden;
-  max-height: 220px;
   overflow-y: auto;
-  background: #ffffff;
+  max-height: 280px;
+  background: #fafaf8;
+  scroll-behavior: smooth;
 }
 
 .traceList::-webkit-scrollbar { width: 4px; }
 .traceList::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(13,18,33,0.1); }
+
+.traceEmpty {
+  padding: 20px 16px;
+  font-size: 12px;
+  color: #9b9aa6;
+  line-height: 1.6;
+  text-align: center;
+}
 
 .traceRow {
   display: flex;
@@ -427,7 +344,15 @@
   font-weight: 600;
 }
 
-/* ── Right: browser preview ─────────────────────────── */
+/* ── Misc ────────────────────────────────────────────────── */
+
+.emptyNote {
+  font-size: 13px;
+  color: #9b9aa6;
+  line-height: 1.6;
+}
+
+/* ── Right: browser preview ──────────────────────────────── */
 
 .previewCol {
   position: sticky;
@@ -531,9 +456,14 @@
   font-weight: 800;
 }
 
-/* ── Responsive ─────────────────────────────────────── */
+/* ── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: 1fr; }
   .previewCol { position: static; order: -1; }
+  .tierGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  .tierGrid { grid-template-columns: 1fr; }
 }
