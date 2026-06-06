@@ -210,59 +210,70 @@ function TraceChip({ children, color = "neutral", variant = "soft", icon, style:
 
 // ── Trace card ────────────────────────────────────────────────────────────────
 
-function TraceCard({ entry, seq }: { entry: TraceEntry; seq: number }) {
+type StoredEntryProp = TraceEntry & { receivedAt?: number };
+
+function TraceCard({ entry, seq }: { entry: StoredEntryProp; seq: number }) {
   const [open, setOpen] = useState(false);
   const m = traceRowMeta(entry.icon);
   const statusColor: ChipColor = m.status === "success" ? "success" : m.status === "error" ? "error" : m.status === "warning" ? "warning" : "pending";
+  const timeStr = entry.receivedAt ? new Date(entry.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : null;
 
   return (
     <CollapsiblePrimitive.Root open={open} onOpenChange={setOpen}>
-      <div className={styles.traceCard}>
-        {/* Status dot */}
-        <div className={styles.traceDotWrap}>
-          <div className={styles.traceDot} style={{ background: m.color }} />
-          {m.status === "pending" && <div className={styles.traceDotPulse} style={{ background: m.color }} />}
-        </div>
-
-        {/* Body */}
-        <div className={styles.traceCardBody}>
-          <div className={styles.traceCardRow}>
-            {/* Status icon + title */}
-            <div className={styles.traceCardTitle}>
-              <m.Icon size={13} strokeWidth={2} style={{ color: m.color, flexShrink: 0 }} />
-              <span className={styles.traceCardName}>{m.title}</span>
-            </div>
-
-            {/* Chips */}
-            <div className={styles.traceCardChips}>
-              <TraceChip color="neutral" variant="soft" icon={<m.TypeIcon size={9} strokeWidth={2} />}>
-                {m.type}
-              </TraceChip>
-              <TraceChip color={statusColor} variant="secondary">
-                {m.status}
-              </TraceChip>
-              {entry.ms > 0 && (
-                <TraceChip color="accent" variant="soft">
-                  {formatMs(entry.ms)}
-                </TraceChip>
-              )}
-            </div>
+      {/* Single compact row — whole card is the trigger */}
+      <CollapsiblePrimitive.CollapsibleTrigger asChild>
+        <div className={styles.traceCard} role="button" aria-expanded={open}>
+          <div className={styles.traceDotWrap}>
+            <div className={styles.traceDot} style={{ background: m.color }} />
+            {m.status === "pending" && <div className={styles.traceDotPulse} style={{ background: m.color }} />}
           </div>
 
-          {/* Expand trigger */}
-          <CollapsiblePrimitive.CollapsibleTrigger asChild>
-            <button className={styles.traceExpandBtn}>
-              <ChevronDown size={11} strokeWidth={2.5} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 180ms" }} />
-              {open ? "hide details" : "view details"}
-            </button>
-          </CollapsiblePrimitive.CollapsibleTrigger>
-        </div>
+          <m.Icon size={12} strokeWidth={2} style={{ color: m.color, flexShrink: 0 }} />
+          <span className={styles.traceCardName}>{m.title}</span>
 
-        {/* Sequence number */}
-        <span className={styles.traceSeq}>{seq}</span>
-      </div>
+          <div className={styles.traceCardChips}>
+            <TraceChip color="neutral" variant="soft" icon={<m.TypeIcon size={8} strokeWidth={2} />}>
+              {m.type}
+            </TraceChip>
+            <TraceChip color={statusColor} variant="secondary">{m.status}</TraceChip>
+            {entry.ms > 0 && <TraceChip color="accent" variant="soft">{formatMs(entry.ms)}</TraceChip>}
+          </div>
+
+          <ChevronDown size={10} strokeWidth={2.5} style={{ color: "#9ca3af", marginLeft: "auto", flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 180ms" }} />
+          <span className={styles.traceSeq}>{seq}</span>
+        </div>
+      </CollapsiblePrimitive.CollapsibleTrigger>
 
       <CollapsiblePrimitive.CollapsibleContent className={styles.traceCardDetail}>
+        {/* Metadata grid */}
+        <div className={styles.traceDetailMeta}>
+          <div className={styles.traceDetailMetaItem}>
+            <span className={styles.traceDetailKey}>Event</span>
+            <span className={styles.traceDetailVal}>#{seq}</span>
+          </div>
+          <div className={styles.traceDetailMetaItem}>
+            <span className={styles.traceDetailKey}>Type</span>
+            <span className={styles.traceDetailVal}>{m.type}</span>
+          </div>
+          <div className={styles.traceDetailMetaItem}>
+            <span className={styles.traceDetailKey}>Status</span>
+            <span className={styles.traceDetailVal} style={{ color: m.color }}>{m.status}</span>
+          </div>
+          {entry.ms > 0 && (
+            <div className={styles.traceDetailMetaItem}>
+              <span className={styles.traceDetailKey}>Latency</span>
+              <span className={styles.traceDetailVal}>{formatMs(entry.ms)}</span>
+            </div>
+          )}
+          {timeStr && (
+            <div className={styles.traceDetailMetaItem}>
+              <span className={styles.traceDetailKey}>Time</span>
+              <span className={styles.traceDetailVal}>{timeStr}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Full output */}
         <div className={styles.traceDetailLabel}>Output</div>
         <div className={styles.traceDetailBody}>{entry.text}</div>
       </CollapsiblePrimitive.CollapsibleContent>
@@ -288,7 +299,8 @@ export function LiveTestPage() {
   const [tierCfg, setTierCfg] = useState<SavedTierConfig>(readTierConfig);
   const [liveKey] = useState(readApiKey);
   const [activeTier, setActiveTier] = useState<TierKey>("guest");
-  const [traceLog, setTraceLog] = useState<TraceEntry[]>([]);
+  type StoredEntry = TraceEntry & { receivedAt: number };
+  const [traceLog, setTraceLog] = useState<StoredEntry[]>([]);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
   const [mcpCounts, setMcpCounts] = useState<Record<TierKey, number> | null>(null);
 
@@ -374,7 +386,7 @@ export function LiveTestPage() {
   } : null;
 
   function addTrace(entry: TraceEntry) {
-    setTraceLog((prev) => [entry, ...prev.slice(0, 49)]);
+    setTraceLog((prev) => [{ ...entry, receivedAt: Date.now() }, ...prev.slice(0, 49)]);
   }
 
   function copyPrompt(text: string) {
@@ -544,7 +556,7 @@ export function LiveTestPage() {
             ) : (
               <div className={styles.traceTimeline}>
                 <div className={styles.traceTimelineLine} />
-                {traceLog.map((e, i) => (
+                {traceLog.map((e: StoredEntryProp, i: number) => (
                   <TraceCard key={i} entry={e} seq={traceLog.length - i} />
                 ))}
               </div>

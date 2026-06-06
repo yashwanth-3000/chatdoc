@@ -263,12 +263,12 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 3px;
 }
 
 .traceTimelineLine {
   position: absolute;
-  left: 13px;
+  left: 10px;
   top: 0;
   bottom: 0;
   width: 1px;
@@ -276,22 +276,22 @@
   pointer-events: none;
 }
 
+/* ── Compact single-row card ─────────────────────────────── */
+
 .traceCard {
-  position: relative;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 11px 13px;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
   border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 12px;
+  border-radius: 8px;
   background: #ffffff;
-  transition: box-shadow 140ms, border-color 140ms;
+  cursor: pointer;
+  transition: background 120ms, border-color 120ms;
+  user-select: none;
 }
 
-.traceCard:hover {
-  border-color: rgba(13, 18, 33, 0.14);
-  box-shadow: 0 2px 10px rgba(13, 18, 33, 0.06);
-}
+.traceCard:hover { background: #f9fafb; border-color: rgba(13, 18, 33, 0.13); }
 
 .traceDotWrap {
   position: relative;
@@ -299,83 +299,44 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 8px;
-  margin-top: 3px;
+  width: 7px;
 }
 
 .traceDot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 999px;
   flex-shrink: 0;
 }
 
 .traceDotPulse {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   border-radius: 999px;
-  opacity: 0.25;
+  opacity: 0.2;
   animation: tracePulse 2s ease-in-out infinite;
 }
 
 @keyframes tracePulse {
-  0%, 100% { transform: scale(1); opacity: 0.25; }
-  50%       { transform: scale(1.5); opacity: 0.08; }
-}
-
-.traceCardBody {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.traceCardRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.traceCardTitle {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
+  0%, 100% { transform: scale(1); opacity: 0.2; }
+  50%       { transform: scale(1.5); opacity: 0.07; }
 }
 
 .traceCardName {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 700;
   color: #111827;
   letter-spacing: -0.1px;
+  white-space: nowrap;
 }
 
 .traceCardChips {
   display: flex;
   align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
+  gap: 3px;
+  flex-shrink: 0;
 }
-
-.traceExpandBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #9ca3af;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  transition: color 120ms;
-}
-
-.traceExpandBtn:hover { color: #4b5563; }
 
 .traceSeq {
   flex-shrink: 0;
@@ -384,21 +345,54 @@
   font-size: 9px;
   font-weight: 700;
   user-select: none;
-  margin-top: 3px;
+  min-width: 14px;
+  text-align: right;
 }
 
+/* ── Detail panel (collapsible) ──────────────────────────── */
+
 .traceCardDetail {
-  margin-top: -4px;
-  padding: 10px 13px 11px 33px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  padding: 9px 12px 10px 12px;
   border: 1px solid rgba(13, 18, 33, 0.07);
-  border-top: none;
-  border-radius: 0 0 12px 12px;
+  border-radius: 8px;
   background: #f9fafb;
   overflow: hidden;
 }
 
+.traceDetailMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 9px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.06);
+}
+
+.traceDetailMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.traceDetailKey {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.traceDetailVal {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  font-family: ui-monospace, monospace;
+}
+
 .traceDetailLabel {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -409,12 +403,12 @@
 .traceDetailBody {
   font-family: ui-monospace, monospace;
   font-size: 11px;
-  line-height: 1.65;
+  line-height: 1.6;
   color: #374151;
   background: #ffffff;
   border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 7px;
-  padding: 8px 10px;
+  border-radius: 6px;
+  padding: 7px 9px;
   white-space: pre-wrap;
   word-break: break-word;
 }
