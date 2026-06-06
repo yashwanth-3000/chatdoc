@@ -5,7 +5,7 @@ import styles from "./mini-widget.module.css";
 
 export const BACKEND_URL = (
   process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL || "http://localhost:4000"
-).replace(/\/+$/, "");
+).trim().replace(/\/+$/, "");
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

@@ -10,7 +10,7 @@ type JsonBody = Record<string, unknown>;
 
 const BACKEND_URL = (
   process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL || "http://localhost:4000"
-).replace(/\/+$/, "");
+).trim().replace(/\/+$/, "");
 
 function waitForDemoData() {
   return new Promise((resolve) => window.setTimeout(resolve, 250));
