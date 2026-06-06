@@ -444,6 +444,16 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
         pro:      { model: modelRef, rateLimitPolicy: tierRateLimits.pro,      guardrails: allGuardrails, mcpTools: allMcpTools },
       });
     }
+
+    // Sync addedItems so the browser view shows "✓ applied" for every auto-configured item.
+    // The browser uses index-based keys ("mcpServers-0", "guardrails-1", etc.) — match that format.
+    const autoAdded = new Map<string, string>();
+    allMcpTools.forEach((item, i)    => autoAdded.set(`mcpServers-${i}`,       item.name));
+    allGuardrails.forEach((item, i)  => autoAdded.set(`guardrails-${i}`,        item.name));
+    allRateLimits.forEach((item, i)  => autoAdded.set(`rateLimitConfigs-${i}`,  item.name));
+    if (vms.length === 1 && vms[0]) autoAdded.set(`providerAccounts-0`, vms[0].name);
+    setAddedItems(autoAdded);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inventory]);
 
