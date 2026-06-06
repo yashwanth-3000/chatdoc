@@ -404,4 +404,44 @@ router.post("/", async (req, res) => {
   }
 });
 
+// ── MCP tool counts per tier ──────────────────────────────────────────────────
+// Derived purely from the MCP server's tool definitions — no hardcoding.
+// Guest = tools with no auth requirement
+// Logged-in = guest + tools that need auth but aren't pro-only
+// Pro = all tools
+router.get("/mcp-tools", async (_req, res) => {
+  try {
+    const { openaiTools, authRequired } = await fetchMcpToolDefs();
+    const counts = { guest: 0, loggedIn: 0, pro: 0 };
+    const tools = [];
+
+    for (const tool of openaiTools) {
+      const name = tool.function.name;
+      const desc = (tool.function.description ?? "").toLowerCase();
+      const needsAuth = authRequired.has(name);
+      const isProOnly = needsAuth && (desc.includes("pro tier") || desc.includes("pro only") || /requires.*pro/i.test(desc));
+
+      let tier;
+      if (!needsAuth) {
+        tier = "guest";
+        counts.guest++;
+        counts.loggedIn++;
+        counts.pro++;
+      } else if (isProOnly) {
+        tier = "pro";
+        counts.pro++;
+      } else {
+        tier = "loggedIn";
+        counts.loggedIn++;
+        counts.pro++;
+      }
+      tools.push({ name, tier });
+    }
+
+    res.json({ counts, tools, total: openaiTools.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export { router as chatRouter };

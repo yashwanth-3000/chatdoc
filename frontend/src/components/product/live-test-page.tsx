@@ -140,6 +140,17 @@ export function LiveTestPage() {
   const [activeTier, setActiveTier] = useState<TierKey>("guest");
   const [traceLog, setTraceLog] = useState<TraceEntry[]>([]);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
+  const [mcpCounts, setMcpCounts] = useState<Record<TierKey, number> | null>(null);
+
+  // Fetch real tool counts per tier from MCP server (via backend)
+  useEffect(() => {
+    fetch(`${BACKEND_URL}/api/chat/mcp-tools`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.counts) setMcpCounts(data.counts as Record<TierKey, number>);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const saved = readTierConfig();
@@ -365,10 +376,10 @@ export function LiveTestPage() {
                             <strong>{t.guardrails.length}</strong>
                           </div>
                         )}
-                        {t.mcpTools.length > 0 && (
+                        {(mcpCounts ? mcpCounts[tier] > 0 : t.mcpTools.length > 0) && (
                           <div className={styles.tierCardRow}>
                             <span>MCP tools</span>
-                            <strong>{t.mcpTools.length}</strong>
+                            <strong>{mcpCounts ? mcpCounts[tier] : t.mcpTools.length}</strong>
                           </div>
                         )}
                       </div>
