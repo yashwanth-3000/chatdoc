@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   Bot, Gauge, ShieldCheck, Plug2, Globe, CheckCircle2,
   WifiOff, Clock, Copy, Check, Cpu,
+  Wrench, FileText, RefreshCw, User, Zap, Terminal, XCircle, type LucideIcon,
 } from "lucide-react";
 import { MiniWidget, BACKEND_URL } from "./mini-widget";
 import type { LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
@@ -115,20 +116,20 @@ function formatMs(ms: number): string {
   return `${ms}ms`;
 }
 
-type TraceMeta = { cls: string; badge: string; dot: string };
+type TraceMeta = { cls: string; Icon: LucideIcon; color: string };
 
 function traceRowMeta(icon: string): TraceMeta {
-  if (icon === "✅") return { cls: styles.traceRowSuccess, badge: "DONE",  dot: "#22c55e" };
-  if (icon === "🚫" || icon === "🔴") return { cls: styles.traceRowError,  badge: "ERR",   dot: "#ef4444" };
-  if (icon === "🔧") return { cls: styles.traceRowTool,   badge: "TOOL",  dot: "#3b82f6" };
-  if (icon === "📄") return { cls: styles.traceRowResult, badge: "RES",   dot: "#06b6d4" };
-  if (icon === "🛡️") return { cls: styles.traceRowGuard,  badge: "GUARD", dot: "#f59e0b" };
-  if (icon === "🤖" || icon === "💬") return { cls: styles.traceRowModel, badge: "LLM", dot: "#a855f7" };
-  if (icon === "🔌" || icon === "🔩") return { cls: styles.traceRowMcp,   badge: "MCP",   dot: "#6366f1" };
-  if (icon === "🔁") return { cls: styles.traceRowChain,  badge: "LOOP",  dot: "#8b5cf6" };
-  if (icon === "👤") return { cls: styles.traceRowTier,   badge: "TIER",  dot: "#52525b" };
-  if (icon === "⚡") return { cls: styles.traceRowDefault, badge: "REQ",  dot: "#71717a" };
-  return { cls: styles.traceRowDefault, badge: "LOG", dot: "#3f3f46" };
+  if (icon === "✅")                   return { cls: styles.traceRowSuccess, Icon: CheckCircle2, color: "#22c55e" };
+  if (icon === "🚫" || icon === "🔴") return { cls: styles.traceRowError,   Icon: XCircle,      color: "#ef4444" };
+  if (icon === "🔧")                   return { cls: styles.traceRowTool,    Icon: Wrench,       color: "#3b82f6" };
+  if (icon === "📄")                   return { cls: styles.traceRowResult,  Icon: FileText,     color: "#06b6d4" };
+  if (icon === "🛡️")                  return { cls: styles.traceRowGuard,   Icon: ShieldCheck,  color: "#f59e0b" };
+  if (icon === "🤖" || icon === "💬") return { cls: styles.traceRowModel,   Icon: Bot,          color: "#a855f7" };
+  if (icon === "🔌" || icon === "🔩") return { cls: styles.traceRowMcp,     Icon: Plug2,        color: "#6366f1" };
+  if (icon === "🔁")                   return { cls: styles.traceRowChain,   Icon: RefreshCw,    color: "#8b5cf6" };
+  if (icon === "👤")                   return { cls: styles.traceRowTier,    Icon: User,         color: "#52525b" };
+  if (icon === "⚡")                   return { cls: styles.traceRowDefault, Icon: Zap,          color: "#71717a" };
+  return                                        { cls: styles.traceRowDefault, Icon: Terminal,    color: "#3f3f46" };
 }
 
 // ── Sample prompts ────────────────────────────────────────────────────────────
@@ -398,12 +399,14 @@ export function LiveTestPage() {
                 </div>
               ) : (
                 traceLog.map((e, i) => {
-                  const { cls, badge, dot } = traceRowMeta(e.icon);
+                  const { cls, Icon, color } = traceRowMeta(e.icon);
                   const seq = traceLog.length - i;
                   return (
                     <div key={i} className={`${styles.traceRow} ${cls}`} title={e.text}>
                       <span className={styles.traceSeq}>{seq}</span>
-                      <span className={styles.traceBadge} style={{ background: dot + "22", color: dot, borderColor: dot + "44" }}>{badge}</span>
+                      <span className={styles.traceIconWrap} style={{ color }}>
+                        <Icon size={11} strokeWidth={2} />
+                      </span>
                       <span className={styles.traceText}>{e.text}</span>
                       {e.ms > 0 && <span className={styles.traceMs}>{formatMs(e.ms)}</span>}
                     </div>
