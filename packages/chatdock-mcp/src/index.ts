@@ -5,16 +5,34 @@ import { z } from "zod";
 
 // ── Tier resolution via TrueFoundry ──────────────────────────────────────────
 //
-// Tier is NEVER accepted from the caller — it is always resolved by calling
-// TrueFoundry's API with the user's API key.  The rate-limit config names
-// ("guest-...", "logged-in-...", "pro-...") in the workspace determine the tier.
+// Tier is NEVER accepted from the caller — it is always resolved by:
+//   1. Calling TrueFoundry to confirm the key is valid (401/403 → guest)
+//   2. Decoding the JWT role — tenant-admin/admin → pro
+//   3. Checking rate-limit config names in the workspace → pro / loggedIn
+//   4. Any authenticated key with no configs → loggedIn (minimum for valid key)
 
 type Tier = "guest" | "loggedIn" | "pro";
 const TIER_RANK: Record<Tier, number> = { guest: 0, loggedIn: 1, pro: 2 };
 
 interface TierResult {
   tier: Tier;
+  resolvedBy: string;
   error?: string;
+}
+
+function tierFromJwt(apiKey: string): Tier | null {
+  try {
+    const parts = apiKey.split(".");
+    if (parts.length !== 3) return null;
+    const pad = parts[1] + "=".repeat((4 - (parts[1].length % 4)) % 4);
+    const payload = JSON.parse(Buffer.from(pad, "base64url").toString("utf8")) as Record<string, unknown>;
+    const roles = (payload.roles ?? []) as string[];
+    if (roles.includes("tenant-admin") || roles.includes("admin")) return "pro";
+    // Any authenticated non-admin is at minimum loggedIn
+    return "loggedIn";
+  } catch {
+    return null;
+  }
 }
 
 async function resolveTierFromTrueFoundry(
@@ -26,40 +44,47 @@ async function resolveTierFromTrueFoundry(
 
   try {
     const res = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${apiKey}` },
       signal: AbortSignal.timeout(8000),
     });
 
     if (res.status === 401 || res.status === 403) {
-      return { tier: "guest", error: "Invalid or revoked TrueFoundry API key — access limited to Guest tier." };
+      return { tier: "guest", resolvedBy: "truefoundry-auth", error: "Invalid or revoked API key." };
     }
-
     if (!res.ok) {
-      return { tier: "guest", error: `TrueFoundry returned HTTP ${res.status}. Defaulting to Guest tier.` };
+      return { tier: "guest", resolvedBy: "truefoundry-auth", error: `TrueFoundry returned HTTP ${res.status}.` };
     }
 
-    // Rate-limit config IDs follow the naming convention:
-    //   "guests-100rpm"   → guest
-    //   "logged-in-500rpm" → loggedIn
-    //   "pro-unlimited"   → pro
-    const data = (await res.json()) as unknown;
-    const configs: Array<{ id: string }> =
-      Array.isArray(data) ? data :
-      (data as Record<string, unknown>)?.data as Array<{ id: string }> ?? [];
+    // Key is valid — first check role from JWT (tenant-admin → pro)
+    const jwtTier = tierFromJwt(apiKey);
+    if (jwtTier === "pro") {
+      return { tier: "pro", resolvedBy: "jwt-role:tenant-admin" };
+    }
 
-    const ids = configs.map((c) => c.id?.toLowerCase() ?? "");
+    // Then check rate-limit config names in the workspace
+    // (handles empty body safely — empty response = no configs, not an error)
+    const text = await res.text();
+    if (text.trim()) {
+      try {
+        const data = JSON.parse(text) as unknown;
+        const configs: Array<{ id: string }> =
+          Array.isArray(data) ? data :
+          ((data as Record<string, unknown>)?.data as Array<{ id: string }>) ?? [];
+        const ids = configs.map((c) => (c.id ?? "").toLowerCase());
+        if (ids.some((id) => id.includes("pro"))) {
+          return { tier: "pro", resolvedBy: "rate-limit-config:pro" };
+        }
+        if (ids.some((id) => id.includes("logged") || id.includes("login"))) {
+          return { tier: "loggedIn", resolvedBy: "rate-limit-config:loggedIn" };
+        }
+      } catch { /* invalid JSON — fall through */ }
+    }
 
-    if (ids.some((id) => id.includes("pro"))) return { tier: "pro" };
-    if (ids.some((id) => id.includes("logged") || id.includes("login"))) return { tier: "loggedIn" };
-
-    // Key authenticated successfully → at minimum loggedIn
-    return { tier: "loggedIn" };
+    // Authenticated key with no configs → loggedIn minimum
+    return { tier: jwtTier ?? "loggedIn", resolvedBy: "truefoundry-authenticated" };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return { tier: "guest", error: `Could not reach TrueFoundry (${msg}). Defaulting to Guest tier.` };
+    return { tier: "guest", resolvedBy: "network-error", error: `Could not reach TrueFoundry: ${msg}` };
   }
 }
 
@@ -67,14 +92,14 @@ function hasAccess(resolved: Tier, required: Tier): boolean {
   return TIER_RANK[resolved] >= TIER_RANK[required];
 }
 
-function accessDenied(tool: string, required: Tier, resolvedTier: Tier, tfError?: string): string {
+function accessDenied(tool: string, required: Tier, result: TierResult): string {
   const labels: Record<Tier, string> = { guest: "Guest", loggedIn: "Logged-In", pro: "Pro" };
   const lines = [
     `🔒 Access denied — "${tool}" requires ${labels[required]} tier or higher.`,
     ``,
-    `TrueFoundry reported your tier as: **${labels[resolvedTier]}**`,
+    `TrueFoundry resolved your tier as: **${labels[result.tier]}** (via ${result.resolvedBy})`,
   ];
-  if (tfError) lines.push(`Reason: ${tfError}`);
+  if (result.error) lines.push(`Detail: ${result.error}`);
   lines.push(
     ``,
     `How to upgrade:`,
@@ -761,9 +786,9 @@ function createMcpServer(): McpServer {
       ...authParams,
     },
     async ({ query, truefoundry_api_key, control_plane_url }) => {
-      const { tier, error } = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
-      if (!hasAccess(tier, "loggedIn")) {
-        return { content: [{ type: "text", text: accessDenied("search_docs_standard", "loggedIn", tier, error) }] };
+      const tfResult = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
+      if (!hasAccess(tfResult.tier, "loggedIn")) {
+        return { content: [{ type: "text", text: accessDenied("search_docs_standard", "loggedIn", tfResult) }] };
       }
       return { content: [{ type: "text", text: searchDocs(query, "standard") }] };
     }
@@ -789,9 +814,9 @@ function createMcpServer(): McpServer {
       cornerRadius:   z.number().min(8).max(24).optional().describe("8–24 px"),
     },
     async ({ truefoundry_api_key, control_plane_url, ...input }) => {
-      const { tier, error } = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
-      if (!hasAccess(tier, "loggedIn")) {
-        return { content: [{ type: "text", text: accessDenied("generate_widget_config", "loggedIn", tier, error) }] };
+      const tfResult = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
+      if (!hasAccess(tfResult.tier, "loggedIn")) {
+        return { content: [{ type: "text", text: accessDenied("generate_widget_config", "loggedIn", tfResult) }] };
       }
       return { content: [{ type: "text", text: generateWidgetConfig(input) }] };
     }
@@ -806,9 +831,9 @@ function createMcpServer(): McpServer {
       ...authParams,
     },
     async ({ query, truefoundry_api_key, control_plane_url }) => {
-      const { tier, error } = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
-      if (!hasAccess(tier, "pro")) {
-        return { content: [{ type: "text", text: accessDenied("search_docs_expert", "pro", tier, error) }] };
+      const tfResult = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
+      if (!hasAccess(tfResult.tier, "pro")) {
+        return { content: [{ type: "text", text: accessDenied("search_docs_expert", "pro", tfResult) }] };
       }
       return { content: [{ type: "text", text: searchDocs(query, "expert") }] };
     }
@@ -826,9 +851,9 @@ function createMcpServer(): McpServer {
       pro_model:        z.string().describe('Virtual model ID for pro users'),
     },
     async ({ truefoundry_api_key, control_plane_url, gateway_url, guest_model, logged_in_model, pro_model }) => {
-      const { tier, error } = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
-      if (!hasAccess(tier, "pro")) {
-        return { content: [{ type: "text", text: accessDenied("get_integration_blueprint", "pro", tier, error) }] };
+      const tfResult = await resolveTierFromTrueFoundry(control_plane_url, truefoundry_api_key);
+      if (!hasAccess(tfResult.tier, "pro")) {
+        return { content: [{ type: "text", text: accessDenied("get_integration_blueprint", "pro", tfResult) }] };
       }
       return {
         content: [{
