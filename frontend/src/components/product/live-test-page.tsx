@@ -212,15 +212,48 @@ function TraceChip({ children, color = "neutral", variant = "soft", icon, style:
 
 type StoredEntryProp = TraceEntry & { receivedAt?: number };
 
+function deriveDisplayTitle(icon: string, text: string): string {
+  if (icon === "✅") {
+    const m = text.match(/Done\s*[→-]\s*(.+?)\s*\(/);
+    return m ? m[1] : "Request complete";
+  }
+  if (icon === "⚡") {
+    const m = text.match(/Calling\s+(.+?)[…\.]/);
+    return m ? m[1] : "Gateway request";
+  }
+  if (icon === "🤖") {
+    const m = text.match(/requested\s+(\d+\s+tool[^)]*)/i);
+    return m ? `Model: ${m[1]}` : "Model response";
+  }
+  if (icon === "💬") return "Generating answer";
+  if (icon === "🔧") {
+    const m = text.match(/MCP call\s*[→-]\s*(.+)/);
+    return m ? m[1].trim() : "Tool call";
+  }
+  if (icon === "📄") {
+    const m = text.match(/MCP:\s*(.+?)\s*[→-]/);
+    return m ? m[1].trim() : "Tool result";
+  }
+  if (icon === "🔩" || icon === "🔌") {
+    const count = (text.match(/\[([^\]]+)\]/)?.[1]?.split(",").length) ?? 0;
+    return count ? `${count} tools loaded` : "MCP tools";
+  }
+  if (icon === "👤") {
+    const m = text.match(/rule:\s*"([^"]+)"/);
+    return m ? `Tier: ${m[1]}` : "Tier resolved";
+  }
+  return traceRowMeta(icon).title;
+}
+
 function TraceCard({ entry, seq }: { entry: StoredEntryProp; seq: number }) {
   const [open, setOpen] = useState(false);
   const m = traceRowMeta(entry.icon);
+  const displayTitle = deriveDisplayTitle(entry.icon, entry.text);
   const statusColor: ChipColor = m.status === "success" ? "success" : m.status === "error" ? "error" : m.status === "warning" ? "warning" : "pending";
   const timeStr = entry.receivedAt ? new Date(entry.receivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : null;
 
   return (
     <CollapsiblePrimitive.Root open={open} onOpenChange={setOpen}>
-      {/* Single compact row — whole card is the trigger */}
       <CollapsiblePrimitive.CollapsibleTrigger asChild>
         <div className={styles.traceCard} role="button" aria-expanded={open}>
           <div className={styles.traceDotWrap}>
@@ -229,7 +262,7 @@ function TraceCard({ entry, seq }: { entry: StoredEntryProp; seq: number }) {
           </div>
 
           <m.Icon size={12} strokeWidth={2} style={{ color: m.color, flexShrink: 0 }} />
-          <span className={styles.traceCardName}>{m.title}</span>
+          <span className={styles.traceCardName}>{displayTitle}</span>
 
           <div className={styles.traceCardChips}>
             <TraceChip color="neutral" variant="soft" icon={<m.TypeIcon size={8} strokeWidth={2} />}>
