@@ -115,17 +115,20 @@ function formatMs(ms: number): string {
   return `${ms}ms`;
 }
 
-function traceRowVariant(icon: string): string {
-  if (icon === "✅") return styles.traceRowSuccess;
-  if (icon === "🚫" || icon === "🔴") return styles.traceRowError;
-  if (icon === "🔧") return styles.traceRowTool;
-  if (icon === "📄") return styles.traceRowResult;
-  if (icon === "🛡️") return styles.traceRowGuard;
-  if (icon === "🤖" || icon === "💬") return styles.traceRowModel;
-  if (icon === "🔌") return styles.traceRowMcp;
-  if (icon === "🔁") return styles.traceRowChain;
-  if (icon === "👤") return styles.traceRowTier;
-  return styles.traceRowDefault;
+type TraceMeta = { cls: string; badge: string; dot: string };
+
+function traceRowMeta(icon: string): TraceMeta {
+  if (icon === "✅") return { cls: styles.traceRowSuccess, badge: "DONE",  dot: "#22c55e" };
+  if (icon === "🚫" || icon === "🔴") return { cls: styles.traceRowError,  badge: "ERR",   dot: "#ef4444" };
+  if (icon === "🔧") return { cls: styles.traceRowTool,   badge: "TOOL",  dot: "#3b82f6" };
+  if (icon === "📄") return { cls: styles.traceRowResult, badge: "RES",   dot: "#06b6d4" };
+  if (icon === "🛡️") return { cls: styles.traceRowGuard,  badge: "GUARD", dot: "#f59e0b" };
+  if (icon === "🤖" || icon === "💬") return { cls: styles.traceRowModel, badge: "LLM", dot: "#a855f7" };
+  if (icon === "🔌" || icon === "🔩") return { cls: styles.traceRowMcp,   badge: "MCP",   dot: "#6366f1" };
+  if (icon === "🔁") return { cls: styles.traceRowChain,  badge: "LOOP",  dot: "#8b5cf6" };
+  if (icon === "👤") return { cls: styles.traceRowTier,   badge: "TIER",  dot: "#52525b" };
+  if (icon === "⚡") return { cls: styles.traceRowDefault, badge: "REQ",  dot: "#71717a" };
+  return { cls: styles.traceRowDefault, badge: "LOG", dot: "#3f3f46" };
 }
 
 // ── Sample prompts ────────────────────────────────────────────────────────────
@@ -394,13 +397,18 @@ export function LiveTestPage() {
                   <span>Send a message to see model routing, MCP tool calls, guardrail checks, and latency.</span>
                 </div>
               ) : (
-                traceLog.map((e, i) => (
-                  <div key={i} className={`${styles.traceRow} ${traceRowVariant(e.icon)}`}>
-                    <span className={styles.traceIcon}>{e.icon}</span>
-                    <span className={styles.traceText}>{e.text}</span>
-                    <span className={styles.traceMs}>{formatMs(e.ms)}</span>
-                  </div>
-                ))
+                traceLog.map((e, i) => {
+                  const { cls, badge, dot } = traceRowMeta(e.icon);
+                  const seq = traceLog.length - i;
+                  return (
+                    <div key={i} className={`${styles.traceRow} ${cls}`} title={e.text}>
+                      <span className={styles.traceSeq}>{seq}</span>
+                      <span className={styles.traceBadge} style={{ background: dot + "22", color: dot, borderColor: dot + "44" }}>{badge}</span>
+                      <span className={styles.traceText}>{e.text}</span>
+                      {e.ms > 0 && <span className={styles.traceMs}>{formatMs(e.ms)}</span>}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

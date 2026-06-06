@@ -274,62 +274,88 @@
 }
 
 .traceRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 7px 14px 7px 11px;
+  display: grid;
+  grid-template-columns: 18px 44px 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 12px 6px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  border-left: 3px solid transparent;
+  border-left: 2px solid transparent;
   transition: background 80ms;
 }
 
-.traceRow:hover { background: rgba(255, 255, 255, 0.025); }
+.traceRow:hover { background: rgba(255, 255, 255, 0.03); }
 .traceRow:last-child { border-bottom: none; }
 
-.traceIcon { flex-shrink: 0; font-size: 12px; line-height: 1.6; }
+.traceSeq {
+  flex-shrink: 0;
+  color: #3d3c4e;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: right;
+  padding-top: 1px;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.traceBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, monospace;
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
 
 .traceText {
-  flex: 1;
   color: #a8a7b8;
   font-family: ui-monospace, monospace;
   font-size: 10.5px;
-  line-height: 1.65;
-  word-break: break-word;
-  white-space: pre-wrap;
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .traceMs {
   flex-shrink: 0;
   color: #3d3c4e;
-  font-size: 10px;
+  font-size: 9.5px;
   font-family: ui-monospace, monospace;
-  font-weight: 600;
-  padding-top: 3px;
-  min-width: 28px;
+  font-weight: 700;
   text-align: right;
+  white-space: nowrap;
 }
 
 /* Row variants */
-.traceRowDefault  { border-left-color: #1e1e2e; }
-.traceRowSuccess  { border-left-color: #16a34a; }
+.traceRowDefault  { border-left-color: #27272a; }
+.traceRowSuccess  { border-left-color: #22c55e; }
 .traceRowSuccess .traceText  { color: #86efac; }
-.traceRowSuccess .traceMs   { color: #4ade80; }
-.traceRowError    { border-left-color: #dc2626; }
-.traceRowError .traceText   { color: #fca5a5; }
-.traceRowTool     { border-left-color: #2563eb; }
-.traceRowTool .traceText    { color: #93c5fd; }
-.traceRowResult   { border-left-color: #0891b2; }
-.traceRowResult .traceText  { color: #67e8f9; }
-.traceRowGuard    { border-left-color: #d97706; }
-.traceRowGuard .traceText   { color: #fcd34d; }
-.traceRowModel    { border-left-color: #7c3aed; }
-.traceRowModel .traceText   { color: #c4b5fd; }
-.traceRowMcp      { border-left-color: #4f46e5; }
-.traceRowMcp .traceText     { color: #a5b4fc; }
-.traceRowChain    { border-left-color: #9333ea; }
-.traceRowChain .traceText   { color: #d8b4fe; }
-.traceRowTier     { border-left-color: #27272a; }
-.traceRowTier .traceText    { color: #71717a; }
+.traceRowSuccess .traceMs    { color: #4ade80; }
+.traceRowError    { border-left-color: #ef4444; }
+.traceRowError .traceText    { color: #fca5a5; }
+.traceRowTool     { border-left-color: #3b82f6; }
+.traceRowTool .traceText     { color: #93c5fd; }
+.traceRowResult   { border-left-color: #06b6d4; }
+.traceRowResult .traceText   { color: #67e8f9; }
+.traceRowGuard    { border-left-color: #f59e0b; }
+.traceRowGuard .traceText    { color: #fcd34d; }
+.traceRowModel    { border-left-color: #a855f7; }
+.traceRowModel .traceText    { color: #d8b4fe; }
+.traceRowMcp      { border-left-color: #6366f1; }
+.traceRowMcp .traceText      { color: #a5b4fc; }
+.traceRowChain    { border-left-color: #8b5cf6; }
+.traceRowChain .traceText    { color: #c4b5fd; }
+.traceRowTier     { border-left-color: #3f3f46; }
+.traceRowTier .traceText     { color: #71717a; }
 
 /* ── Sample prompts ──────────────────────────────────────── */
 

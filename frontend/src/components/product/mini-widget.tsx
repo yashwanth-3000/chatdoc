@@ -76,13 +76,20 @@ export function closedTransform(anim: AnimationStyle): string {
 
 function parseInline(str: string, baseKey: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
-  const re = /\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`/g;
+  // Handle links [text](url), bold, italic, inline code
+  const re = /\[([^\]]+)\]\(([^)]+)\)|\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`/g;
   let last = 0; let m; let i = 0;
   while ((m = re.exec(str)) !== null) {
     if (m.index > last) parts.push(str.slice(last, m.index));
-    if (m[1] !== undefined) parts.push(<strong key={`${baseKey}-b${i++}`}>{m[1]}</strong>);
-    else if (m[2] !== undefined) parts.push(<em key={`${baseKey}-i${i++}`}>{m[2]}</em>);
-    else if (m[3] !== undefined) parts.push(<code key={`${baseKey}-c${i++}`} style={{ fontFamily: "monospace", fontSize: "0.88em", background: "rgba(0,0,0,0.12)", borderRadius: 3, padding: "0 3px" }}>{m[3]}</code>);
+    if (m[1] !== undefined) {
+      parts.push(<a key={`${baseKey}-a${i++}`} href={m[2]} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "underline", opacity: 0.85 }}>{m[1]}</a>);
+    } else if (m[3] !== undefined) {
+      parts.push(<strong key={`${baseKey}-b${i++}`}>{m[3]}</strong>);
+    } else if (m[4] !== undefined) {
+      parts.push(<em key={`${baseKey}-i${i++}`}>{m[4]}</em>);
+    } else if (m[5] !== undefined) {
+      parts.push(<code key={`${baseKey}-c${i++}`} style={{ fontFamily: "ui-monospace,monospace", fontSize: "0.85em", background: "rgba(0,0,0,0.13)", borderRadius: 3, padding: "1px 4px" }}>{m[5]}</code>);
+    }
     last = re.lastIndex;
   }
   if (last < str.length) parts.push(str.slice(last));
@@ -91,45 +98,88 @@ function parseInline(str: string, baseKey: string): React.ReactNode[] {
 
 function renderMarkdown(text: string, textColor: string): React.ReactNode {
   const lines = text.split("\n");
-  const out: React.ReactNode[] = [];
-  const listBuf: React.ReactNode[] = [];
-  let k = 0;
+  const blocks: React.ReactNode[] = [];
+  let i = 0; let k = 0;
 
-  function flushList() {
-    if (!listBuf.length) return;
-    out.push(
-      <ul key={`ul${k++}`} style={{ margin: "4px 0 4px 14px", padding: 0, display: "grid", gap: 2 }}>
-        {listBuf.splice(0)}
-      </ul>
-    );
-  }
+  while (i < lines.length) {
+    const line = lines[i];
 
-  for (const line of lines) {
-    const isBullet = /^[-•*] /.test(line);
-    if (isBullet) {
-      listBuf.push(
-        <li key={`li${k++}`} style={{ listStyle: "disc", lineHeight: 1.5 }}>
-          {parseInline(line.replace(/^[-•*] /, ""), `li${k}`)}
-        </li>
+    // Fenced code block
+    if (/^```/.test(line)) {
+      const lang = line.slice(3).trim();
+      const codeLines: string[] = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) { codeLines.push(lines[i]); i++; }
+      blocks.push(
+        <pre key={`pre${k++}`} style={{
+          background: "rgba(0,0,0,0.11)", borderRadius: 6, padding: "9px 11px",
+          margin: "5px 0", overflowX: "auto", fontFamily: "ui-monospace,monospace",
+          fontSize: "0.82em", lineHeight: 1.55, whiteSpace: "pre",
+          border: "1px solid rgba(0,0,0,0.08)",
+        }}>
+          {lang && <div style={{ color: "rgba(0,0,0,0.35)", fontSize: "0.82em", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.4px" }}>{lang}</div>}
+          <code>{codeLines.join("\n")}</code>
+        </pre>
       );
-    } else {
-      flushList();
-      if (line.trim() === "") {
-        out.push(<div key={`sp${k++}`} style={{ height: 4 }} />);
-      } else {
-        out.push(
-          <div key={`ln${k++}`} style={{ lineHeight: 1.5 }}>
-            {parseInline(line, `ln${k}`)}
-          </div>
-        );
-      }
+      i++; continue;
     }
+
+    // Horizontal rule
+    if (/^[-*_]{3,}$/.test(line.trim())) {
+      blocks.push(<hr key={`hr${k++}`} style={{ border: "none", borderTop: "1px solid rgba(0,0,0,0.1)", margin: "7px 0" }} />);
+      i++; continue;
+    }
+
+    // Headings
+    const hm = line.match(/^(#{1,3}) (.+)/);
+    if (hm) {
+      const lvl = hm[1].length;
+      const sz = lvl === 1 ? "1.08em" : lvl === 2 ? "1.04em" : "1em";
+      blocks.push(
+        <div key={`h${k++}`} style={{ fontSize: sz, fontWeight: 700, lineHeight: 1.4, marginTop: 6, marginBottom: 1, color: textColor }}>
+          {parseInline(hm[2], `h${k}`)}
+        </div>
+      );
+      i++; continue;
+    }
+
+    // Bullet list — collect consecutive
+    if (/^[-•*] /.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^[-•*] /.test(lines[i])) {
+        const txt = lines[i].replace(/^[-•*] /, "");
+        items.push(<li key={`li${k++}`} style={{ listStyle: "disc", lineHeight: 1.55 }}>{parseInline(txt, `li${k}`)}</li>);
+        i++;
+      }
+      blocks.push(<ul key={`ul${k++}`} style={{ margin: "4px 0 4px 16px", padding: 0 }}>{items}</ul>);
+      continue;
+    }
+
+    // Numbered list — collect consecutive
+    if (/^\d+\. /.test(line)) {
+      const items: React.ReactNode[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        const txt = lines[i].replace(/^\d+\. /, "");
+        items.push(<li key={`oli${k++}`} style={{ listStyle: "decimal", lineHeight: 1.55 }}>{parseInline(txt, `oli${k}`)}</li>);
+        i++;
+      }
+      blocks.push(<ol key={`ol${k++}`} style={{ margin: "4px 0 4px 16px", padding: 0 }}>{items}</ol>);
+      continue;
+    }
+
+    // Empty line
+    if (line.trim() === "") { blocks.push(<div key={`sp${k++}`} style={{ height: 5 }} />); i++; continue; }
+
+    // Paragraph
+    blocks.push(
+      <div key={`p${k++}`} style={{ lineHeight: 1.55 }}>{parseInline(line, `p${k}`)}</div>
+    );
+    i++;
   }
-  flushList();
 
   return (
-    <div style={{ color: textColor, fontSize: "inherit", display: "grid", gap: 1 }}>
-      {out}
+    <div style={{ color: textColor, fontSize: "inherit", display: "grid", gap: 2 }}>
+      {blocks}
     </div>
   );
 }
