@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { AppFrame } from "@/components/product/app-frame";
-import { ChatbotBuilder } from "@/components/product/chatbot-builder";
+import { PublishPage } from "@/components/product/publish-page";
 
 export const metadata: Metadata = {
-  title: "Final Builder - ChatDock",
-  description: "Finalize a resilient website chatbot with model fallback, MCP tools, budgets, guardrails, and embed output.",
+  title: "Publish — ChatDock",
+  description: "Install the chatdock-widget package and embed your configured AI chatbot in minutes.",
 };
 
 export default function FinalBuilderPage() {
   return (
     <AppFrame currentPage="builder">
-      <ChatbotBuilder />
+      <PublishPage />
     </AppFrame>
   );
 }

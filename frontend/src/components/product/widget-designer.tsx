@@ -318,6 +318,11 @@ function SidebarSection({
 
 export function WidgetDesigner() {
   const [widget, setWidget] = useState<WidgetState>(initialWidget);
+
+  // Keep sessionStorage in sync so the Publish page can read the latest config
+  useEffect(() => {
+    try { sessionStorage.setItem("chatdock_widget_config", JSON.stringify(widget)); } catch { /* ignore */ }
+  }, [widget]);
   const [isOpen, setIsOpen] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [draft, setDraft] = useState("");
@@ -454,6 +459,11 @@ export function WidgetDesigner() {
           <i />
           <div className={styles.stepNode}>
             <span>3</span>
+            <strong>Live test</strong>
+          </div>
+          <i />
+          <div className={styles.stepNode}>
+            <span>4</span>
             <strong>Publish</strong>
           </div>
         </div>
@@ -468,7 +478,7 @@ export function WidgetDesigner() {
           <Link className={styles.secondaryButton} href="/builder">
             Back
           </Link>
-          <Link className={styles.primaryButton} href="/builder/step-two">
+          <Link className={styles.primaryButton} href="/builder/step-two/existing-foundry-user">
             Continue
           </Link>
         </div>
@@ -648,7 +658,7 @@ export function WidgetDesigner() {
           </div>
 
           <div className={styles.controlsFooter}>
-            <Link className={styles.primaryButton} href="/builder/step-two">
+            <Link className={styles.primaryButton} href="/builder/step-two/existing-foundry-user">
               Continue to Step 2
             </Link>
           </div>

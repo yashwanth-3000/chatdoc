@@ -31,7 +31,7 @@
 
 .stepRail {
   display: grid;
-  grid-template-columns: auto minmax(80px, 1fr) auto minmax(80px, 1fr) auto;
+  grid-template-columns: auto minmax(40px, 1fr) auto minmax(40px, 1fr) auto minmax(40px, 1fr) auto;
   align-items: center;
   gap: 10px;
   grid-column: 1 / -1;
@@ -1244,7 +1244,7 @@
   }
 
   .stepRail {
-    grid-template-columns: auto minmax(18px, 1fr) auto minmax(18px, 1fr) auto;
+    grid-template-columns: auto minmax(10px, 1fr) auto minmax(10px, 1fr) auto minmax(10px, 1fr) auto;
     gap: 7px;
   }
 

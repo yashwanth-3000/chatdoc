@@ -31,10 +31,11 @@ export type FoundryInventorySection = {
   key: string;
   title: string;
   description: string;
-  status: "ok" | "error";
+  status: "ok" | "error" | "unavailable";
   count: number;
   records?: unknown[];
   raw?: unknown;
+  resolvedPath?: string;
   error?: {
     status: number;
     message: string;

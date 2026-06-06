@@ -1,6 +1,9 @@
 # dependencies
 frontend/node_modules/
 backend/node_modules/
+packages/*/node_modules/
+frontend/.agents/
+frontend/skills-lock.json
 
 # build outputs
 frontend/.next/

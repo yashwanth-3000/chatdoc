@@ -1,0 +1,450 @@
+/* ── Two-column layout — mirrors the step 1 / publish page pattern ── */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Left: controls col ─────────────────────────────── */
+
+.controlsCol {
+  display: grid;
+  gap: 0;
+}
+
+.section {
+  display: grid;
+  gap: 12px;
+  padding: 22px 0;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.07);
+}
+
+.section:last-child { border-bottom: none; }
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0d1221;
+  line-height: 1.2;
+}
+
+.sectionSub {
+  font-size: 13px;
+  font-weight: 500;
+  color: #7b7785;
+}
+
+/* ── Connection card ────────────────────────────────── */
+
+.connCard {
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fcfbfa;
+  display: grid;
+  gap: 8px;
+}
+
+.connRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.connKey {
+  color: #7b7785;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 10px;
+}
+
+.connVal {
+  color: #0d1221;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.connStatus {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f6b54;
+}
+
+.connDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #0f6b54;
+  flex-shrink: 0;
+}
+
+.connEmpty {
+  font-size: 13px;
+  color: #9b9aa6;
+  line-height: 1.6;
+}
+
+/* ── Tier policy grid (Break It — Part 1) ───────────── */
+
+.tierPolicyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tierPolicyCard {
+  display: grid;
+  gap: 8px;
+  border: 1.5px solid rgba(13, 18, 33, 0.09);
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fcfbfa;
+  transition: border-color 140ms, background 140ms;
+}
+
+.tierPolicyCardActive {
+  background: #ffffff;
+}
+
+.tierPolicyBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  width: fit-content;
+}
+
+.tierPolicyRows {
+  display: grid;
+  gap: 4px;
+}
+
+.tierPolicyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.tierPolicyRow > span {
+  color: #9b9aa6;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+
+.tierPolicyRow > strong {
+  color: #0d1221;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 110px;
+  font-family: ui-monospace, monospace;
+}
+
+/* ── Tier simulator buttons (Break It — Part 2) ─────── */
+
+.tierDivider {
+  height: 1px;
+  background: rgba(13, 18, 33, 0.07);
+}
+
+.tierBtnRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tierBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 9px 10px;
+  border: 1.5px solid rgba(13, 18, 33, 0.12);
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5b5a66;
+  transition: border-color 120ms, color 120ms, background 120ms;
+  white-space: nowrap;
+}
+
+.tierBtn:hover:not(:disabled) {
+  border-color: rgba(13, 18, 33, 0.25);
+  color: #0d1221;
+  background: #fafafa;
+}
+
+.tierBtn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.tierBtnActive {
+  background: #fcfcff;
+}
+
+.tierBtnCheck {
+  font-size: 10px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.tierActiveNote {
+  font-size: 12px;
+  color: #5b5a66;
+  line-height: 1.7;
+}
+
+.tierActiveNote code {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  background: rgba(13, 18, 33, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #0d1221;
+}
+
+.tierBadgeInline {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  vertical-align: middle;
+  margin: 0 1px;
+}
+
+/* ── Prompts ─────────────────────────────────────────── */
+
+.promptList {
+  display: grid;
+  gap: 6px;
+}
+
+.promptChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #5b5a66;
+  background: #fcfbfa;
+  line-height: 1.4;
+}
+
+.promptArrow {
+  color: #9b9aa6;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ── Trace log ──────────────────────────────────────── */
+
+.traceHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.traceClearBtn {
+  padding: 2px 9px;
+  border: 1px solid rgba(13, 18, 33, 0.12);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9b9aa6;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 100ms;
+}
+
+.traceClearBtn:hover { color: #0d1221; }
+
+.traceList {
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.traceList::-webkit-scrollbar { width: 4px; }
+.traceList::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(13,18,33,0.1); }
+
+.traceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.05);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.traceRow:last-child { border-bottom: none; }
+
+.traceIcon { flex-shrink: 0; font-size: 12px; }
+
+.traceText {
+  flex: 1;
+  color: #3b3a45;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+
+.traceMs {
+  flex-shrink: 0;
+  color: #9b9aa6;
+  font-size: 10px;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+}
+
+/* ── Right: browser preview ─────────────────────────── */
+
+.previewCol {
+  position: sticky;
+  top: 24px;
+}
+
+.browser {
+  border: 1px solid rgba(13, 18, 33, 0.09);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.browserBar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  height: 34px;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.08);
+  background: rgba(252, 251, 250, 0.9);
+}
+
+.browserDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(13, 18, 33, 0.15);
+  flex-shrink: 0;
+}
+
+.browserUrl {
+  flex: 1;
+  text-align: center;
+  color: #7b7785;
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.browserBody {
+  position: relative;
+  min-height: 660px;
+  overflow: hidden;
+}
+
+.pageLines {
+  display: grid;
+  gap: 13px;
+  padding: 26px;
+  width: 55%;
+}
+
+.pageLines span {
+  display: block;
+  height: 13px;
+  border-radius: 999px;
+  background: rgba(13, 18, 33, 0.07);
+}
+
+.pageLines span:first-child  { width: 70%; height: 24px; border-radius: 8px; }
+.pageLines span:nth-child(2) { width: 90%; }
+.pageLines span:nth-child(3) { width: 55%; }
+.pageLines span:nth-child(4) { width: 75%; }
+
+.browserFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-top: 1px solid rgba(13, 18, 33, 0.07);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.liveBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(15, 107, 84, 0.1);
+  color: #0f6b54;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.offlineBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(13, 18, 33, 0.06);
+  color: #9b9aa6;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tierFooterBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .previewCol { position: static; order: -1; }
+}

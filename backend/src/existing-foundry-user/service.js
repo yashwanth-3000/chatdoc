@@ -27,42 +27,50 @@ const INVENTORY_ENDPOINTS = [
     title: "MCP servers",
     description: "MCP Gateway servers available to the token.",
     method: "GET",
-    path: `/api/svc/v1/mcp-servers?limit=${LIST_LIMIT}`,
+    // Correct path: /api/svc/v1/llm-gateway/mcp-servers (not /api/svc/v1/mcp-servers)
+    path: `/api/svc/v1/llm-gateway/mcp-servers?limit=${LIST_LIMIT}`,
+    softFail: true,
   },
   {
     key: "guardrails",
     title: "Guardrails",
-    description: "Gateway guardrail configurations.",
+    description: "Guardrail config groups and their individual integrations (content moderation, PII, SQL sanitizer, etc.).",
     method: "GET",
-    path: `/api/svc/v1/gateway-guardrails-configs?limit=${LIST_LIMIT}`,
-    optionalOn404: true,
+    path: `/api/svc/v1/provider-accounts?limit=${LIST_LIMIT}`,
+    filterFn: (record) => record?.manifest?.type === "provider-account/guardrail-config-group",
+    expandIntegrations: true,
+    softFail: true,
   },
   {
     key: "routingConfigs",
     title: "Routing configs",
-    description: "Gateway load balancing, fallback, retry, and rerouting configuration.",
+    description: "Virtual model routing: load balancing, fallback, retry, and rerouting configuration.",
     method: "GET",
-    path: "/api/svc/v1/gateway/configs?type=gateway-load-balancing-config",
-    optionalOnFailure: true,
-    optionalMessage: "No gateway routing config was returned for this tenant.",
+    // Virtual models live in provider accounts filtered by manifest.type === "provider-account/virtual-model"
+    path: `/api/svc/v1/provider-accounts?limit=${LIST_LIMIT}`,
+    filterFn: (record) => record?.manifest?.type === "provider-account/virtual-model",
+    softFail: true,
   },
   {
     key: "rateLimitConfigs",
     title: "Rate limits",
     description: "Gateway request and token limits by user, model, virtual account, or metadata.",
     method: "GET",
-    path: "/api/svc/v1/gateway/configs?type=gateway-rate-limiting-config",
-    optionalOnFailure: true,
-    optionalMessage: "No gateway rate limit config was returned for this tenant.",
+    // TrueFoundry SDK path: /api/svc/v1/llm-gateway/config/{type} with lowercase type
+    // Returns a single config object { id, tenantName, type, manifest: { rules: [...] } }
+    path: "/api/svc/v1/llm-gateway/config/gateway-rate-limiting-config",
+    softFail: true,
+    gatewayConfig: true,
   },
   {
     key: "budgetConfigs",
     title: "Budget controls",
     description: "Gateway cost budgets, budget scope, audit mode, and alert thresholds.",
     method: "GET",
-    path: "/api/svc/v1/gateway/configs?type=gateway-budget-config",
-    optionalOnFailure: true,
-    optionalMessage: "No gateway budget config was returned for this tenant.",
+    // TrueFoundry SDK path: /api/svc/v1/llm-gateway/config/{type} with lowercase type
+    path: "/api/svc/v1/llm-gateway/config/gateway-budget-config",
+    softFail: true,
+    gatewayConfig: true,
   },
   {
     key: "virtualAccounts",
@@ -134,7 +142,9 @@ const INVENTORY_ENDPOINTS = [
     title: "Tracing projects",
     description: "Tracing projects used for Gateway observability.",
     method: "GET",
-    path: `/api/svc/v1/tracing-projects?limit=${LIST_LIMIT}`,
+    // Correct path per TrueFoundry API docs — tracing uses /api/ml/v1/, not /api/svc/v1/
+    path: `/api/ml/v1/tracing-projects?limit=${LIST_LIMIT}`,
+    softFail: true,
   },
 ];
 
@@ -185,7 +195,8 @@ async function fetchJson({ url, apiKey, method = "GET", body, timeoutMs = DEFAUL
     });
 
     const text = await response.text();
-    const parsed = text ? parseJson(text) : null;
+    // 200 with empty body means "resource exists but no config saved yet"
+    const parsed = (text && text.trim()) ? parseJson(text) : null;
 
     if (!response.ok) {
       const error = new Error(extractErrorMessage(parsed, response.statusText));
@@ -225,11 +236,17 @@ function extractErrorMessage(payload, fallback) {
 }
 
 function getRecords(payload) {
+  if (!payload) return [];
   if (Array.isArray(payload)) return payload;
-  if (payload && Array.isArray(payload.data)) return payload.data;
-  if (payload && Array.isArray(payload.items)) return payload.items;
-  if (payload && Array.isArray(payload.results)) return payload.results;
-  return payload ? [payload] : [];
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload.results)) return payload.results;
+  if (Array.isArray(payload.configs)) return payload.configs;
+  if (Array.isArray(payload.servers)) return payload.servers;            // llm-gateway/mcp-servers
+  if (payload.manifest && Array.isArray(payload.manifest.rules)) return payload.manifest.rules;  // llm-gateway/config/* with rules
+  if (payload.manifest && Array.isArray(payload.manifest.guardrails)) return payload.manifest.guardrails;
+  if (Array.isArray(payload.rules)) return payload.rules;
+  return [payload];
 }
 
 function countRecords(payload) {
@@ -261,26 +278,11 @@ function isSensitiveKey(key) {
 }
 
 async function runSection({ controlPlaneUrl, apiKey, section }) {
+  const url = joinUrl(controlPlaneUrl, section.path);
   try {
-    const raw = await fetchJson({
-      url: joinUrl(controlPlaneUrl, section.path),
-      apiKey,
-      method: section.method,
-      body: section.body,
-    });
-
-    const sanitized = redactSensitive(raw);
-    return {
-      key: section.key,
-      title: section.title,
-      description: section.description,
-      status: "ok",
-      count: countRecords(raw),
-      records: redactSensitive(getRecords(raw)),
-      raw: sanitized,
-    };
-  } catch (error) {
-    if ((section.optionalOn404 && error.status === 404) || section.optionalOnFailure) {
+    const raw = await fetchJson({ url, apiKey, method: section.method, body: section.body });
+    // null = 200 with empty body → resource exists but no config saved yet
+    if (raw === null) {
       return {
         key: section.key,
         title: section.title,
@@ -288,11 +290,59 @@ async function runSection({ controlPlaneUrl, apiKey, section }) {
         status: "ok",
         count: 0,
         records: [],
-        raw: {
-          data: [],
-          unavailable: true,
-          message: section.optionalMessage || "This optional TrueFoundry API is not available on this tenant.",
-        },
+        raw: { data: [], notConfigured: true, message: "No configuration found for this resource on your tenant." },
+        resolvedPath: section.path,
+      };
+    }
+    const allRecords = getRecords(raw);
+    // Apply client-side filter if defined (e.g. virtual models from provider accounts)
+    let records = section.filterFn ? allRecords.filter(section.filterFn) : allRecords;
+    // Expand integrations if flagged (e.g. guardrail-config-group → individual integrations)
+    if (section.expandIntegrations) {
+      records = records.flatMap((r) => r.integrations ?? []);
+    }
+    const sanitized = redactSensitive(raw);
+    return {
+      key: section.key,
+      title: section.title,
+      description: section.description,
+      status: "ok",
+      count: records.length,
+      records: redactSensitive(records),
+      raw: sanitized,
+      resolvedPath: section.path,
+    };
+  } catch (err) {
+    const isNotFound = err.status === 404;
+    const isPermission = err.status === 401 || err.status === 403;
+
+    if (section.softFail || section.optionalOn404 || section.optionalOnFailure) {
+      // 404 = not configured yet → show 0 (ok, no policies yet)
+      if (isNotFound) {
+        return {
+          key: section.key,
+          title: section.title,
+          description: section.description,
+          status: "ok",
+          count: 0,
+          records: [],
+          raw: { data: [], notConfigured: true, message: "No configuration found for this resource on your tenant." },
+        };
+      }
+
+      // Permission error or server error → show ! with details
+      const hint = isPermission
+        ? `Permission denied (HTTP ${err.status}). Your API token (PAT/VAT) may not have read access to this resource. Check your role bindings in the TrueFoundry dashboard.`
+        : `Request failed with HTTP ${err.status ?? "?"}: ${err.message || "unknown error"}. Check your control-plane URL and API key.`;
+
+      return {
+        key: section.key,
+        title: section.title,
+        description: section.description,
+        status: "unavailable",
+        count: 0,
+        records: [],
+        raw: { data: [], unavailable: true, hint, triedPath: url, httpStatus: err.status, errors: [{ path: section.path, status: err.status, message: err.message }] },
       };
     }
 
@@ -303,8 +353,8 @@ async function runSection({ controlPlaneUrl, apiKey, section }) {
       status: "error",
       count: 0,
       error: {
-        status: error.status || 500,
-        message: error.message || "Unable to fetch this section.",
+        status: err.status || 500,
+        message: err.message || "Unable to fetch this section.",
       },
     };
   }
@@ -314,20 +364,28 @@ async function runGatewaySection({ apiKey, gatewayBaseUrl, controlPlaneUrl }) {
   const urls = [
     joinUrl(gatewayBaseUrl, "/models"),
     joinUrl(controlPlaneUrl, "/api/llm/models"),
+    // virtual models (provider-registered models visible to this key)
+    joinUrl(controlPlaneUrl, "/api/svc/v1/llm-gateway/virtual-models"),
+    joinUrl(controlPlaneUrl, "/api/svc/v1/gateway/virtual-models"),
+    joinUrl(gatewayBaseUrl, "/v1/models"),
   ];
 
   let lastError = null;
   for (const url of [...new Set(urls)]) {
     try {
       const raw = await fetchJson({ url, apiKey });
+      // Normalize: OpenAI /models returns { data: [...] }, virtual-models may return { data: [...] } or []
+      const records = getRecords(raw);
+      if (records.length === 0 && url.includes("virtual-models")) continue; // try next
       return {
         key: "availableModels",
         title: "Callable models",
         description: "OpenAI-compatible models this token can call through AI Gateway.",
         status: "ok",
         count: countRecords(raw),
-        records: redactSensitive(getRecords(raw)),
+        records: redactSensitive(records),
         raw: redactSensitive(raw),
+        resolvedUrl: url,
       };
     } catch (error) {
       lastError = error;

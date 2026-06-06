@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import { chatRouter } from "./chat/route.js";
 import { existingFoundryUserRouter } from "./existing-foundry-user/routes.js";
 
 const app = express();
@@ -21,6 +22,7 @@ app.get("/api/health", (_request, response) => {
   });
 });
 
+app.use("/api/chat", chatRouter);
 app.use("/api/existing-foundry-user", existingFoundryUserRouter);
 
 app.use((error, _request, response, _next) => {
