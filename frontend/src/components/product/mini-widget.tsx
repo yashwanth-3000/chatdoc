@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./mini-widget.module.css";
 
-export const BACKEND_URL =
-  process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL?.replace(/\/+$/, "") ??
-  "http://localhost:4000";
+export const BACKEND_URL = (
+  process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL || "http://localhost:4000"
+).replace(/\/+$/, "");
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 

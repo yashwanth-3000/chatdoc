@@ -8,9 +8,9 @@ import type {
 
 type JsonBody = Record<string, unknown>;
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL?.replace(/\/+$/, "") ??
-  "http://localhost:4000";
+const BACKEND_URL = (
+  process.env.NEXT_PUBLIC_CHATDOCK_BACKEND_URL || "http://localhost:4000"
+).replace(/\/+$/, "");
 
 function waitForDemoData() {
   return new Promise((resolve) => window.setTimeout(resolve, 250));
