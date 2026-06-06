@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   connectExistingFoundryUser,
   getSavedExistingFoundryInventory,
+  applyGuardrailPolicy,
 } from "./service.js";
 
 const connectSchema = z.object({
@@ -17,6 +18,19 @@ export const existingFoundryUserRouter = Router();
 existingFoundryUserRouter.get("/saved-inventory", async (_request, response, next) => {
   try {
     response.json(await getSavedExistingFoundryInventory());
+  } catch (error) {
+    next(error);
+  }
+});
+
+existingFoundryUserRouter.post("/apply-guardrail-policy", async (request, response, next) => {
+  try {
+    const { apiKey } = request.body;
+    if (!apiKey || typeof apiKey !== "string" || !apiKey.trim()) {
+      return response.status(400).json({ error: "apiKey is required." });
+    }
+    const result = await applyGuardrailPolicy({ apiKey: apiKey.trim() });
+    response.json(result);
   } catch (error) {
     next(error);
   }

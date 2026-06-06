@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import styles from "./publish-page.module.css";
 import stepStyles from "./widget-designer.module.css";
 
@@ -59,19 +59,52 @@ const DEFAULT: WidgetConfig = {
   cornerRadius: 18,
 };
 
-function readConfig(): WidgetConfig {
-  if (typeof window === "undefined") return DEFAULT;
+const EMPTY_STORAGE_SNAPSHOT = "";
+
+function subscribeToSessionStorage(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const timer = window.setTimeout(onStoreChange, 0);
+  const handleStorage = (event: StorageEvent) => {
+    if (
+      event.storageArea === window.sessionStorage &&
+      (event.key === "chatdock_widget_config" || event.key === "chatdock_tier_config")
+    ) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+
+  return () => {
+    window.clearTimeout(timer);
+    window.removeEventListener("storage", handleStorage);
+  };
+}
+
+function emptyStorageSnapshot() {
+  return EMPTY_STORAGE_SNAPSHOT;
+}
+
+function getWidgetConfigSnapshot() {
+  if (typeof window === "undefined") return EMPTY_STORAGE_SNAPSHOT;
+  return window.sessionStorage.getItem("chatdock_widget_config") ?? EMPTY_STORAGE_SNAPSHOT;
+}
+
+function getTierConfigSnapshot() {
+  if (typeof window === "undefined") return EMPTY_STORAGE_SNAPSHOT;
+  return window.sessionStorage.getItem("chatdock_tier_config") ?? EMPTY_STORAGE_SNAPSHOT;
+}
+
+function readConfig(raw: string): WidgetConfig {
   try {
-    const raw = sessionStorage.getItem("chatdock_widget_config");
     if (raw) return { ...DEFAULT, ...JSON.parse(raw) };
   } catch { /* ignore */ }
   return DEFAULT;
 }
 
-function readTierConfig(): SavedTierConfig {
-  if (typeof window === "undefined") return null;
+function readTierConfig(raw: string): SavedTierConfig {
   try {
-    const raw = sessionStorage.getItem("chatdock_tier_config");
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
   return null;
@@ -725,22 +758,32 @@ function AiPromptPanel({
           className={`${styles.aiBtn} ${styles.aiBtnClaude} ${copiedKey === "claude" ? styles.aiBtnDone : ""}`}
           onClick={() => copyAs("claude", claudePrompt)}
         >
-          <span className={styles.aiBtnIcon}>◆</span>
+          <span className={styles.aiBtnIcon}>
+            {/* Anthropic logo mark */}
+            <svg width="22" height="15" viewBox="0 0 46 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M32.73 0h-6.945L38.45 32h6.945zM13.55 0 0 32h7.078l2.78-7.216h14.33L26.93 32h7.032L20.494 0zm-1.51 19.072 4.53-11.77 4.531 11.77z"/>
+            </svg>
+          </span>
           <span className={styles.aiBtnLabel}>
             {copiedKey === "claude" ? "Copied!" : "Copy for Claude"}
           </span>
-          <span className={styles.aiBtnSub}>Works with Claude.ai &amp; Claude Code</span>
+          <span className={styles.aiBtnSub}>Claude.ai · Claude Code · Cursor</span>
         </button>
 
         <button
           className={`${styles.aiBtn} ${styles.aiBtnCodex} ${copiedKey === "codex" ? styles.aiBtnDone : ""}`}
           onClick={() => copyAs("codex", codexPrompt)}
         >
-          <span className={styles.aiBtnIcon}>⬡</span>
-          <span className={styles.aiBtnLabel}>
-            {copiedKey === "codex" ? "Copied!" : "Copy for Codex / GPT"}
+          <span className={styles.aiBtnIcon}>
+            {/* OpenAI logo mark */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .511 4.91 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 23a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 21.95a4.475 4.475 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 17.9a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95A4.5 4.5 0 0 1 3.6 17.9zm-.83-9.063A4.485 4.485 0 0 1 5.14 6.87v4.07a.77.77 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0L4.95 13.28A4.504 4.504 0 0 1 2.77 8.837zm16.597 3.856-5.815-3.355 2.014-1.163a.076.076 0 0 1 .072 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.104v-5.678a.79.79 0 0 0-.425-.699zm2.01-3.023-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.84 10.13V7.798a.066.066 0 0 1 .027-.062l4.83-2.786a4.5 4.5 0 0 1 6.68 4.662zM8.307 12.863l-2.02-1.164a.08.08 0 0 1-.038-.057V6.071a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.098-2.365 2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/>
+            </svg>
           </span>
-          <span className={styles.aiBtnSub}>Works with ChatGPT, Cursor, Copilot Chat</span>
+          <span className={styles.aiBtnLabel}>
+            {copiedKey === "codex" ? "Copied!" : "Copy for ChatGPT"}
+          </span>
+          <span className={styles.aiBtnSub}>ChatGPT · Copilot Chat · Windsurf</span>
         </button>
       </div>
     </div>
@@ -750,8 +793,19 @@ function AiPromptPanel({
 // ── Publish page ──────────────────────────────────────────────────────────────
 
 export function PublishPage() {
-  const [cfg] = useState<WidgetConfig>(readConfig);
-  const [tierCfg] = useState<SavedTierConfig>(readTierConfig);
+  const widgetConfigSnapshot = useSyncExternalStore(
+    subscribeToSessionStorage,
+    getWidgetConfigSnapshot,
+    emptyStorageSnapshot,
+  );
+  const tierConfigSnapshot = useSyncExternalStore(
+    subscribeToSessionStorage,
+    getTierConfigSnapshot,
+    emptyStorageSnapshot,
+  );
+
+  const cfg = readConfig(widgetConfigSnapshot);
+  const tierCfg = readTierConfig(tierConfigSnapshot);
 
   const hasTiers = tierCfg !== null;
 
@@ -799,7 +853,7 @@ export function PublishPage() {
         {hasTiers && tierCfg ? (
           <div className={styles.section}>
             <div className={styles.sectionHead}>
-              <div className={styles.sectionNum}>0</div>
+              <div className={styles.sectionNumCheck}>✓</div>
               <div>
                 <h2>Your gateway configuration</h2>
                 <p>Auto-imported from your TrueFoundry tenant. Already baked into the code below.</p>

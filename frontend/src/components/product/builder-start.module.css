@@ -1,3 +1,286 @@
+.builderLanding {
+  display: block;
+}
+
+.builderArticle {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 0 76px;
+}
+
+.builderKicker {
+  display: inline-block;
+  margin: 0 0 14px;
+  color: #f75c30;
+  font-size: 10.5px;
+  font-weight: 850;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.builderPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  min-width: 136px;
+  padding: 0 18px 0 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.builderPrimary {
+  border: 1px solid #161425;
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(38, 34, 54, 1), #161425);
+  box-shadow:
+    0 10px 24px rgba(13, 18, 33, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.builderPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 30px rgba(13, 18, 33, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.builderPrimary svg {
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  border-radius: 999px;
+  color: #161425;
+  background: #f75c30;
+}
+
+.workflowSection {
+  display: grid;
+}
+
+.workflowHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.1);
+}
+
+.workflowTitleBlock {
+  display: grid;
+  gap: 14px;
+}
+
+.workflowHeader .builderKicker {
+  margin-bottom: 0;
+}
+
+.workflowSection h2 {
+  max-width: 680px;
+  margin: 0;
+  color: #0d1221;
+  font-family: var(--font-host-grotesk), sans-serif;
+  font-size: clamp(34px, 4.5vw, 52px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.workflowGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(286px, 330px);
+  gap: 24px;
+  align-items: start;
+}
+
+.workflowList {
+  display: grid;
+  gap: 0;
+}
+
+.workflowRow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.1);
+}
+
+.workflowRow:first-child {
+  padding-top: 0;
+}
+
+.workflowNumber {
+  padding-top: 2px;
+  color: #f75c30;
+  font-family: var(--font-host-grotesk), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.workflowMeta {
+  display: block;
+  margin: 0 0 6px;
+  color: #f75c30;
+  font-size: 9.5px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.workflowRow h3 {
+  margin: 0;
+  color: #0d1221;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.28;
+}
+
+.workflowRow p {
+  max-width: 520px;
+  margin: 6px 0 0;
+  color: #45444d;
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+
+.builderPreview {
+  overflow: hidden;
+  border: 1px solid rgba(13, 18, 33, 0.12);
+  border-radius: 18px;
+  color: #0d1221;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(13, 18, 33, 0.1);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(13, 18, 33, 0.09);
+  background: rgba(252, 251, 250, 0.84);
+}
+
+.previewHeader span {
+  color: #74717d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.previewHeader strong {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #146c43;
+  background: rgba(20, 108, 67, 0.1);
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.previewWidget {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.previewBubble,
+.previewReply {
+  border-radius: 14px;
+}
+
+.previewBubble {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 14px;
+  color: #0d1221;
+  background: #fcfbfa;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+}
+
+.previewBubble span {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: #f75c30;
+}
+
+.previewBubble p,
+.previewReply p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.previewReply {
+  justify-self: end;
+  max-width: 86%;
+  padding: 12px 14px;
+  color: #45444d;
+  background: rgba(13, 18, 33, 0.06);
+}
+
+.previewChecklist {
+  display: grid;
+  padding: 0 18px 18px;
+}
+
+.previewItem {
+  display: flex;
+  gap: 10px;
+  padding: 13px 0;
+  border-top: 1px solid rgba(13, 18, 33, 0.09);
+}
+
+.previewIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: #f75c30;
+  background: rgba(247, 92, 48, 0.1);
+}
+
+.previewItem p {
+  margin: 0;
+  color: #0d1221;
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.previewItem span:not(.previewIcon) {
+  display: block;
+  margin-top: 3px;
+  color: #74717d;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .start {
   display: grid;
   gap: 18px;
@@ -2170,6 +2453,14 @@
 /* ─── Responsive overrides ────────────────────────── */
 
 @media (max-width: 980px) {
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .builderPreview {
+    max-width: 520px;
+  }
+
   .hero {
     grid-template-columns: 1fr;
   }
@@ -2214,6 +2505,53 @@
 }
 
 @media (max-width: 640px) {
+  .builderArticle {
+    padding: 30px 0 56px;
+  }
+
+  .workflowHeader {
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    margin-bottom: 22px;
+    padding-bottom: 20px;
+  }
+
+  .workflowTitleBlock {
+    display: contents;
+  }
+
+  .workflowHeader .builderKicker {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+
+  .workflowSection h2 {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    font-size: clamp(29px, 9vw, 38px);
+  }
+
+  .workflowRow {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 14px;
+    padding: 18px 0;
+  }
+
+  .builderPreview {
+    border-radius: 16px;
+  }
+
+  .workflowHeader .builderPrimary {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 116px;
+    min-height: 40px;
+    padding-inline: 13px;
+    border-radius: 11px;
+    font-size: 13px;
+  }
+
   .hero {
     padding: 20px;
   }

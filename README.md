@@ -24,7 +24,4 @@ Open [http://localhost:3001](http://localhost:3001).
 
 - `/` - product overview
 - `/builder` - chatbot configuration builder
-- `/templates` - reusable chatbot templates
-- `/architecture` - TrueFoundry architecture mapping
 - `/demo` - judge-facing demo plan
-- `/about` - hackathon brief

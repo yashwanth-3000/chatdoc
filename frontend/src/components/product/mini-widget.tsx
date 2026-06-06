@@ -48,6 +48,7 @@ export interface LiveConfig {
   userTier?: string;
   controlPlaneUrl?: string;
   systemPrompt?: string;
+  guardrailNames?: string[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -219,12 +220,6 @@ export function MiniWidget({
     cfg.surfaceStyle === "matte" ? cfg.panelColor + "fa" :
     cfg.panelColor;
 
-  useEffect(() => {
-    const el = bottomRef.current?.parentElement;
-    if (!el) return;
-    const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
-    if (isNearBottom) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingText]);
 
   async function send() {
     const text = input.trim();
@@ -268,6 +263,7 @@ export function MiniWidget({
           userTier: liveConfig.userTier,
           controlPlaneUrl: liveConfig.controlPlaneUrl,
           systemPrompt: liveConfig.systemPrompt,
+          guardrailNames: liveConfig.guardrailNames,
         }),
       });
 

@@ -15,23 +15,23 @@ const MCP_SERVER_URL = (process.env.MCP_SERVER_URL ?? "https://chatdock-mcp-prod
 // Auth param names the MCP server uses — backend injects these, LLM never sees them
 const MCP_AUTH_PARAMS = ["truefoundry_api_key", "control_plane_url"];
 
-let _guardrailCache = null;
+// Read the guardrail policy from the snapshot on every request — no permanent cache.
+// This ensures the updated policy is picked up immediately after applyGuardrailPolicy()
+// writes the guardrailPolicy section without requiring a backend restart.
 async function getGuardrailPolicy() {
-  if (_guardrailCache !== null) return _guardrailCache;
   try {
     const data = JSON.parse(await readFile(SNAPSHOT_PATH, "utf8"));
     const gwSection = data.sections?.find((s) => s.key === "guardrailPolicy");
     const policy = gwSection?.raw?.manifest?.default ?? {};
-    _guardrailCache = {
+    return {
       input:   (policy.llm_input_guardrails               ?? []),
       output:  (policy.llm_output_guardrails              ?? []),
       mcpPre:  (policy.mcp_tool_pre_invoke_guardrails     ?? []),
       mcpPost: (policy.mcp_tool_post_invoke_guardrails    ?? []),
     };
   } catch {
-    _guardrailCache = { input: [], output: [], mcpPre: [], mcpPost: [] };
+    return { input: [], output: [], mcpPre: [], mcpPost: [] };
   }
-  return _guardrailCache;
 }
 
 const CHAOS = {
@@ -203,7 +203,7 @@ router.post("/", async (req, res) => {
   const {
     messages, gatewayUrl, modelId, apiKey,
     chaosMode, primaryModelLabel, fallbackModelLabel,
-    userTier, controlPlaneUrl, systemPrompt,
+    userTier, controlPlaneUrl, systemPrompt, guardrailNames,
   } = req.body;
 
   if (!messages?.length || !gatewayUrl || !modelId || !apiKey) {
@@ -218,7 +218,13 @@ router.post("/", async (req, res) => {
   const t0 = Date.now();
   const primary  = primaryModelLabel  || modelId;
   const fallback = fallbackModelLabel || modelId;
-  const gp = await getGuardrailPolicy();
+
+  // Prefer guardrail names sent from the frontend (tier config); fall back to snapshot.
+  const snapshotGp = await getGuardrailPolicy();
+  const clientGuardrails = Array.isArray(guardrailNames) && guardrailNames.length > 0 ? guardrailNames : null;
+  const gp = clientGuardrails
+    ? { input: clientGuardrails, output: clientGuardrails, mcpPre: clientGuardrails, mcpPost: [] }
+    : snapshotGp;
 
   try {
     sse(res, "trace", { icon: "🔵", text: `Request received → model: ${primary}`, ms: 0 });
@@ -406,9 +412,8 @@ router.post("/", async (req, res) => {
       }
     } catch { /* keep rawMsg */ }
 
-    const gp2 = await getGuardrailPolicy().catch(() => ({ input: [] }));
-    if (gp2.input.length > 0 && (lc.includes("guardrail") || lc.includes("blocked") || lc.includes("content"))) {
-      sse(res, "trace", { icon: "🚫", text: `Input blocked by guardrail: ${gp2.input.join(", ")}`, ms: Date.now() - t0 });
+    if (gp.input.length > 0 && (lc.includes("guardrail") || lc.includes("blocked") || lc.includes("content"))) {
+      sse(res, "trace", { icon: "🚫", text: `Input blocked by guardrail: ${gp.input.join(", ")}`, ms: Date.now() - t0 });
     } else {
       // Always emit a trace row so the error is visible in the timeline
       const is429 = rawMsg.includes("429") || lc.includes("rate limit");

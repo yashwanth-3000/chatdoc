@@ -1,78 +1,103 @@
 import Link from "next/link";
+import { ArrowRight, CheckCircle2, Settings2, ShieldCheck } from "lucide-react";
 import styles from "./builder-start.module.css";
 
 const steps = [
   {
-    label: "Step 01",
-    title: "Design the widget UI",
-    body: "Tune placement, launcher style, colors, greeting, and message layout with a live website preview.",
+    label: "01",
+    title: "Design the widget",
+    body: "Set the launcher, greeting, colors, behavior, and live preview before touching gateway policy.",
+    meta: "Widget UI",
   },
   {
-    label: "Step 02",
-    title: "Configure intelligence",
-    body: "Choose model routes, fallback behavior, budgets, tools, and safety policies for the assistant.",
+    label: "02",
+    title: "Connect intelligence",
+    body: "Choose model routes, fallback behavior, budgets, scoped tools, and guardrails for each tier.",
+    meta: "Gateway policy",
   },
   {
-    label: "Step 03",
-    title: "Publish the config",
-    body: "Generate the embed script, guardrail notes, recovery trace, and demo-ready configuration files.",
+    label: "03",
+    title: "Live test the recovery",
+    body: "Ask real prompts, force a fallback path, inspect trace events, and verify the assistant stays useful.",
+    meta: "Trace proof",
   },
+  {
+    label: "04",
+    title: "Ship the code",
+    body: "Copy the widget, backend route, environment checklist, and implementation prompt into your app.",
+    meta: "Publish",
+  },
+];
+
+const previewItems = [
+  { icon: Settings2, label: "Primary route", value: "chat-bot-llm" },
+  { icon: ShieldCheck, label: "Guardrails", value: "PII checks, tool scope" },
+  { icon: CheckCircle2, label: "Publish output", value: "React widget + API route" },
 ];
 
 export function BuilderStart() {
   return (
-    <div className={styles.start}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <p className={styles.kicker}>ChatDock builder</p>
-          <h1>Let&apos;s build your AI chatbot.</h1>
-          <p>
-            Start with the part your website visitors actually see: the chat
-            widget. Then move into model routing, tools, guardrails, and the
-            final embed configuration.
-          </p>
-          <div className={styles.actions}>
-            <Link className={styles.primaryButton} href="/builder/step-one">
-              Start creating
-            </Link>
-            <Link className={styles.secondaryButton} href="/builder/final">
-              Open final page
-            </Link>
-          </div>
-        </div>
-
-        <div className={styles.previewCard} aria-hidden="true">
-          <div className={styles.previewTop}>
-            <span />
-            <span />
-            <span />
-          </div>
-          <div className={styles.previewCanvas}>
-            <div className={styles.pageLines}>
-              <span />
-              <span />
-              <span />
+    <div className={styles.builderLanding}>
+      <article className={styles.builderArticle}>
+        <section className={styles.workflowSection} aria-labelledby="builder-workflow-title">
+          <header className={styles.workflowHeader}>
+            <div className={styles.workflowTitleBlock}>
+              <p className={styles.builderKicker}>Workflow</p>
+              <h2 id="builder-workflow-title">A clean path from draft to embed.</h2>
             </div>
-            <div className={styles.chatWindow}>
-              <i />
-              <strong>Hi, I can help with plans.</strong>
-              <span />
-              <span />
-            </div>
-            <div className={styles.launcher}>AI</div>
-          </div>
-        </div>
-      </section>
+            <Link className={styles.builderPrimary} href="/builder/step-one">
+              Continue
+              <ArrowRight size={15} />
+            </Link>
+          </header>
 
-      <section className={styles.steps} aria-label="Builder steps">
-        {steps.map((step) => (
-          <article key={step.title} className={styles.stepCard}>
-            <span>{step.label}</span>
-            <h2>{step.title}</h2>
-            <p>{step.body}</p>
-          </article>
-        ))}
-      </section>
+          <div className={styles.workflowGrid}>
+            <div className={styles.workflowList}>
+              {steps.map((step) => (
+                <article key={step.title} className={styles.workflowRow}>
+                  <span className={styles.workflowNumber}>{step.label}</span>
+                  <div>
+                    <span className={styles.workflowMeta}>{step.meta}</span>
+                    <h3>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <aside className={styles.builderPreview} aria-label="Builder preview">
+              <div className={styles.previewHeader}>
+                <span>Draft session</span>
+                <strong>Ready</strong>
+              </div>
+
+              <div className={styles.previewWidget}>
+                <div className={styles.previewBubble}>
+                  <span />
+                  <p>Hi, I can help visitors choose the right plan.</p>
+                </div>
+                <div className={styles.previewReply}>
+                  <p>Route: primary model with fallback enabled.</p>
+                </div>
+              </div>
+
+              <div className={styles.previewChecklist}>
+                {previewItems.map(({ icon: Icon, label, value }) => (
+                  <div key={label} className={styles.previewItem}>
+                    <span className={styles.previewIcon}>
+                      <Icon size={14} />
+                    </span>
+                    <div>
+                      <p>{label}</p>
+                      <span>{value}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </div>
+        </section>
+      </article>
     </div>
   );
 }

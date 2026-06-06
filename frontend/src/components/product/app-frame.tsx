@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/site-header";
 import styles from "./app-frame.module.css";
 
-type CurrentPage = "home" | "about" | "templates" | "builder" | "architecture" | "demo";
+type CurrentPage = "home" | "builder" | "demo";
 
 type AppFrameProps = {
   children: ReactNode;

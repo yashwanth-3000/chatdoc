@@ -59,6 +59,30 @@
   gap: 24px;
 }
 
+.githubLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(13, 18, 33, 0.14);
+  border-radius: 8px;
+  color: #0d1221;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background 150ms, border-color 150ms, color 150ms;
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.githubLink::after { display: none !important; }
+
+.githubLink:hover {
+  background: #0d1221;
+  border-color: #0d1221;
+  color: #ffffff;
+}
+
 .mainNav a {
   position: relative;
   color: #0d1221;

@@ -508,6 +508,85 @@ async function saveInventorySnapshot(payload) {
   await writeFile(SNAPSHOT_PATH, JSON.stringify(payload, null, 2), "utf8");
 }
 
+// Internal: apply guardrail policy using an already-loaded snapshot object.
+// Returns { applied, policy } on success or { applied: false, reason } on soft failure.
+async function _applyGuardrailPolicyFromSnapshot(snapshot, apiKey, controlPlaneUrl) {
+  const guardrailSection = snapshot.sections?.find((s) => s.key === "guardrails");
+  const records = guardrailSection?.records ?? [];
+  const contentRec = records.find((r) => r.name === "content-moderation");
+  const sqlRec     = records.find((r) => r.name === "sql-sanitizer");
+
+  if (!contentRec && !sqlRec) {
+    return { applied: false, reason: "No guardrail integrations found in inventory." };
+  }
+
+  const llmGuardrails = contentRec ? [contentRec.fqn] : [];
+  const mcpGuardrails = sqlRec     ? [sqlRec.fqn]     : [];
+
+  const policyManifest = {
+    default: {
+      llm_input_guardrails:            llmGuardrails,
+      llm_output_guardrails:           llmGuardrails,
+      mcp_tool_pre_invoke_guardrails:  mcpGuardrails,
+      mcp_tool_post_invoke_guardrails: [],
+    },
+  };
+
+  const url = joinUrl(controlPlaneUrl, "/api/svc/v1/llm-gateway/config/gateway-guardrails-config");
+  try {
+    await fetchJson({ url, apiKey, method: "PUT", body: { manifest: policyManifest } });
+  } catch (err) {
+    return { applied: false, reason: `TrueFoundry rejected the guardrail policy: ${err.message}` };
+  }
+
+  // Store readable display names (not full FQNs) in the snapshot so trace labels stay short
+  const resolvedPolicy = {
+    default: {
+      llm_input_guardrails:            contentRec ? [contentRec.name] : [],
+      llm_output_guardrails:           contentRec ? [contentRec.name] : [],
+      mcp_tool_pre_invoke_guardrails:  sqlRec     ? [sqlRec.name]     : [],
+      mcp_tool_post_invoke_guardrails: [],
+    },
+  };
+
+  const policySection = {
+    key: "guardrailPolicy",
+    title: "Gateway guardrail policy",
+    description: "Active guardrail policy attached to the AI Gateway (input, output, MCP).",
+    status: "ok",
+    count: llmGuardrails.length + mcpGuardrails.length,
+    records: [],
+    raw: { manifest: resolvedPolicy },
+    resolvedPath: "/api/svc/v1/llm-gateway/config/gateway-guardrails-config",
+    appliedAt: new Date().toISOString(),
+  };
+
+  const idx = (snapshot.sections ?? []).findIndex((s) => s.key === "guardrailPolicy");
+  if (idx >= 0) snapshot.sections[idx] = policySection;
+  else          snapshot.sections.push(policySection);
+
+  await saveInventorySnapshot(snapshot);
+  return { applied: true, policy: resolvedPolicy.default };
+}
+
+// Exported for the utility route (reads snapshot from disk)
+export async function applyGuardrailPolicy({ apiKey }) {
+  const snapshot = await getSavedExistingFoundryInventory();
+  const controlPlaneUrl = snapshot.connection?.controlPlaneUrl;
+  if (!controlPlaneUrl) {
+    const err = new Error("No saved control plane URL. Reconnect in Step 2 first.");
+    err.status = 400;
+    throw err;
+  }
+  const result = await _applyGuardrailPolicyFromSnapshot(snapshot, apiKey, controlPlaneUrl);
+  if (!result.applied) {
+    const err = new Error(result.reason);
+    err.status = 400;
+    throw err;
+  }
+  return result;
+}
+
 export async function getSavedExistingFoundryInventory() {
   try {
     return JSON.parse(await readFile(SNAPSHOT_PATH, "utf8"));
@@ -592,5 +671,9 @@ export async function connectExistingFoundryUser(input) {
   };
 
   await saveInventorySnapshot(result);
+
+  // Automatically wire guardrails to the gateway — soft failure so connect always succeeds
+  await _applyGuardrailPolicyFromSnapshot(result, input.apiKey, controlPlaneUrl).catch(() => {});
+
   return result;
 }
