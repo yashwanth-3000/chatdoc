@@ -222,13 +222,7 @@ export function LiveTestPage() {
   const activeModel = activeTierData?.model ?? firstModel;
   const canSwitch = !!(liveGatewayUrl && liveKey);
 
-  const builtSystemPrompt = [
-    `You are ${cfg.assistantName}.`,
-    cfg.greeting,
-    cfg.subGreeting,
-    `You have tools available — use them whenever they can help answer the user's question accurately.`,
-    `If a tool tells you the user doesn't have access at their current tier, relay that clearly.`,
-  ].filter(Boolean).join(" ");
+  const builtSystemPrompt = `You are ${cfg.assistantName}, an AI assistant. Only answer specific questions by using your available tools — never invent product details, pricing, or technical specifications. For greetings and general conversation, respond naturally and briefly. If a tool indicates the user's tier lacks access, explain that clearly.`;
 
   const liveConfig: LiveConfig | null = liveGatewayUrl && activeModel && liveKey ? {
     gatewayUrl: liveGatewayUrl, modelId: activeModel.id, apiKey: liveKey,

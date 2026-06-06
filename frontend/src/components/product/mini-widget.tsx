@@ -72,6 +72,68 @@ export function closedTransform(anim: AnimationStyle): string {
   }
 }
 
+// ── Markdown renderer ─────────────────────────────────────────────────────────
+
+function parseInline(str: string, baseKey: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const re = /\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`/g;
+  let last = 0; let m; let i = 0;
+  while ((m = re.exec(str)) !== null) {
+    if (m.index > last) parts.push(str.slice(last, m.index));
+    if (m[1] !== undefined) parts.push(<strong key={`${baseKey}-b${i++}`}>{m[1]}</strong>);
+    else if (m[2] !== undefined) parts.push(<em key={`${baseKey}-i${i++}`}>{m[2]}</em>);
+    else if (m[3] !== undefined) parts.push(<code key={`${baseKey}-c${i++}`} style={{ fontFamily: "monospace", fontSize: "0.88em", background: "rgba(0,0,0,0.12)", borderRadius: 3, padding: "0 3px" }}>{m[3]}</code>);
+    last = re.lastIndex;
+  }
+  if (last < str.length) parts.push(str.slice(last));
+  return parts;
+}
+
+function renderMarkdown(text: string, textColor: string): React.ReactNode {
+  const lines = text.split("\n");
+  const out: React.ReactNode[] = [];
+  const listBuf: React.ReactNode[] = [];
+  let k = 0;
+
+  function flushList() {
+    if (!listBuf.length) return;
+    out.push(
+      <ul key={`ul${k++}`} style={{ margin: "4px 0 4px 14px", padding: 0, display: "grid", gap: 2 }}>
+        {listBuf.splice(0)}
+      </ul>
+    );
+  }
+
+  for (const line of lines) {
+    const isBullet = /^[-•*] /.test(line);
+    if (isBullet) {
+      listBuf.push(
+        <li key={`li${k++}`} style={{ listStyle: "disc", lineHeight: 1.5 }}>
+          {parseInline(line.replace(/^[-•*] /, ""), `li${k}`)}
+        </li>
+      );
+    } else {
+      flushList();
+      if (line.trim() === "") {
+        out.push(<div key={`sp${k++}`} style={{ height: 4 }} />);
+      } else {
+        out.push(
+          <div key={`ln${k++}`} style={{ lineHeight: 1.5 }}>
+            {parseInline(line, `ln${k}`)}
+          </div>
+        );
+      }
+    }
+  }
+  flushList();
+
+  return (
+    <div style={{ color: textColor, fontSize: "inherit", display: "grid", gap: 1 }}>
+      {out}
+    </div>
+  );
+}
+
 // ── MiniWidget ────────────────────────────────────────────────────────────────
 
 export function MiniWidget({
@@ -263,7 +325,9 @@ export function MiniWidget({
                   : { background: cfg.messageColor, color: cfg.messageTextColor, borderRadius: `4px ${r * 0.65}px ${r * 0.65}px`, alignSelf: "flex-start" }
               }
             >
-              {msg.text}
+              {msg.role === "assistant"
+                ? renderMarkdown(msg.text, cfg.messageTextColor)
+                : msg.text}
             </div>
           ))}
 
@@ -272,7 +336,7 @@ export function MiniWidget({
               className={styles.miniBubble}
               style={{ background: cfg.messageColor, color: cfg.messageTextColor, borderRadius: `4px ${r * 0.65}px ${r * 0.65}px`, alignSelf: "flex-start" }}
             >
-              {streamingText}
+              {renderMarkdown(streamingText, cfg.messageTextColor)}
             </div>
           )}
 
