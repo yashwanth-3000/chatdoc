@@ -85,8 +85,8 @@ const colorPresets: ThemePreset[] = [
 ];
 
 const initialWidget: WidgetState = {
-  assistantName: "Acme Support Copilot",
-  launcherLabel: "AI",
+  assistantName: "ChatDock Assistant",
+  launcherLabel: "Chat",
   greeting: "Need help choosing a plan?",
   subGreeting: "I can answer product questions, compare pricing, and create a support ticket.",
   panelSize: "standard",

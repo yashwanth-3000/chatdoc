@@ -40,9 +40,9 @@ const guardrailOptions = [
 ];
 
 const initialForm: BotForm = {
-  botName: "Acme Support Copilot",
-  business: "B2B SaaS website",
-  goal: "Help visitors choose a plan, answer product questions, and create a ticket when the answer needs a human.",
+  botName: "ChatDock Assistant",
+  business: "B2B SaaS — chat widget platform for AI-powered customer support",
+  goal: "Help visitors choose a ChatDock plan, answer product and pricing questions, and guide them through integration.",
   tone: "calm, concise, helpful",
   position: "bottom-right",
   primaryModel: "bedrock/deepseek-v3",
