@@ -104,13 +104,13 @@ const RULE_TO_TIER: Record<string, TierKey> = {
 
 // ── Sample prompts (tier-tagged) ──────────────────────────────────────────────
 
-const SAMPLE_PROMPTS: { tier: TierKey; text: string }[] = [
-  { tier: "guest",    text: "What is this chatbot and how do I embed it?" },
-  { tier: "guest",    text: "How do I get started quickly?" },
-  { tier: "loggedIn", text: "What widget animation options are available?" },
-  { tier: "loggedIn", text: "Generate a purple-themed chatbot config called Aria" },
-  { tier: "pro",      text: "Explain the SSE streaming protocol in detail" },
-  { tier: "pro",      text: "Give me a complete integration blueprint with code" },
+const SAMPLE_PROMPTS: { tier: TierKey; text: string; desc: string }[] = [
+  { tier: "guest",    text: "What is this chatbot and how do I embed it?",        desc: "Triggers search_docs_basic MCP tool — no auth needed" },
+  { tier: "guest",    text: "How do I get started quickly?",                       desc: "Triggers get_quick_start MCP tool — returns 5-step guide" },
+  { tier: "loggedIn", text: "What widget animation options are available?",        desc: "Triggers search_docs_standard — requires Logged-in tier" },
+  { tier: "loggedIn", text: "Generate a purple-themed chatbot config called Aria", desc: "Triggers generate_widget_config — returns TypeScript config" },
+  { tier: "pro",      text: "Explain the SSE streaming protocol in detail",        desc: "Triggers search_docs_expert — full internals, Pro only" },
+  { tier: "pro",      text: "Give me a complete integration blueprint with code",  desc: "Triggers get_integration_blueprint — Pro tier required" },
 ];
 
 // ── Live test page ────────────────────────────────────────────────────────────
@@ -370,34 +370,6 @@ export function LiveTestPage() {
             )}
           </div>
 
-          {/* ── Sample prompts (compact flat list) ── */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>
-              Sample prompts
-              <span className={styles.sectionSub}> — click to copy</span>
-            </h3>
-            <div className={styles.promptList}>
-              {SAMPLE_PROMPTS.map((p) => (
-                <button
-                  key={p.text}
-                  className={`${styles.promptChip} ${copiedPrompt === p.text ? styles.promptChipCopied : ""}`}
-                  onClick={() => copyPrompt(p.text)}
-                  title="Click to copy"
-                >
-                  <span
-                    className={styles.promptDot}
-                    style={{ background: TIER_COLORS[p.tier] }}
-                    title={TIER_LABELS[p.tier]}
-                  />
-                  <span className={styles.promptChipText}>{p.text}</span>
-                  <span className={styles.promptChipAction}>
-                    {copiedPrompt === p.text ? "✓" : "⎘"}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* ── Gateway trace (always visible, chronological) ── */}
           <div className={styles.section}>
             <div className={styles.traceHead}>
@@ -426,6 +398,37 @@ export function LiveTestPage() {
                 ))
               )}
               <div ref={traceEndRef} />
+            </div>
+          </div>
+
+          {/* ── Sample prompts ── */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              Sample prompts
+              <span className={styles.sectionSub}> — click to copy, paste in chatbot</span>
+            </h3>
+            <div className={styles.promptList}>
+              {SAMPLE_PROMPTS.map((p) => (
+                <button
+                  key={p.text}
+                  className={`${styles.promptChip} ${copiedPrompt === p.text ? styles.promptChipCopied : ""}`}
+                  onClick={() => copyPrompt(p.text)}
+                  title="Click to copy"
+                >
+                  <span
+                    className={styles.promptDot}
+                    style={{ background: TIER_COLORS[p.tier] }}
+                    title={TIER_LABELS[p.tier]}
+                  />
+                  <span className={styles.promptChipBody}>
+                    <span className={styles.promptChipText}>{p.text}</span>
+                    <span className={styles.promptChipDesc}>{p.desc}</span>
+                  </span>
+                  <span className={styles.promptChipAction}>
+                    {copiedPrompt === p.text ? "✓" : "⎘"}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
