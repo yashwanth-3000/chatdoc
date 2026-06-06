@@ -46,6 +46,8 @@ export interface LiveConfig {
   primaryModelLabel: string;
   fallbackModelLabel: string;
   userTier?: string;
+  controlPlaneUrl?: string;
+  systemPrompt?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -149,6 +151,8 @@ export function MiniWidget({
           primaryModelLabel: liveConfig.primaryModelLabel,
           fallbackModelLabel: liveConfig.fallbackModelLabel,
           userTier: liveConfig.userTier,
+          controlPlaneUrl: liveConfig.controlPlaneUrl,
+          systemPrompt: liveConfig.systemPrompt,
         }),
       });
 

@@ -113,6 +113,7 @@ export function LiveTestPage() {
   const [liveKey] = useState(readApiKey);
   const [activeTier, setActiveTier] = useState<TierKey>("guest");
   const [traceLog, setTraceLog] = useState<TraceEntry[]>([]);
+  const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = readTierConfig();
@@ -214,6 +215,15 @@ export function LiveTestPage() {
   const activeTierData = tierCfg?.tiers[activeTier] ?? null;
   const activeModel = activeTierData?.model ?? firstModel;
 
+  // Build system prompt from the user's own widget config — no hardcoding
+  const builtSystemPrompt = [
+    `You are ${cfg.assistantName}.`,
+    cfg.greeting,
+    cfg.subGreeting,
+    `You have tools available — use them whenever they can help answer the user's question accurately.`,
+    `If a tool tells you the user doesn't have access at their current tier, relay that information clearly.`,
+  ].filter(Boolean).join(" ");
+
   const liveConfig: LiveConfig | null =
     liveGatewayUrl && activeModel && liveKey
       ? {
@@ -224,11 +234,19 @@ export function LiveTestPage() {
           primaryModelLabel: activeModel.name,
           fallbackModelLabel: activeModel.name,
           userTier: activeTier,
+          controlPlaneUrl: tierCfg?.controlPlaneUrl ?? "",
+          systemPrompt: builtSystemPrompt,
         }
       : null;
 
   function addTrace(entry: TraceEntry) {
     setTraceLog((prev) => [entry, ...prev.slice(0, 29)]);
+  }
+
+  function copyPrompt(text: string) {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedPrompt(text);
+    setTimeout(() => setCopiedPrompt(null), 1500);
   }
 
   const botSlug = cfg.assistantName
@@ -387,6 +405,70 @@ export function LiveTestPage() {
               {" "}→ model:{" "}
               <code>{activeModel?.name ?? "not configured"}</code>
             </p>
+          </div>
+
+          {/* ── Try these prompts ── */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>
+              Try these prompts
+              <span className={styles.sectionSub}> — click to copy, paste in chatbot</span>
+            </h3>
+            <div className={styles.promptGroups}>
+              {([
+                {
+                  tier: "guest" as TierKey,
+                  prompts: [
+                    "What is ChatDock and how does it work?",
+                    "How do I add the chatbot widget to my site?",
+                  ],
+                },
+                {
+                  tier: "loggedIn" as TierKey,
+                  prompts: [
+                    "What widget animation and design options are available?",
+                    "Generate a config for a purple-themed chatbot called Aria",
+                  ],
+                },
+                {
+                  tier: "pro" as TierKey,
+                  prompts: [
+                    "Explain the TrueFoundry SSE streaming protocol in detail",
+                    "Give me a complete integration blueprint with code examples",
+                  ],
+                },
+              ] as { tier: TierKey; prompts: string[] }[]).map(({ tier, prompts }) => (
+                <div key={tier} className={styles.promptGroup}>
+                  <span className={styles.promptGroupLabel} style={{ background: TIER_COLORS[tier] }}>
+                    {TIER_LABELS[tier]}
+                  </span>
+                  <div className={styles.promptList}>
+                    {prompts.map((p) => (
+                      <button
+                        key={p}
+                        className={`${styles.promptChip} ${copiedPrompt === p ? styles.promptChipCopied : ""}`}
+                        onClick={() => copyPrompt(p)}
+                        title="Click to copy"
+                      >
+                        <span className={styles.promptChipText}>{p}</span>
+                        <span className={styles.promptChipAction}>
+                          {copiedPrompt === p ? "✓" : "⎘"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.testChecklist}>
+              <p className={styles.testChecklistTitle}>What to watch for</p>
+              <ul className={styles.testChecklistItems}>
+                <li>Switch tiers → model badge at the chatbot footer updates</li>
+                <li>Rate limits enforced by TrueFoundry (Guest 5 · Logged-in 20 · Pro 40 req/hr)</li>
+                <li>Docs questions trigger MCP tools — check Gateway trace below</li>
+                <li>Unsafe inputs stopped by guardrails before reaching the model</li>
+              </ul>
+            </div>
           </div>
 
           {/* Trace log */}
