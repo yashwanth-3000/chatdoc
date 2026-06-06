@@ -233,122 +233,191 @@
 }
 
 .traceClearBtn {
-  padding: 3px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 12px;
+  border: 1px solid rgba(13, 18, 33, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
+  background: #fff;
   font-size: 11px;
   font-weight: 600;
-  color: #6b6a7a;
+  color: #6b7280;
   cursor: pointer;
   font-family: inherit;
-  transition: color 100ms, background 100ms;
+  transition: color 100ms, border-color 100ms, background 100ms;
 }
 
-.traceClearBtn:hover { color: #c8c7d4; background: rgba(255, 255, 255, 0.12); }
+.traceClearBtn:hover { color: #111827; border-color: rgba(13, 18, 33, 0.2); background: #f9fafb; }
 
 /* ── Gateway trace ───────────────────────────────────────── */
 
-.traceList {
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.traceEmptyCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 16px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
   border-radius: 12px;
-  overflow-y: auto;
-  max-height: 300px;
-  background: #0c0c12;
+  background: #fafafa;
 }
 
-.traceList::-webkit-scrollbar { width: 3px; }
-.traceList::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(255,255,255,0.08); }
-
-.traceEmpty {
+.traceTimeline {
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 8px;
-  padding: 28px 20px;
-  color: #3d3c4e;
-  font-family: ui-monospace, monospace;
-  font-size: 11.5px;
-  line-height: 1.6;
-  text-align: center;
 }
 
-.traceRow {
-  display: grid;
-  grid-template-columns: 18px 16px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  border-left: 2px solid transparent;
-  transition: background 80ms;
+.traceTimelineLine {
+  position: absolute;
+  left: 13px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, #e5e7eb, rgba(229,231,235,0));
+  pointer-events: none;
 }
 
-.traceRow:hover { background: rgba(255, 255, 255, 0.03); }
-.traceRow:last-child { border-bottom: none; }
-
-.traceSeq {
-  flex-shrink: 0;
-  color: #3d3c4e;
-  font-family: ui-monospace, monospace;
-  font-size: 9px;
-  font-weight: 700;
-  text-align: right;
-  padding-top: 1px;
-  letter-spacing: 0;
-  user-select: none;
+.traceCard {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 12px;
+  background: #ffffff;
+  transition: box-shadow 140ms, border-color 140ms;
 }
 
-.traceIconWrap {
+.traceCard:hover {
+  border-color: rgba(13, 18, 33, 0.14);
+  box-shadow: 0 2px 10px rgba(13, 18, 33, 0.06);
+}
+
+.traceDotWrap {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  opacity: 0.9;
+  width: 8px;
+  margin-top: 3px;
 }
 
-.traceText {
-  color: #a8a7b8;
-  font-family: ui-monospace, monospace;
-  font-size: 10.5px;
-  line-height: 1.6;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.traceMs {
+.traceDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
   flex-shrink: 0;
-  color: #3d3c4e;
-  font-size: 9.5px;
-  font-family: ui-monospace, monospace;
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
 }
 
-/* Row variants */
-.traceRowDefault  { border-left-color: #27272a; }
-.traceRowSuccess  { border-left-color: #22c55e; }
-.traceRowSuccess .traceText  { color: #86efac; }
-.traceRowSuccess .traceMs    { color: #4ade80; }
-.traceRowError    { border-left-color: #ef4444; }
-.traceRowError .traceText    { color: #fca5a5; }
-.traceRowTool     { border-left-color: #3b82f6; }
-.traceRowTool .traceText     { color: #93c5fd; }
-.traceRowResult   { border-left-color: #06b6d4; }
-.traceRowResult .traceText   { color: #67e8f9; }
-.traceRowGuard    { border-left-color: #f59e0b; }
-.traceRowGuard .traceText    { color: #fcd34d; }
-.traceRowModel    { border-left-color: #a855f7; }
-.traceRowModel .traceText    { color: #d8b4fe; }
-.traceRowMcp      { border-left-color: #6366f1; }
-.traceRowMcp .traceText      { color: #a5b4fc; }
-.traceRowChain    { border-left-color: #8b5cf6; }
-.traceRowChain .traceText    { color: #c4b5fd; }
-.traceRowTier     { border-left-color: #3f3f46; }
-.traceRowTier .traceText     { color: #71717a; }
+.traceDotPulse {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  opacity: 0.25;
+  animation: tracePulse 2s ease-in-out infinite;
+}
+
+@keyframes tracePulse {
+  0%, 100% { transform: scale(1); opacity: 0.25; }
+  50%       { transform: scale(1.5); opacity: 0.08; }
+}
+
+.traceCardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.traceCardRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.traceCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.traceCardName {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.1px;
+}
+
+.traceCardChips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.traceExpandBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 120ms;
+}
+
+.traceExpandBtn:hover { color: #4b5563; }
+
+.traceSeq {
+  flex-shrink: 0;
+  color: #d1d5db;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  user-select: none;
+  margin-top: 3px;
+}
+
+.traceCardDetail {
+  margin-top: -4px;
+  padding: 10px 13px 11px 33px;
+  border: 1px solid rgba(13, 18, 33, 0.07);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  background: #f9fafb;
+  overflow: hidden;
+}
+
+.traceDetailLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+  margin-bottom: 5px;
+}
+
+.traceDetailBody {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  line-height: 1.65;
+  color: #374151;
+  background: #ffffff;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 7px;
+  padding: 8px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 /* ── Sample prompts ──────────────────────────────────────── */
 

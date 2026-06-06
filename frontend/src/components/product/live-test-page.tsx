@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import {
   Bot, Gauge, ShieldCheck, Plug2, Globe, CheckCircle2,
   WifiOff, Clock, Copy, Check, Cpu,
-  Wrench, FileText, RefreshCw, User, Zap, Terminal, XCircle, type LucideIcon,
+  Wrench, FileText, RefreshCw, User, Zap, Terminal, XCircle,
+  AlertCircle, Settings, Database, MessageSquare, ChevronDown,
+  type LucideIcon,
 } from "lucide-react";
 import { MiniWidget, BACKEND_URL } from "./mini-widget";
 import type { LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
@@ -116,20 +119,155 @@ function formatMs(ms: number): string {
   return `${ms}ms`;
 }
 
-type TraceMeta = { cls: string; Icon: LucideIcon; color: string };
+type TraceStatus = "success" | "error" | "warning" | "pending";
+type TraceType   = "llm" | "tool" | "retrieval" | "agent" | "system";
+
+type TraceMeta = {
+  Icon: LucideIcon; TypeIcon: LucideIcon;
+  color: string; status: TraceStatus; type: TraceType; title: string;
+};
 
 function traceRowMeta(icon: string): TraceMeta {
-  if (icon === "✅")                   return { cls: styles.traceRowSuccess, Icon: CheckCircle2, color: "#22c55e" };
-  if (icon === "🚫" || icon === "🔴") return { cls: styles.traceRowError,   Icon: XCircle,      color: "#ef4444" };
-  if (icon === "🔧")                   return { cls: styles.traceRowTool,    Icon: Wrench,       color: "#3b82f6" };
-  if (icon === "📄")                   return { cls: styles.traceRowResult,  Icon: FileText,     color: "#06b6d4" };
-  if (icon === "🛡️")                  return { cls: styles.traceRowGuard,   Icon: ShieldCheck,  color: "#f59e0b" };
-  if (icon === "🤖" || icon === "💬") return { cls: styles.traceRowModel,   Icon: Bot,          color: "#a855f7" };
-  if (icon === "🔌" || icon === "🔩") return { cls: styles.traceRowMcp,     Icon: Plug2,        color: "#6366f1" };
-  if (icon === "🔁")                   return { cls: styles.traceRowChain,   Icon: RefreshCw,    color: "#8b5cf6" };
-  if (icon === "👤")                   return { cls: styles.traceRowTier,    Icon: User,         color: "#52525b" };
-  if (icon === "⚡")                   return { cls: styles.traceRowDefault, Icon: Zap,          color: "#71717a" };
-  return                                        { cls: styles.traceRowDefault, Icon: Terminal,    color: "#3f3f46" };
+  if (icon === "✅")
+    return { Icon: CheckCircle2, TypeIcon: MessageSquare, color: "#22c55e", status: "success", type: "agent",     title: "Request complete" };
+  if (icon === "🚫" || icon === "🔴")
+    return { Icon: XCircle,      TypeIcon: AlertCircle,   color: "#ef4444", status: "error",   type: "system",    title: "Error" };
+  if (icon === "🔧")
+    return { Icon: Wrench,       TypeIcon: Settings,      color: "#3b82f6", status: "success", type: "tool",      title: "Tool call" };
+  if (icon === "📄")
+    return { Icon: FileText,     TypeIcon: Database,      color: "#06b6d4", status: "success", type: "retrieval", title: "Tool result" };
+  if (icon === "🛡️")
+    return { Icon: ShieldCheck,  TypeIcon: AlertCircle,   color: "#f59e0b", status: "warning", type: "system",    title: "Guardrail check" };
+  if (icon === "🤖" || icon === "💬")
+    return { Icon: Bot,          TypeIcon: Zap,           color: "#a855f7", status: "success", type: "llm",       title: "LLM" };
+  if (icon === "🔌" || icon === "🔩")
+    return { Icon: Plug2,        TypeIcon: Database,      color: "#6366f1", status: "success", type: "system",    title: "MCP tools" };
+  if (icon === "🔁")
+    return { Icon: RefreshCw,    TypeIcon: MessageSquare, color: "#8b5cf6", status: "success", type: "agent",     title: "Tool loop" };
+  if (icon === "👤")
+    return { Icon: User,         TypeIcon: AlertCircle,   color: "#52525b", status: "success", type: "system",    title: "Tier resolved" };
+  if (icon === "⚡")
+    return { Icon: Zap,          TypeIcon: MessageSquare, color: "#6366f1", status: "pending", type: "agent",     title: "Gateway request" };
+  return   { Icon: Terminal,     TypeIcon: AlertCircle,   color: "#71717a", status: "success", type: "system",    title: "Event" };
+}
+
+// ── Trace chip ────────────────────────────────────────────────────────────────
+
+type ChipColor  = "success" | "error" | "warning" | "pending" | "neutral" | "accent";
+type ChipVariant = "soft" | "outline" | "secondary";
+
+const CHIP_COLORS: Record<ChipColor, Record<ChipVariant, { bg: string; color: string; border: string }>> = {
+  success: {
+    soft:      { bg: "#f0fdf4", color: "#16a34a", border: "transparent" },
+    outline:   { bg: "transparent", color: "#16a34a", border: "#bbf7d0" },
+    secondary: { bg: "#dcfce7", color: "#15803d", border: "transparent" },
+  },
+  error: {
+    soft:      { bg: "#fff1f2", color: "#e11d48", border: "transparent" },
+    outline:   { bg: "transparent", color: "#e11d48", border: "#fecdd3" },
+    secondary: { bg: "#ffe4e6", color: "#be123c", border: "transparent" },
+  },
+  warning: {
+    soft:      { bg: "#fffbeb", color: "#d97706", border: "transparent" },
+    outline:   { bg: "transparent", color: "#d97706", border: "#fde68a" },
+    secondary: { bg: "#fef3c7", color: "#b45309", border: "transparent" },
+  },
+  pending: {
+    soft:      { bg: "#eff6ff", color: "#2563eb", border: "transparent" },
+    outline:   { bg: "transparent", color: "#2563eb", border: "#bfdbfe" },
+    secondary: { bg: "#dbeafe", color: "#1d4ed8", border: "transparent" },
+  },
+  neutral: {
+    soft:      { bg: "#f4f4f5", color: "#52525b", border: "transparent" },
+    outline:   { bg: "transparent", color: "#52525b", border: "#e4e4e7" },
+    secondary: { bg: "#e4e4e7", color: "#3f3f46", border: "transparent" },
+  },
+  accent: {
+    soft:      { bg: "#f0f9ff", color: "#0284c7", border: "transparent" },
+    outline:   { bg: "transparent", color: "#0284c7", border: "#bae6fd" },
+    secondary: { bg: "#e0f2fe", color: "#0369a1", border: "transparent" },
+  },
+};
+
+function TraceChip({ children, color = "neutral", variant = "soft", icon, style: extraStyle }: {
+  children: React.ReactNode; color?: ChipColor; variant?: ChipVariant;
+  icon?: React.ReactNode; style?: React.CSSProperties;
+}) {
+  const c = CHIP_COLORS[color][variant];
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 3,
+      padding: "2px 7px", borderRadius: 999, fontSize: 10.5, fontWeight: 600,
+      letterSpacing: "0.1px", whiteSpace: "nowrap",
+      background: c.bg, color: c.color, border: `1px solid ${c.border}`,
+      ...extraStyle,
+    }}>
+      {icon}
+      {children}
+    </span>
+  );
+}
+
+// ── Trace card ────────────────────────────────────────────────────────────────
+
+function TraceCard({ entry, seq }: { entry: TraceEntry; seq: number }) {
+  const [open, setOpen] = useState(false);
+  const m = traceRowMeta(entry.icon);
+  const statusColor: ChipColor = m.status === "success" ? "success" : m.status === "error" ? "error" : m.status === "warning" ? "warning" : "pending";
+
+  return (
+    <CollapsiblePrimitive.Root open={open} onOpenChange={setOpen}>
+      <div className={styles.traceCard}>
+        {/* Status dot */}
+        <div className={styles.traceDotWrap}>
+          <div className={styles.traceDot} style={{ background: m.color }} />
+          {m.status === "pending" && <div className={styles.traceDotPulse} style={{ background: m.color }} />}
+        </div>
+
+        {/* Body */}
+        <div className={styles.traceCardBody}>
+          <div className={styles.traceCardRow}>
+            {/* Status icon + title */}
+            <div className={styles.traceCardTitle}>
+              <m.Icon size={13} strokeWidth={2} style={{ color: m.color, flexShrink: 0 }} />
+              <span className={styles.traceCardName}>{m.title}</span>
+            </div>
+
+            {/* Chips */}
+            <div className={styles.traceCardChips}>
+              <TraceChip color="neutral" variant="soft" icon={<m.TypeIcon size={9} strokeWidth={2} />}>
+                {m.type}
+              </TraceChip>
+              <TraceChip color={statusColor} variant="secondary">
+                {m.status}
+              </TraceChip>
+              {entry.ms > 0 && (
+                <TraceChip color="accent" variant="soft">
+                  {formatMs(entry.ms)}
+                </TraceChip>
+              )}
+            </div>
+          </div>
+
+          {/* Expand trigger */}
+          <CollapsiblePrimitive.CollapsibleTrigger asChild>
+            <button className={styles.traceExpandBtn}>
+              <ChevronDown size={11} strokeWidth={2.5} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 180ms" }} />
+              {open ? "hide details" : "view details"}
+            </button>
+          </CollapsiblePrimitive.CollapsibleTrigger>
+        </div>
+
+        {/* Sequence number */}
+        <span className={styles.traceSeq}>{seq}</span>
+      </div>
+
+      <CollapsiblePrimitive.CollapsibleContent className={styles.traceCardDetail}>
+        <div className={styles.traceDetailLabel}>Output</div>
+        <div className={styles.traceDetailBody}>{entry.text}</div>
+      </CollapsiblePrimitive.CollapsibleContent>
+    </CollapsiblePrimitive.Root>
+  );
 }
 
 // ── Sample prompts ────────────────────────────────────────────────────────────
@@ -383,37 +521,34 @@ export function LiveTestPage() {
           {/* ── Gateway trace ── */}
           <div className={styles.section}>
             <div className={styles.sectionHead}>
-              <h3 className={styles.sectionTitle}>
-                Gateway trace
-                {traceLog.length > 0 && <span className={styles.traceCount}>{traceLog.length}</span>}
-              </h3>
+              <div>
+                <h3 className={styles.sectionTitle}>
+                  Gateway trace
+                  {traceLog.length > 0 && <span className={styles.traceCount}>{traceLog.length}</span>}
+                </h3>
+                <p className={styles.sectionHint} style={{ marginTop: 2 }}>Production observability timeline</p>
+              </div>
               {traceLog.length > 0 && (
                 <button className={styles.traceClearBtn} onClick={() => setTraceLog([])}>Clear</button>
               )}
             </div>
-            <div className={styles.traceList}>
-              {traceLog.length === 0 ? (
-                <div className={styles.traceEmpty}>
-                  <Clock size={14} strokeWidth={1.5} style={{ opacity: 0.4 }} />
-                  <span>Send a message to see model routing, MCP tool calls, guardrail checks, and latency.</span>
+
+            {traceLog.length === 0 ? (
+              <div className={styles.traceEmptyCard}>
+                <Clock size={16} strokeWidth={1.5} style={{ color: "#9ca3af" }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 2 }}>No events yet</div>
+                  <div style={{ fontSize: 12, color: "#9ca3af" }}>Send a message to see model routing, MCP tool calls, guardrail checks, and latency.</div>
                 </div>
-              ) : (
-                traceLog.map((e, i) => {
-                  const { cls, Icon, color } = traceRowMeta(e.icon);
-                  const seq = traceLog.length - i;
-                  return (
-                    <div key={i} className={`${styles.traceRow} ${cls}`} title={e.text}>
-                      <span className={styles.traceSeq}>{seq}</span>
-                      <span className={styles.traceIconWrap} style={{ color }}>
-                        <Icon size={11} strokeWidth={2} />
-                      </span>
-                      <span className={styles.traceText}>{e.text}</span>
-                      {e.ms > 0 && <span className={styles.traceMs}>{formatMs(e.ms)}</span>}
-                    </div>
-                  );
-                })
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className={styles.traceTimeline}>
+                <div className={styles.traceTimelineLine} />
+                {traceLog.map((e, i) => (
+                  <TraceCard key={i} entry={e} seq={traceLog.length - i} />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* ── Sample prompts ── */}
