@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { MiniWidget, BACKEND_URL } from "./mini-widget";
 import type { LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
 import styles from "./live-test-page.module.css";
@@ -102,6 +102,24 @@ const RULE_TO_TIER: Record<string, TierKey> = {
   pro: "pro",
 };
 
+function formatMs(ms: number): string {
+  if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+  return `${ms}ms`;
+}
+
+function traceRowVariant(icon: string): string {
+  if (icon === "✅") return styles.traceRowSuccess;
+  if (icon === "🚫" || icon === "🔴") return styles.traceRowError;
+  if (icon === "🔧") return styles.traceRowTool;
+  if (icon === "📄") return styles.traceRowResult;
+  if (icon === "🛡️") return styles.traceRowGuard;
+  if (icon === "🤖" || icon === "💬") return styles.traceRowModel;
+  if (icon === "🔌") return styles.traceRowMcp;
+  if (icon === "🔁") return styles.traceRowChain;
+  if (icon === "👤") return styles.traceRowTier;
+  return styles.traceRowDefault;
+}
+
 // ── Sample prompts (tier-tagged) ──────────────────────────────────────────────
 
 const SAMPLE_PROMPTS: { tier: TierKey; text: string; desc: string }[] = [
@@ -122,12 +140,6 @@ export function LiveTestPage() {
   const [activeTier, setActiveTier] = useState<TierKey>("guest");
   const [traceLog, setTraceLog] = useState<TraceEntry[]>([]);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
-  const traceEndRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll trace to bottom when new entries arrive
-  useEffect(() => {
-    traceEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [traceLog]);
 
   useEffect(() => {
     const saved = readTierConfig();
@@ -236,8 +248,7 @@ export function LiveTestPage() {
       : null;
 
   function addTrace(entry: TraceEntry) {
-    // Append (chronological) — newest at bottom, auto-scroll keeps it visible
-    setTraceLog((prev) => [...prev.slice(-49), entry]);
+    setTraceLog((prev) => [entry, ...prev.slice(0, 49)]);
   }
 
   function copyPrompt(text: string) {
@@ -386,18 +397,17 @@ export function LiveTestPage() {
             <div className={styles.traceList}>
               {traceLog.length === 0 ? (
                 <div className={styles.traceEmpty}>
-                  Send a message to see the full gateway request trace — model routing, MCP tool calls, guardrail checks, and latency.
+                  Send a message to see the full gateway trace — model routing, MCP tool calls, guardrail checks, and latency.
                 </div>
               ) : (
                 traceLog.map((e, i) => (
-                  <div key={i} className={styles.traceRow}>
+                  <div key={i} className={`${styles.traceRow} ${traceRowVariant(e.icon)}`}>
                     <span className={styles.traceIcon}>{e.icon}</span>
                     <span className={styles.traceText}>{e.text}</span>
-                    <span className={styles.traceMs}>{e.ms}ms</span>
+                    <span className={styles.traceMs}>{formatMs(e.ms)}</span>
                   </div>
                 ))
               )}
-              <div ref={traceEndRef} />
             </div>
           </div>
 
