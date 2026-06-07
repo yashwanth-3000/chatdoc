@@ -401,7 +401,8 @@ router.post("/", async (req, res) => {
           if (gp.output.length > 0) {
             sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} — passed`, ms: latencyMs });
           }
-          sse(res, "trace", { icon: "✅", text: `Done — ${followUp.usedModel} (${latencyMs}ms, ${pendingCalls.length} tool call(s))`, ms: latencyMs });
+          const followUpServedBy = followUp.usedModel && followUp.usedModel !== primary ? ` resolved to ${followUp.usedModel}` : "";
+          sse(res, "trace", { icon: "✅", text: `Done — ${primary}${followUpServedBy} (${latencyMs}ms, ${pendingCalls.length} tool call(s))`, ms: latencyMs });
           sse(res, "done", { model: followUp.usedModel, latencyMs, traceId: followUp.traceId });
           res.end();
           return;
@@ -430,7 +431,8 @@ router.post("/", async (req, res) => {
     if (gp.output.length > 0) {
       sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} — passed`, ms: latencyMs });
     }
-    sse(res, "trace", { icon: "✅", text: `Done — ${first.usedModel} (${latencyMs}ms, no tool calls)`, ms: latencyMs });
+    const servedBy = first.usedModel && first.usedModel !== primary ? ` resolved to ${first.usedModel}` : "";
+    sse(res, "trace", { icon: "✅", text: `Done — ${primary}${servedBy} (${latencyMs}ms, no tool calls)`, ms: latencyMs });
     sse(res, "done",  { model: first.usedModel, latencyMs, traceId: first.traceId });
 
   } catch (err) {

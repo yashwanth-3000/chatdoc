@@ -496,6 +496,46 @@
   margin-left: auto;
 }
 
+.modelServedBy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  margin-bottom: 9px;
+  border: 1px solid rgba(22, 163, 74, 0.22);
+  border-radius: 10px;
+  background: rgba(22, 163, 74, 0.05);
+  font-size: 11.5px;
+  color: #374151;
+}
+
+.modelServedByName {
+  font-weight: 700;
+  color: #111827;
+  font-family: ui-monospace, monospace;
+}
+
+.modelServedByLogo {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  color: #374151;
+  flex-shrink: 0;
+}
+
+.modelRoutingHint {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: #9ca3af;
+  margin: 0 0 9px;
+}
+
+.modelRoutingHint strong {
+  color: #6b7280;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
 .modelChainRow {
   display: flex;
   align-items: center;

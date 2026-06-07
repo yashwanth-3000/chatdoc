@@ -63,6 +63,26 @@ function providerOf(fqn: string | null | undefined): string {
   return slash === -1 ? "" : fqn.slice(0, slash);
 }
 
+// Trace spans report the resolved provider model verbatim (e.g. "gpt-5-2025-08-07"
+// or "openai/gpt-5-2025-08-07"), which carries a dated suffix the routing config's
+// target slug ("openai/gpt-5") doesn't have — so compare base names, not exact strings.
+function normalizeModelName(name: string | null | undefined): string {
+  if (!name) return "";
+  let n = name.toLowerCase();
+  const slash = n.lastIndexOf("/");
+  if (slash !== -1) n = n.slice(slash + 1);
+  n = n.replace(/-\d{4}-?\d{2}-?\d{2}$/, "");
+  n = n.replace(/-\d{8}$/, "");
+  return n;
+}
+
+function modelsMatch(attemptModel: string | null | undefined, targetFqn: string | null | undefined): boolean {
+  const a = normalizeModelName(attemptModel);
+  const b = normalizeModelName(targetFqn);
+  if (!a || !b) return false;
+  return a === b || a.startsWith(b) || b.startsWith(a);
+}
+
 function friendlyErrorType(errorType: string | null, errorMessage: string | null): string {
   if (errorType === "tfy-rate-limit") return "Rate limit";
   if (errorMessage) {
@@ -705,11 +725,34 @@ export function LiveTestPage() {
                   </span>
                 </div>
 
+                {modelTrace?.resolvedModel && (
+                  <div className={styles.modelServedBy}>
+                    <Zap size={12} strokeWidth={2} color="#16a34a" />
+                    <span>
+                      Currently serving via <strong>{routingInfo.virtualModelName}</strong>:{" "}
+                      <span className={styles.modelServedByName}>{shortModel(modelTrace.resolvedModel)}</span>
+                    </span>
+                    {(() => {
+                      const matchedTarget = routingInfo.targets.find((t) => modelsMatch(modelTrace.resolvedModel, t.target));
+                      const provider = providerOf(matchedTarget?.target) || providerOf(modelTrace.resolvedModel);
+                      return provider ? (
+                        <span className={styles.modelServedByLogo}><ProviderIcon provider={provider} size={12} /></span>
+                      ) : null;
+                    })()}
+                  </div>
+                )}
+
+                <p className={styles.modelRoutingHint}>
+                  Routing: <strong>{routingInfo.routingType.replace(/-/g, " ")}</strong> — chat-bot-llm picks whichever
+                  fallback target answers fastest for your session, so the model served first can vary turn to turn
+                  (it won&rsquo;t always be Fallback 1).
+                </p>
+
                 <div className={styles.modelChainRow}>
                   {routingInfo.targets.map((target, idx) => {
                     const fqn = target.target;
                     const provider = providerOf(fqn);
-                    const attempt = modelTrace?.attempts.find((a) => a.model === fqn) ?? null;
+                    const attempt = modelTrace?.attempts.find((a) => modelsMatch(a.model, fqn)) ?? null;
                     const isExpanded = expandedModel === fqn;
                     const stateLabel: "ok" | "error" | "idle" =
                       !attempt ? "idle" : attempt.status === "ok" ? "ok" : "error";
@@ -755,7 +798,7 @@ export function LiveTestPage() {
 
                 {expandedModel && (() => {
                   const idx = routingInfo.targets.findIndex((t) => t.target === expandedModel);
-                  const attempt = modelTrace?.attempts.find((a) => a.model === expandedModel) ?? null;
+                  const attempt = modelTrace?.attempts.find((a) => modelsMatch(a.model, expandedModel)) ?? null;
                   if (idx === -1 || !attempt || attempt.status !== "error") return null;
                   const nextTarget = routingInfo.targets[idx + 1]?.target;
                   return (
