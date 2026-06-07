@@ -7,9 +7,10 @@ import {
   Bot, Gauge, ShieldCheck, Plug2, Globe, CheckCircle2,
   WifiOff, Clock, Copy, Check, Cpu,
   Wrench, FileText, RefreshCw, User, Zap, Terminal, XCircle,
-  AlertCircle, Settings, Database, MessageSquare, ChevronDown,
+  AlertCircle, Settings, Database, MessageSquare, ChevronDown, ArrowRight,
   type LucideIcon,
 } from "lucide-react";
+import { ProviderIcon } from "./provider-icons";
 import { MiniWidget, BACKEND_URL } from "./mini-widget";
 import type { LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
 import styles from "./live-test-page.module.css";
@@ -704,67 +705,77 @@ export function LiveTestPage() {
                   </span>
                 </div>
 
-                <div className={styles.modelChain}>
+                <div className={styles.modelChainRow}>
                   {routingInfo.targets.map((target, idx) => {
                     const fqn = target.target;
+                    const provider = providerOf(fqn);
                     const attempt = modelTrace?.attempts.find((a) => a.model === fqn) ?? null;
                     const isExpanded = expandedModel === fqn;
                     const stateLabel: "ok" | "error" | "idle" =
                       !attempt ? "idle" : attempt.status === "ok" ? "ok" : "error";
 
                     return (
-                      <div key={fqn || idx}>
+                      <React.Fragment key={fqn || idx}>
+                        {idx > 0 && (
+                          <span className={styles.modelArrow} aria-hidden="true">
+                            <ArrowRight size={14} strokeWidth={2} />
+                          </span>
+                        )}
                         <button
                           type="button"
                           className={[
-                            styles.modelRow,
-                            stateLabel === "error" ? styles.modelRowError : "",
-                            stateLabel === "ok" ? styles.modelRowOk : "",
+                            styles.modelCard,
+                            stateLabel === "error" ? styles.modelCardError : "",
+                            stateLabel === "ok" ? styles.modelCardOk : "",
                           ].join(" ").trim()}
                           onClick={() => attempt?.status === "error" && setExpandedModel(isExpanded ? null : fqn)}
                           disabled={!attempt || attempt.status !== "error"}
                           aria-expanded={isExpanded}
                         >
-                          <span className={styles.modelStatusIcon}>
-                            {stateLabel === "ok" && <CheckCircle2 size={14} strokeWidth={2} color="#16a34a" />}
-                            {stateLabel === "error" && <XCircle size={14} strokeWidth={2} color="#ef4444" />}
-                            {stateLabel === "idle" && <span className={styles.modelIdleDot} />}
+                          <span className={styles.modelCardTop}>
+                            <span className={styles.modelCardLogo}>
+                              <ProviderIcon provider={provider} size={15} />
+                            </span>
+                            <span className={styles.modelStatusIcon}>
+                              {stateLabel === "ok" && <CheckCircle2 size={14} strokeWidth={2} color="#16a34a" />}
+                              {stateLabel === "error" && <XCircle size={14} strokeWidth={2} color="#ef4444" />}
+                              {stateLabel === "idle" && <span className={styles.modelIdleDot} />}
+                            </span>
                           </span>
-                          <span className={styles.modelOrder}>
+                          <span className={styles.modelCardName}>{shortModel(fqn)}</span>
+                          <span className={styles.modelCardProvider}>{provider || "model"}</span>
+                          <span className={styles.modelCardOrder}>
                             {attempt ? `Attempt ${attempt.order}` : `Fallback ${idx + 1}`}
                           </span>
-                          <span className={styles.modelName}>{shortModel(fqn)}</span>
-                          <TraceChip color="neutral" variant="soft">{providerOf(fqn)}</TraceChip>
-                          {stateLabel === "error" && (
-                            <span className={styles.modelExpandHint}>
-                              <ChevronDown
-                                size={12}
-                                strokeWidth={2}
-                                style={{ transform: isExpanded ? "rotate(180deg)" : undefined, transition: "transform 120ms" }}
-                              />
-                            </span>
-                          )}
                         </button>
-
-                        {isExpanded && attempt?.status === "error" && (
-                          <div className={styles.traceCardDetail}>
-                            <div className={styles.traceErrorPrefix}>
-                              {friendlyErrorType(attempt.errorType, attempt.errorMessage)}
-                            </div>
-                            <div className={styles.traceErrorMessage}>
-                              {attempt.errorMessage ?? "The gateway did not return an error detail for this attempt."}
-                            </div>
-                            <div className={styles.traceDetailLabel}>Why it fell back</div>
-                            <div className={styles.traceDetailBody}>
-                              {shortModel(fqn)} failed on this turn, so chat-bot-llm routed the request to the next
-                              fallback target{idx + 1 < routingInfo.targets.length ? ` (${shortModel(routingInfo.targets[idx + 1]?.target)})` : ""}.
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      </React.Fragment>
                     );
                   })}
                 </div>
+
+                {expandedModel && (() => {
+                  const idx = routingInfo.targets.findIndex((t) => t.target === expandedModel);
+                  const attempt = modelTrace?.attempts.find((a) => a.model === expandedModel) ?? null;
+                  if (idx === -1 || !attempt || attempt.status !== "error") return null;
+                  const nextTarget = routingInfo.targets[idx + 1]?.target;
+                  return (
+                    <div className={styles.traceCardDetail} style={{ marginTop: 9 }}>
+                      <div className={styles.traceDetailLabel}>
+                        {shortModel(expandedModel)} · why it fell back
+                      </div>
+                      <div className={styles.traceErrorPrefix}>
+                        {friendlyErrorType(attempt.errorType, attempt.errorMessage)}
+                      </div>
+                      <div className={styles.traceErrorMessage}>
+                        {attempt.errorMessage ?? "The gateway did not return an error detail for this attempt."}
+                      </div>
+                      <div className={styles.traceDetailBody}>
+                        {shortModel(expandedModel)} failed on this turn, so chat-bot-llm routed the request to the next
+                        fallback target{nextTarget ? ` (${shortModel(nextTarget)})` : ""}.
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {modelTrace && modelTrace.attempts.length > 0 && modelTrace.attempts.every((a) => a.status === "error") && (
                   <div className={styles.traceErrorMessage} style={{ marginTop: 9 }}>

@@ -496,42 +496,71 @@
   margin-left: auto;
 }
 
-.modelChain {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.modelRow {
+.modelChainRow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 12px;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.modelArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #d1d5db;
+}
+
+.modelCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  flex: 1;
+  min-width: 132px;
+  padding: 10px 12px;
   border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 10px;
+  border-radius: 12px;
   background: #ffffff;
   font: inherit;
   text-align: left;
   cursor: default;
-  transition: background 120ms, border-color 120ms;
+  transition: background 120ms, border-color 120ms, transform 120ms;
 }
 
-.modelRow:disabled { cursor: default; opacity: 0.6; }
+.modelCard:disabled { cursor: default; }
 
-.modelRowError {
+.modelCardError {
   cursor: pointer;
   border-color: rgba(239, 68, 68, 0.28);
-  background: rgba(239, 68, 68, 0.04);
-  opacity: 1;
+  background: rgba(239, 68, 68, 0.045);
 }
 
-.modelRowError:hover { background: rgba(239, 68, 68, 0.08); }
+.modelCardError:hover { background: rgba(239, 68, 68, 0.09); transform: translateY(-1px); }
 
-.modelRowOk {
+.modelCardOk {
   border-color: rgba(22, 163, 74, 0.25);
-  background: rgba(22, 163, 74, 0.04);
-  opacity: 1;
+  background: rgba(22, 163, 74, 0.045);
+}
+
+.modelCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.modelCardLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: #f3f4f6;
+  color: #374151;
+  flex-shrink: 0;
 }
 
 .modelStatusIcon {
@@ -550,17 +579,7 @@
   background: #d1d5db;
 }
 
-.modelOrder {
-  flex-shrink: 0;
-  font-size: 9.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #9ca3af;
-  min-width: 64px;
-}
-
-.modelName {
+.modelCardName {
   font-size: 12px;
   font-weight: 700;
   color: #111827;
@@ -568,14 +587,24 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
-.modelExpandHint {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
+.modelCardProvider {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: capitalize;
   color: #9ca3af;
-  flex-shrink: 0;
+  letter-spacing: 0.2px;
+}
+
+.modelCardOrder {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #c4c9d2;
+  margin-top: 1px;
 }
 
 /* ── Sample prompts ──────────────────────────────────────── */
