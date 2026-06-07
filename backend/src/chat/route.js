@@ -140,11 +140,36 @@ async function callMcpTool(toolName, args) {
 
 // ── Stream one gateway request ────────────────────────────────────────────────
 
+// Reasoning models (e.g. gpt-5) can sit completely silent for 30s+ — both while the
+// gateway is still waiting on the model for a first response token (i.e. during the
+// `fetch()` call itself, before headers even arrive) and later mid-stream between
+// content chunks. Either gap is long enough for an idle proxy/CDN in front of this
+// SSE response to decide the connection is dead and kill it client-side (surfaces as
+// a generic network failure, e.g. Safari's "Load failed", even though the upstream
+// call eventually succeeds). A `: comment` line is valid-but-ignored SSE per spec, so
+// re-racing the SAME pending promise against a periodic timeout — and writing one
+// each time the timeout wins — keeps the connection alive without the client ever
+// seeing it as a real event or us calling the underlying read()/fetch() concurrently.
+async function withHeartbeat(promise, res, intervalMs = 10000) {
+  const heartbeat = Symbol("heartbeat");
+  while (true) {
+    const result = await Promise.race([
+      promise,
+      new Promise((resolve) => setTimeout(() => resolve(heartbeat), intervalMs)),
+    ]);
+    if (result === heartbeat) {
+      res.write(": keep-alive\n\n");
+      continue;
+    }
+    return result;
+  }
+}
+
 async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools, modelId, streamDeltas, res, t0 }) {
   const body = { model: modelId, messages, stream: true };
   if (tools?.length) { body.tools = tools; body.tool_choice = "auto"; }
 
-  const upstream = await fetch(url, {
+  const upstream = await withHeartbeat(fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -153,7 +178,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
       "X-TFY-METADATA": tfyMetadata,
     },
     body: JSON.stringify(body),
-  });
+  }), res);
 
   if (!upstream.ok) {
     const errText = await upstream.text().catch(() => "");
@@ -191,7 +216,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
   const toolCallMap = {};
 
   while (true) {
-    const { done, value } = await reader.read();
+    const { done, value } = await withHeartbeat(reader.read(), res);
     if (done) break;
     buf += dec.decode(value, { stream: true });
     const lines = buf.split("\n");
