@@ -469,6 +469,115 @@
   word-break: break-word;
 }
 
+/* ── Models / fallback chain ─────────────────────────────── */
+
+.modelRoot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  margin-bottom: 9px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 10px;
+  background: #f9fafb;
+  color: #374151;
+}
+
+.modelRootName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+  font-family: ui-monospace, monospace;
+}
+
+.modelRootHint {
+  font-size: 10.5px;
+  color: #9ca3af;
+  margin-left: auto;
+}
+
+.modelChain {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 10px;
+  background: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+  transition: background 120ms, border-color 120ms;
+}
+
+.modelRow:disabled { cursor: default; opacity: 0.6; }
+
+.modelRowError {
+  cursor: pointer;
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.04);
+  opacity: 1;
+}
+
+.modelRowError:hover { background: rgba(239, 68, 68, 0.08); }
+
+.modelRowOk {
+  border-color: rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.04);
+  opacity: 1;
+}
+
+.modelStatusIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.modelIdleDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #d1d5db;
+}
+
+.modelOrder {
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #9ca3af;
+  min-width: 64px;
+}
+
+.modelName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+  font-family: ui-monospace, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modelExpandHint {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
 /* ── Sample prompts ──────────────────────────────────────── */
 
 /* Segment slider */

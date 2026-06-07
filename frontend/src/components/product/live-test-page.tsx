@@ -24,8 +24,54 @@ type SavedTierConfig = {
   tiers: Record<TierKey, TierConfig>;
   gatewayUrl?: string;
   controlPlaneUrl?: string;
+  dataRoutingDestination?: string;
   savedAt?: string;
 } | null;
+
+// ── Models / fallback chain ───────────────────────────────────────────────────
+
+type RoutingTarget = { target: string; fallbackCandidate: boolean };
+type RoutingInfo = { virtualModelName: string; routingType: string; targets: RoutingTarget[] } | null;
+
+type ModelAttempt = {
+  order: number;
+  model: string | null;
+  status: "ok" | "error";
+  errorType: string | null;
+  errorMessage: string | null;
+};
+type ModelTraceResult = {
+  traceId: string;
+  found: boolean;
+  resolvedModel: string | null;
+  status: "ok" | "error";
+  errorMessage: string | null;
+  requestedFirstTarget: string | null;
+  attempts: ModelAttempt[];
+};
+
+function shortModel(fqn: string | null | undefined): string {
+  if (!fqn) return "—";
+  const slash = fqn.indexOf("/");
+  return slash === -1 ? fqn : fqn.slice(slash + 1);
+}
+
+function providerOf(fqn: string | null | undefined): string {
+  if (!fqn) return "";
+  const slash = fqn.indexOf("/");
+  return slash === -1 ? "" : fqn.slice(0, slash);
+}
+
+function friendlyErrorType(errorType: string | null, errorMessage: string | null): string {
+  if (errorType === "tfy-rate-limit") return "Rate limit";
+  if (errorMessage) {
+    const lc = errorMessage.toLowerCase();
+    if (lc.includes("timeout")) return "Timeout";
+    if (lc.includes("overloaded")) return "Provider overloaded";
+    if (lc.includes("guardrail") || lc.includes("blocked")) return "Blocked by guardrail";
+  }
+  return errorType ? errorType.replace(/^tfy-/, "").replace(/-/g, " ") : "Error";
+}
 
 // ── Tier meta ─────────────────────────────────────────────────────────────────
 
@@ -412,6 +458,10 @@ export function LiveTestPage() {
   const [promptTab, setPromptTab] = useState<"prompts" | "guardrails">("prompts");
   const [guardrailFilter, setGuardrailFilter] = useState<GuardrailCategory | "all">("all");
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
+  const [routingInfo, setRoutingInfo] = useState<RoutingInfo>(null);
+  const [modelTrace, setModelTrace] = useState<ModelTraceResult | null>(null);
+  const [modelTraceLoading, setModelTraceLoading] = useState(false);
+  const [expandedModel, setExpandedModel] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/chat/mcp-tools`)
@@ -440,6 +490,27 @@ export function LiveTestPage() {
           const tierKey = RULE_TO_TIER[ruleId];
           if (tierKey) rateLimitByTier[tierKey] = { id: ruleId, name: `${rec.limit_to as number} ${unitLabel(rec.unit as string)}` };
         }
+        const routingSection = allSections.find((s) => s.key === "routingConfigs");
+        const routingRecords = (routingSection?.records ?? []) as Array<Record<string, unknown>>;
+        const routingRecord = routingRecords[0];
+        if (routingRecord) {
+          const manifest = routingRecord.manifest as Record<string, unknown> | undefined;
+          const integrations = (manifest?.integrations ?? []) as Array<Record<string, unknown>>;
+          const integration = integrations.find((i) => i?.routing_config) ?? integrations[0];
+          const rc = integration?.routing_config as Record<string, unknown> | undefined;
+          const lbTargets = (rc?.load_balance_targets ?? []) as Array<Record<string, unknown>>;
+          if (rc && lbTargets.length > 0) {
+            setRoutingInfo({
+              virtualModelName: (integration?.slug as string) ?? (routingRecord.name as string) ?? "virtual-model",
+              routingType: (rc.type as string) ?? "load-balanced",
+              targets: lbTargets.map((t) => ({
+                target: (t.target as string) ?? "",
+                fallbackCandidate: t.fallback_candidate !== false,
+              })),
+            });
+          }
+        }
+
         const hasModel = saved?.tiers.guest.model || saved?.tiers.loggedIn.model || saved?.tiers.pro.model;
         let modelRef: TierItemRef | null = null;
         if (!hasModel && gwUrl) {
@@ -461,10 +532,12 @@ export function LiveTestPage() {
           const base: NonNullable<SavedTierConfig> = prev ?? {
             tiers: { guest: emptyTier, loggedIn: emptyTier, pro: emptyTier },
             gatewayUrl: gw, controlPlaneUrl: data.connection?.controlPlaneUrl ?? "",
+            dataRoutingDestination: data.connection?.dataRoutingDestination ?? "default",
             savedAt: new Date().toISOString(),
           };
           return {
             ...base, gatewayUrl: gw,
+            dataRoutingDestination: base.dataRoutingDestination ?? data.connection?.dataRoutingDestination ?? "default",
             tiers: {
               guest:    { ...base.tiers.guest,    model: base.tiers.guest.model    ?? modelRef, rateLimitPolicy: rateLimitByTier.guest    ?? base.tiers.guest.rateLimitPolicy },
               loggedIn: { ...base.tiers.loggedIn, model: base.tiers.loggedIn.model ?? modelRef, rateLimitPolicy: rateLimitByTier.loggedIn ?? base.tiers.loggedIn.rateLimitPolicy },
@@ -503,6 +576,45 @@ export function LiveTestPage() {
 
   function addTrace(entry: TraceEntry) {
     setTraceLog((prev) => [{ ...entry, receivedAt: Date.now() }, ...prev.slice(0, 49)]);
+  }
+
+  // Pull the per-model fallback chain for the response that just finished — the
+  // gateway's trace spans take a moment to land, so retry briefly before giving up.
+  function handleDone(info: { model: string; latencyMs: number; traceId: string | null }) {
+    const controlPlaneUrl = tierCfg?.controlPlaneUrl;
+    if (!info.traceId || !controlPlaneUrl || !liveKey) return;
+
+    setExpandedModel(null);
+    setModelTraceLoading(true);
+
+    let cancelled = false;
+    const attempt = (tryNum: number) => {
+      fetch(`${BACKEND_URL}/api/chat/model-trace`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          traceId: info.traceId,
+          controlPlaneUrl,
+          apiKey: liveKey,
+          dataRoutingDestination: tierCfg?.dataRoutingDestination ?? "default",
+        }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data: ModelTraceResult | null) => {
+          if (cancelled) return;
+          if (data?.found && data.attempts.length > 0) {
+            setModelTrace(data);
+            setModelTraceLoading(false);
+          } else if (tryNum < 4) {
+            setTimeout(() => attempt(tryNum + 1), 1500);
+          } else {
+            setModelTraceLoading(false);
+          }
+        })
+        .catch(() => { if (!cancelled) setModelTraceLoading(false); });
+    };
+    attempt(1);
+    return () => { cancelled = true; };
   }
 
   function copyPrompt(text: string) {
@@ -568,6 +680,107 @@ export function LiveTestPage() {
                 <WifiOff size={13} strokeWidth={2} />
                 <span>{liveGatewayUrl && !liveKey ? "API key missing — reconnect in Step 2" : "Not connected — go back to Step 2"}</span>
               </div>
+            )}
+          </div>
+
+          {/* ── Models / fallback chain ── */}
+          <div className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h3 className={styles.sectionTitle}>Models</h3>
+              {routingInfo && (
+                <span className={styles.sectionHint}>{routingInfo.routingType.replace(/-/g, " ")}</span>
+              )}
+            </div>
+
+            {routingInfo ? (
+              <>
+                <div className={styles.modelRoot}>
+                  <Bot size={13} strokeWidth={2} />
+                  <span className={styles.modelRootName}>{routingInfo.virtualModelName}</span>
+                  <span className={styles.modelRootHint}>
+                    {modelTraceLoading
+                      ? "tracing latest response…"
+                      : `${routingInfo.targets.length} fallback model${routingInfo.targets.length === 1 ? "" : "s"} connected`}
+                  </span>
+                </div>
+
+                <div className={styles.modelChain}>
+                  {routingInfo.targets.map((target, idx) => {
+                    const fqn = target.target;
+                    const attempt = modelTrace?.attempts.find((a) => a.model === fqn) ?? null;
+                    const isExpanded = expandedModel === fqn;
+                    const stateLabel: "ok" | "error" | "idle" =
+                      !attempt ? "idle" : attempt.status === "ok" ? "ok" : "error";
+
+                    return (
+                      <div key={fqn || idx}>
+                        <button
+                          type="button"
+                          className={[
+                            styles.modelRow,
+                            stateLabel === "error" ? styles.modelRowError : "",
+                            stateLabel === "ok" ? styles.modelRowOk : "",
+                          ].join(" ").trim()}
+                          onClick={() => attempt?.status === "error" && setExpandedModel(isExpanded ? null : fqn)}
+                          disabled={!attempt || attempt.status !== "error"}
+                          aria-expanded={isExpanded}
+                        >
+                          <span className={styles.modelStatusIcon}>
+                            {stateLabel === "ok" && <CheckCircle2 size={14} strokeWidth={2} color="#16a34a" />}
+                            {stateLabel === "error" && <XCircle size={14} strokeWidth={2} color="#ef4444" />}
+                            {stateLabel === "idle" && <span className={styles.modelIdleDot} />}
+                          </span>
+                          <span className={styles.modelOrder}>
+                            {attempt ? `Attempt ${attempt.order}` : `Fallback ${idx + 1}`}
+                          </span>
+                          <span className={styles.modelName}>{shortModel(fqn)}</span>
+                          <TraceChip color="neutral" variant="soft">{providerOf(fqn)}</TraceChip>
+                          {stateLabel === "error" && (
+                            <span className={styles.modelExpandHint}>
+                              <ChevronDown
+                                size={12}
+                                strokeWidth={2}
+                                style={{ transform: isExpanded ? "rotate(180deg)" : undefined, transition: "transform 120ms" }}
+                              />
+                            </span>
+                          )}
+                        </button>
+
+                        {isExpanded && attempt?.status === "error" && (
+                          <div className={styles.traceCardDetail}>
+                            <div className={styles.traceErrorPrefix}>
+                              {friendlyErrorType(attempt.errorType, attempt.errorMessage)}
+                            </div>
+                            <div className={styles.traceErrorMessage}>
+                              {attempt.errorMessage ?? "The gateway did not return an error detail for this attempt."}
+                            </div>
+                            <div className={styles.traceDetailLabel}>Why it fell back</div>
+                            <div className={styles.traceDetailBody}>
+                              {shortModel(fqn)} failed on this turn, so chat-bot-llm routed the request to the next
+                              fallback target{idx + 1 < routingInfo.targets.length ? ` (${shortModel(routingInfo.targets[idx + 1]?.target)})` : ""}.
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {modelTrace && modelTrace.attempts.length > 0 && modelTrace.attempts.every((a) => a.status === "error") && (
+                  <div className={styles.traceErrorMessage} style={{ marginTop: 9 }}>
+                    <strong>All fallback targets failed on this turn.</strong>{" "}
+                    {modelTrace.errorMessage
+                      ?? modelTrace.attempts[modelTrace.attempts.length - 1]?.errorMessage
+                      ?? "The gateway exhausted every fallback target without producing a response — check the active tier's rate-limit policy."}
+                  </div>
+                )}
+
+                {!modelTrace && !modelTraceLoading && (
+                  <p className={styles.emptyNote}>Send a message in the preview to see which model answered — and why any fell back.</p>
+                )}
+              </>
+            ) : (
+              <p className={styles.emptyNote}>Connect your gateway in Step 2 to load the chat-bot-llm fallback chain.</p>
             )}
           </div>
 
@@ -863,7 +1076,7 @@ export function LiveTestPage() {
               <div className={styles.pageLines}>
                 <span /><span /><span /><span />
               </div>
-              <MiniWidget cfg={cfg} liveConfig={liveConfig} onTrace={addTrace} />
+              <MiniWidget cfg={cfg} liveConfig={liveConfig} onTrace={addTrace} onDone={handleDone} />
             </div>
             <div className={styles.browserFooter}>
               {liveConfig

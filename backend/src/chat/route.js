@@ -160,20 +160,17 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
     throw Object.assign(new Error(`Gateway returned ${upstream.status}: ${errText.slice(0, 200)}`), { statusText: errText });
   }
 
-  // TEMP: investigating whether the gateway exposes per-attempt fallback diagnostics
-  // via response headers (x-tfy-resolved-model / x-tfy-applied-configurations).
+  // The gateway returns the resolved (actually-used) model and a feedback-target-id
+  // that encodes {spanId, traceId} for the request's root trace span — this is what
+  // lets us later pull the full per-model fallback attempt chain via the spans API.
   const resolvedModelHeader = upstream.headers.get("x-tfy-resolved-model");
-  const appliedConfigHeader = upstream.headers.get("x-tfy-applied-configurations");
-  if (resolvedModelHeader || appliedConfigHeader) {
-    console.log("[gateway-headers] x-tfy-resolved-model:", resolvedModelHeader);
-    console.log("[gateway-headers] x-tfy-applied-configurations (raw):", appliedConfigHeader);
-    let parsedAppliedConfig = appliedConfigHeader;
-    try { parsedAppliedConfig = JSON.parse(appliedConfigHeader); } catch { /* not JSON, keep raw */ }
-    sse(res, "trace", {
-      icon: "🔬",
-      text: `Gateway headers — resolved-model: ${resolvedModelHeader ?? "(none)"} · applied-configurations: ${JSON.stringify(parsedAppliedConfig)}`,
-      ms: Date.now() - t0,
-    });
+  let traceId = null;
+  const feedbackTargetId = upstream.headers.get("x-tfy-feedback-target-id");
+  if (feedbackTargetId) {
+    try {
+      const decoded = JSON.parse(Buffer.from(feedbackTargetId, "base64").toString("utf8"));
+      traceId = decoded.traceId || null;
+    } catch { /* not decodable — leave traceId null */ }
   }
 
   const reader = upstream.body.getReader();
@@ -220,7 +217,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
   }
 
   const toolCalls = Object.values(toolCallMap).filter((tc) => tc.name);
-  return { text: accumulated, toolCalls, usedModel, finishReason };
+  return { text: accumulated, toolCalls, usedModel, finishReason, traceId };
 }
 
 // ── Chat route ────────────────────────────────────────────────────────────────
@@ -405,7 +402,7 @@ router.post("/", async (req, res) => {
             sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} — passed`, ms: latencyMs });
           }
           sse(res, "trace", { icon: "✅", text: `Done — ${followUp.usedModel} (${latencyMs}ms, ${pendingCalls.length} tool call(s))`, ms: latencyMs });
-          sse(res, "done", { model: followUp.usedModel, latencyMs });
+          sse(res, "done", { model: followUp.usedModel, latencyMs, traceId: followUp.traceId });
           res.end();
           return;
         }
@@ -434,7 +431,7 @@ router.post("/", async (req, res) => {
       sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} — passed`, ms: latencyMs });
     }
     sse(res, "trace", { icon: "✅", text: `Done — ${first.usedModel} (${latencyMs}ms, no tool calls)`, ms: latencyMs });
-    sse(res, "done",  { model: first.usedModel, latencyMs });
+    sse(res, "done",  { model: first.usedModel, latencyMs, traceId: first.traceId });
 
   } catch (err) {
     const rawMsg = err.message || "Gateway request failed.";
@@ -498,6 +495,71 @@ router.get("/mcp-tools", async (_req, res) => {
     res.json({ counts, tools, total: openaiTools.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Per-request model fallback chain (from the gateway's trace spans) ────────
+// Surfaces exactly which fallback target served (or attempted to serve) a given
+// chat response, in call order, with the gateway's own per-attempt error reason —
+// e.g. "Rate limit exceeded for model: openai/gpt-5 with rule: guests".
+router.post("/model-trace", async (req, res) => {
+  const { traceId, controlPlaneUrl, apiKey, dataRoutingDestination } = req.body;
+  if (!traceId || !controlPlaneUrl || !apiKey) {
+    return res.status(400).json({ error: "traceId, controlPlaneUrl and apiKey are required." });
+  }
+
+  try {
+    const endTime = new Date();
+    const startTime = new Date(endTime.getTime() - 24 * 60 * 60 * 1000);
+    const base = controlPlaneUrl.replace(/\/+$/, "");
+
+    const upstream = await fetch(`${base}/api/svc/v1/spans/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        dataRoutingDestination: dataRoutingDestination || "default",
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        traceIds: [traceId],
+        limit: 50,
+        sortDirection: "asc",
+      }),
+    });
+
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({ error: `Spans query failed (${upstream.status})` });
+    }
+
+    const body = await upstream.json();
+    const spans = body?.data ?? [];
+
+    const root = spans.find((s) => s.spanAttributes?.["tfy.span_type"] === "ChatCompletion") ?? null;
+    const modelSpans = spans
+      .filter((s) => s.spanAttributes?.["tfy.span_type"] === "Model")
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    const attempts = (modelSpans.length > 0 ? modelSpans : root ? [root] : []).map((s, i) => {
+      const a = s.spanAttributes ?? {};
+      return {
+        order: i + 1,
+        model: a["tfy.model.name"] ?? null,
+        status: s.statusCode === "Error" ? "error" : "ok",
+        errorType: a["tfy.error_type"] ?? null,
+        errorMessage: a["tfy.error_message"] || null,
+      };
+    });
+
+    res.json({
+      traceId,
+      found: !!root || attempts.length > 0,
+      resolvedModel: root?.spanAttributes?.["tfy.model.name"] ?? null,
+      status: root?.statusCode === "Error" ? "error" : "ok",
+      errorMessage: root?.spanAttributes?.["tfy.error_message"] || null,
+      requestedFirstTarget: root?.spanAttributes?.["tfy.loadbalance.first_target"] ?? null,
+      attempts,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to fetch model trace." });
   }
 });
 

@@ -38,6 +38,8 @@ export type ChaosMode = null | "rate-limit" | "kill-primary" | "slow";
 
 export interface TraceEntry { icon: string; text: string; ms: number; }
 
+export interface DoneInfo { model: string; latencyMs: number; traceId: string | null }
+
 export interface LiveConfig {
   gatewayUrl: string;
   modelId: string;
@@ -191,11 +193,13 @@ export function MiniWidget({
   cfg,
   liveConfig,
   onTrace,
+  onDone,
   fallbackMessage = "Connect a TrueFoundry gateway to enable live responses.",
 }: {
   cfg: WidgetConfig;
   liveConfig: LiveConfig | null;
   onTrace: (e: TraceEntry) => void;
+  onDone?: (info: DoneInfo) => void;
   fallbackMessage?: string;
 }) {
   const [open, setOpen] = useState(true);
@@ -297,6 +301,11 @@ export function MiniWidget({
               } else if (curEvent === "done") {
                 setMessages((m) => [...m, { role: "assistant", text: accumulated, id: Date.now() }]);
                 setStreamingText("");
+                onDone?.({
+                  model: (payload.model as string) ?? "",
+                  latencyMs: (payload.latencyMs as number) ?? 0,
+                  traceId: (payload.traceId as string | null) ?? null,
+                });
               } else if (curEvent === "error") {
                 const raw = (payload.message as string) ?? "Gateway error";
                 const lc = raw.toLowerCase();
