@@ -137,7 +137,7 @@ interface DocEntry {
 const DOCS: DocEntry[] = [
   {
     topic: "what-is-chatdock",
-    keywords: ["what", "chatdock", "overview", "about", "intro", "introduction"],
+    keywords: ["what", "chatdock", "overview", "about", "intro", "introduction", "sse", "streaming", "stream", "protocol", "event", "events", "architecture", "how does", "how it works"],
     basic: `## What is ChatDock?
 
 ChatDock is an AI chatbot builder. You design a chatbot visually, connect it to an AI model, and get copy-paste code that drops into any Next.js app.

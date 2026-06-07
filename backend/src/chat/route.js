@@ -46,6 +46,16 @@ function sse(res, event, data) {
 
 const TIER_RULE_ID = { guest: "guests", loggedIn: "logged-in", pro: "pro" };
 const TIER_LABELS  = { guest: "Guest",  loggedIn: "Logged-in",  pro: "Pro"  };
+const TOOL_TIER_RANK = { guest: 0, loggedIn: 1, pro: 2 };
+
+// Classify a tool's minimum required tier from its auth requirement + description.
+// Mirrors the heuristic used by /mcp-tools so counts and actual access stay consistent.
+function classifyToolTier(description, needsAuth) {
+  if (!needsAuth) return "guest";
+  const desc = (description ?? "").toLowerCase();
+  const isProOnly = desc.includes("pro tier") || desc.includes("pro only") || /requires.*pro/i.test(desc);
+  return isProOnly ? "pro" : "loggedIn";
+}
 
 // ── MCP helpers ───────────────────────────────────────────────────────────────
 
@@ -261,23 +271,35 @@ router.post("/", async (req, res) => {
       ? messages
       : [{ role: "system", content: systemPrompt }, ...messages];
 
-    // Fetch ALL MCP tool definitions; auth params stripped so LLM only sees domain args
+    // Fetch ALL MCP tool definitions; auth params stripped so LLM only sees domain args.
+    // Then scope down to only the tools the SIMULATED tier may use — this is what makes
+    // "Simulate user tier" behave realistically: a Guest literally cannot see (let alone
+    // call or hallucinate around) Logged-in/Pro-only tools such as search_docs_standard.
     const { openaiTools, authRequired } = await fetchMcpToolDefs();
-    if (openaiTools.length > 0) {
-      const names = openaiTools.map((t) => t.function.name).join(", ");
-      const authNames = [...authRequired];
+    const userTierKey = TOOL_TIER_RANK[userTier] !== undefined ? userTier : "guest";
+    const scopedTools = openaiTools.filter((t) => {
+      const needsAuth = authRequired.has(t.function.name);
+      const toolTier = classifyToolTier(t.function.description, needsAuth);
+      return TOOL_TIER_RANK[toolTier] <= TOOL_TIER_RANK[userTierKey];
+    });
+
+    if (scopedTools.length > 0) {
+      const names = scopedTools.map((t) => t.function.name).join(", ");
+      const authNames = scopedTools.filter((t) => authRequired.has(t.function.name)).map((t) => t.function.name);
       sse(res, "trace", {
         icon: "🔌",
-        text: `MCP tools loaded: [${names}] — ${authNames.length} require auth: [${authNames.join(", ")}]`,
+        text: `MCP tools available to ${tier} tier: [${names}]${authNames.length > 0 ? ` — ${authNames.length} require auth: [${authNames.join(", ")}]` : ""}`,
         ms: Date.now() - t0,
       });
+    } else {
+      sse(res, "trace", { icon: "🔌", text: `No MCP tools available to ${tier} tier`, ms: Date.now() - t0 });
     }
 
     // ── First LLM call ────────────────────────────────────────────────────────
     const first = await streamGatewayRequest({
       url, apiKey, tfyMetadata,
       messages: fullMessages,
-      tools: openaiTools,
+      tools: scopedTools,
       modelId: primary,
       streamDeltas: true,
       res, t0,
@@ -355,7 +377,7 @@ router.post("/", async (req, res) => {
         const followUp = await streamGatewayRequest({
           url, apiKey, tfyMetadata,
           messages: conversationMessages,
-          tools: openaiTools,
+          tools: scopedTools,
           modelId: primary,
           streamDeltas: true,
           res, t0,
@@ -400,17 +422,28 @@ router.post("/", async (req, res) => {
 
   } catch (err) {
     const rawMsg = err.message || "Gateway request failed.";
-    const lc = (err.statusText ?? rawMsg).toLowerCase();
+    // err.statusText carries the FULL untruncated upstream error body — rawMsg may be
+    // truncated (see the `.slice(0, 200)` in streamGatewayRequest), which can cut a JSON
+    // error body mid-string and make it unparseable. Always extract from the full text.
+    const fullText = err.statusText || rawMsg;
+    const lc = fullText.toLowerCase();
 
     // Extract the meaningful part of a JSON error body embedded in the message
-    let cleanMsg = rawMsg;
+    let cleanMsg = null;
     try {
-      const jsonMatch = rawMsg.match(/\{[\s\S]+\}/);
+      const jsonMatch = fullText.match(/\{[\s\S]+\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        cleanMsg = parsed.message || parsed.error?.message || rawMsg;
+        cleanMsg = parsed.message || parsed.error?.message || null;
       }
-    } catch { /* keep rawMsg */ }
+    } catch { /* fall through to regex fallback below */ }
+
+    // Fallback: even truncated/malformed JSON usually still has a complete "message" field
+    // near the start — pull it out directly with a regex if full JSON.parse failed.
+    if (!cleanMsg) {
+      const msgMatch = fullText.match(/"message"\s*:\s*"([^"]+)"/);
+      cleanMsg = msgMatch?.[1] || rawMsg;
+    }
 
     if (gp.input.length > 0 && (lc.includes("guardrail") || lc.includes("blocked") || lc.includes("content"))) {
       sse(res, "trace", { icon: "🚫", text: `Input blocked by guardrail: ${gp.input.join(", ")}`, ms: Date.now() - t0 });
@@ -438,24 +471,11 @@ router.get("/mcp-tools", async (_req, res) => {
 
     for (const tool of openaiTools) {
       const name = tool.function.name;
-      const desc = (tool.function.description ?? "").toLowerCase();
       const needsAuth = authRequired.has(name);
-      const isProOnly = needsAuth && (desc.includes("pro tier") || desc.includes("pro only") || /requires.*pro/i.test(desc));
-
-      let tier;
-      if (!needsAuth) {
-        tier = "guest";
-        counts.guest++;
-        counts.loggedIn++;
-        counts.pro++;
-      } else if (isProOnly) {
-        tier = "pro";
-        counts.pro++;
-      } else {
-        tier = "loggedIn";
-        counts.loggedIn++;
-        counts.pro++;
-      }
+      const tier = classifyToolTier(tool.function.description, needsAuth);
+      if (TOOL_TIER_RANK[tier] <= TOOL_TIER_RANK.guest)    counts.guest++;
+      if (TOOL_TIER_RANK[tier] <= TOOL_TIER_RANK.loggedIn) counts.loggedIn++;
+      if (TOOL_TIER_RANK[tier] <= TOOL_TIER_RANK.pro)      counts.pro++;
       tools.push({ name, tier });
     }
 

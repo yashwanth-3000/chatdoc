@@ -298,9 +298,16 @@ export function MiniWidget({
                 setMessages((m) => [...m, { role: "assistant", text: accumulated, id: Date.now() }]);
                 setStreamingText("");
               } else if (curEvent === "error") {
+                const raw = (payload.message as string) ?? "Gateway error";
+                const lc = raw.toLowerCase();
+                const friendly = lc.includes("rate limit") || lc.includes("429")
+                  ? "This tier has hit its rate limit for the connected model. Please wait a moment and try again, or simulate a higher tier with more headroom."
+                  : lc.includes("guardrail") || lc.includes("blocked")
+                  ? "That message was blocked by a content guardrail, so I can't respond to it."
+                  : raw;
                 setMessages((m) => [...m, {
                   role: "assistant",
-                  text: `Error: ${(payload.message as string) ?? "Gateway error"}`,
+                  text: friendly,
                   id: Date.now(),
                 }]);
               }

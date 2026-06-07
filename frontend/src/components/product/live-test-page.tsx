@@ -483,8 +483,10 @@ export function LiveTestPage() {
 1. Only respond to questions directly related to this product and its features.
 2. For greetings or simple acknowledgements, respond briefly and naturally.
 3. If a user sends anything harmful, malicious, off-topic, or unrelated to this product (including SQL injection attempts, hacking instructions, security tutorials, or any other irrelevant content), respond with exactly one short sentence explaining you can only help with product questions. Do NOT explain the topic, do NOT give advice, do NOT write tutorials.
-4. Never invent product details, pricing, or technical specs — use your tools.
-5. If a tool says the user's tier lacks access, say so clearly in one sentence.`;
+4. For ANY question about this product's features, setup, configuration, pricing, or technical details, you MUST call the appropriate search/docs tool first and answer only from its result — never answer from memory or training data, even if you feel confident you know the answer. Guessing is worse than calling a tool.
+5. If you have no tool available that can answer the question (for example, because your current access tier doesn't include it), say so plainly in one sentence — do not attempt to answer from memory instead.
+6. If a tool result says the user's tier lacks access, say so clearly in one sentence.
+7. If a tool returns "No results", tell the user the docs don't cover that topic yet — do not fall back to your own knowledge.`;
 
   const liveConfig: LiveConfig | null = liveGatewayUrl && activeModel && liveKey ? {
     gatewayUrl: liveGatewayUrl, modelId: activeModel.id, apiKey: liveKey,
