@@ -172,6 +172,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
       traceId = decoded.traceId || null;
     } catch { /* not decodable — leave traceId null */ }
   }
+  console.log(`[gateway] resolvedModel=${resolvedModelHeader} feedbackTargetId=${feedbackTargetId ? "present" : "MISSING"} traceId=${traceId}`);
 
   const reader = upstream.body.getReader();
   const dec = new TextDecoder();
@@ -506,6 +507,7 @@ router.get("/mcp-tools", async (_req, res) => {
 // e.g. "Rate limit exceeded for model: openai/gpt-5 with rule: guests".
 router.post("/model-trace", async (req, res) => {
   const { traceId, controlPlaneUrl, apiKey, dataRoutingDestination } = req.body;
+  console.log(`[model-trace] request traceId=${traceId} controlPlaneUrl=${controlPlaneUrl} hasApiKey=${!!apiKey}`);
   if (!traceId || !controlPlaneUrl || !apiKey) {
     return res.status(400).json({ error: "traceId, controlPlaneUrl and apiKey are required." });
   }
@@ -539,6 +541,7 @@ router.post("/model-trace", async (req, res) => {
     const modelSpans = spans
       .filter((s) => s.spanAttributes?.["tfy.span_type"] === "Model")
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    console.log(`[model-trace] spans=${spans.length} root=${!!root} modelSpans=${modelSpans.length} types=${JSON.stringify(spans.map((s) => s.spanAttributes?.["tfy.span_type"]))}`);
 
     const attempts = (modelSpans.length > 0 ? modelSpans : root ? [root] : []).map((s, i) => {
       const a = s.spanAttributes ?? {};

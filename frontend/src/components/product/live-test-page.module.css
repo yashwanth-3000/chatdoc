@@ -471,75 +471,76 @@
 
 /* ── Models / fallback chain ─────────────────────────────── */
 
-.modelRoot {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 12px;
-  margin-bottom: 9px;
-  border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 10px;
-  background: #f9fafb;
-  color: #374151;
-}
-
-.modelRootName {
-  font-size: 12px;
-  font-weight: 700;
-  color: #111827;
-  font-family: ui-monospace, monospace;
-}
-
-.modelRootHint {
-  font-size: 10.5px;
-  color: #9ca3af;
-  margin-left: auto;
-}
-
-.modelServedBy {
+.modelTopline {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 12px;
-  margin-bottom: 9px;
-  border: 1px solid rgba(22, 163, 74, 0.22);
-  border-radius: 10px;
-  background: rgba(22, 163, 74, 0.05);
-  font-size: 11.5px;
-  color: #374151;
+  margin-bottom: 8px;
+  font-size: 11px;
+  flex-wrap: wrap;
 }
 
-.modelServedByName {
-  font-weight: 700;
-  color: #111827;
-  font-family: ui-monospace, monospace;
-}
-
-.modelServedByLogo {
-  display: flex;
+.modelTopChip {
+  display: inline-flex;
   align-items: center;
-  margin-left: auto;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
   color: #374151;
+  font-weight: 700;
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+}
+
+.modelTopArrow {
+  color: #d1d5db;
   flex-shrink: 0;
 }
 
-.modelRoutingHint {
-  font-size: 10.5px;
-  line-height: 1.5;
-  color: #9ca3af;
-  margin: 0 0 9px;
+.modelTopServed {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px 3px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.06);
+  color: #15803d;
 }
 
-.modelRoutingHint strong {
-  color: #6b7280;
+.modelTopServedName {
   font-weight: 700;
-  text-transform: capitalize;
+  font-family: ui-monospace, monospace;
+  color: #111827;
+  font-size: 10.5px;
+}
+
+.modelLiveDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+
+.modelTopServedLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #16a34a;
+}
+
+.modelTopIdle {
+  font-size: 10.5px;
+  color: #9ca3af;
 }
 
 .modelChainRow {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
   padding-bottom: 2px;
 }
@@ -556,12 +557,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 5px;
+  gap: 3px;
   flex: 1;
-  min-width: 132px;
-  padding: 10px 12px;
+  min-width: 108px;
+  padding: 6px 9px;
   border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 12px;
+  border-radius: 9px;
   background: #ffffff;
   font: inherit;
   text-align: left;
@@ -587,7 +588,7 @@
 .modelCardTop {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   width: 100%;
 }
 
@@ -595,9 +596,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
   background: #f3f4f6;
   color: #374151;
   flex-shrink: 0;
@@ -608,43 +609,35 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
 }
 
 .modelIdleDot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 999px;
   background: #d1d5db;
 }
 
 .modelCardName {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #111827;
   font-family: ui-monospace, monospace;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  min-width: 0;
 }
 
-.modelCardProvider {
-  font-size: 9.5px;
-  font-weight: 600;
-  text-transform: capitalize;
-  color: #9ca3af;
-  letter-spacing: 0.2px;
-}
-
-.modelCardOrder {
+.modelCardSub {
   font-size: 9px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   color: #c4c9d2;
-  margin-top: 1px;
 }
 
 /* ── Sample prompts ──────────────────────────────────────── */

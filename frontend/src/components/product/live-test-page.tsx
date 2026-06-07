@@ -483,6 +483,9 @@ export function LiveTestPage() {
   const [modelTrace, setModelTrace] = useState<ModelTraceResult | null>(null);
   const [modelTraceLoading, setModelTraceLoading] = useState(false);
   const [expandedModel, setExpandedModel] = useState<string | null>(null);
+  // Set straight from the gateway's `done` event (x-tfy-resolved-model) — independent
+  // of the slower spans lookup, so "now serving" is visible immediately every turn.
+  const [lastServedModel, setLastServedModel] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/chat/mcp-tools`)
@@ -602,10 +605,13 @@ export function LiveTestPage() {
   // Pull the per-model fallback chain for the response that just finished — the
   // gateway's trace spans take a moment to land, so retry briefly before giving up.
   function handleDone(info: { model: string; latencyMs: number; traceId: string | null }) {
+    if (info.model) setLastServedModel(info.model);
+    setExpandedModel(null);
+
     const controlPlaneUrl = tierCfg?.controlPlaneUrl;
     if (!info.traceId || !controlPlaneUrl || !liveKey) return;
 
-    setExpandedModel(null);
+    setModelTrace(null);
     setModelTraceLoading(true);
 
     let cancelled = false;
@@ -715,38 +721,27 @@ export function LiveTestPage() {
 
             {routingInfo ? (
               <>
-                <div className={styles.modelRoot}>
-                  <Bot size={13} strokeWidth={2} />
-                  <span className={styles.modelRootName}>{routingInfo.virtualModelName}</span>
-                  <span className={styles.modelRootHint}>
-                    {modelTraceLoading
-                      ? "tracing latest response…"
-                      : `${routingInfo.targets.length} fallback model${routingInfo.targets.length === 1 ? "" : "s"} connected`}
+                <div className={styles.modelTopline}>
+                  <span className={styles.modelTopChip}>
+                    <Bot size={11} strokeWidth={2} />
+                    {routingInfo.virtualModelName}
                   </span>
-                </div>
-
-                {modelTrace?.resolvedModel && (
-                  <div className={styles.modelServedBy}>
-                    <Zap size={12} strokeWidth={2} color="#16a34a" />
-                    <span>
-                      Currently serving via <strong>{routingInfo.virtualModelName}</strong>:{" "}
-                      <span className={styles.modelServedByName}>{shortModel(modelTrace.resolvedModel)}</span>
+                  <ArrowRight size={11} strokeWidth={2} className={styles.modelTopArrow} />
+                  {lastServedModel ? (
+                    <span className={styles.modelTopServed}>
+                      <ProviderIcon provider={
+                        providerOf(routingInfo.targets.find((t) => modelsMatch(lastServedModel, t.target))?.target) || providerOf(lastServedModel)
+                      } size={12} />
+                      <span className={styles.modelTopServedName}>{shortModel(lastServedModel)}</span>
+                      <span className={styles.modelLiveDot} aria-hidden="true" />
+                      <span className={styles.modelTopServedLabel}>now serving</span>
                     </span>
-                    {(() => {
-                      const matchedTarget = routingInfo.targets.find((t) => modelsMatch(modelTrace.resolvedModel, t.target));
-                      const provider = providerOf(matchedTarget?.target) || providerOf(modelTrace.resolvedModel);
-                      return provider ? (
-                        <span className={styles.modelServedByLogo}><ProviderIcon provider={provider} size={12} /></span>
-                      ) : null;
-                    })()}
-                  </div>
-                )}
-
-                <p className={styles.modelRoutingHint}>
-                  Routing: <strong>{routingInfo.routingType.replace(/-/g, " ")}</strong> — chat-bot-llm picks whichever
-                  fallback target answers fastest for your session, so the model served first can vary turn to turn
-                  (it won&rsquo;t always be Fallback 1).
-                </p>
+                  ) : (
+                    <span className={styles.modelTopIdle}>
+                      {modelTraceLoading ? "tracing latest response…" : "send a message to see which model answers"}
+                    </span>
+                  )}
+                </div>
 
                 <div className={styles.modelChainRow}>
                   {routingInfo.targets.map((target, idx) => {
@@ -754,14 +749,15 @@ export function LiveTestPage() {
                     const provider = providerOf(fqn);
                     const attempt = modelTrace?.attempts.find((a) => modelsMatch(a.model, fqn)) ?? null;
                     const isExpanded = expandedModel === fqn;
+                    const servedNow = !attempt && !!lastServedModel && modelsMatch(lastServedModel, fqn);
                     const stateLabel: "ok" | "error" | "idle" =
-                      !attempt ? "idle" : attempt.status === "ok" ? "ok" : "error";
+                      attempt ? (attempt.status === "ok" ? "ok" : "error") : servedNow ? "ok" : "idle";
 
                     return (
                       <React.Fragment key={fqn || idx}>
                         {idx > 0 && (
                           <span className={styles.modelArrow} aria-hidden="true">
-                            <ArrowRight size={14} strokeWidth={2} />
+                            <ArrowRight size={12} strokeWidth={2} />
                           </span>
                         )}
                         <button
@@ -777,18 +773,17 @@ export function LiveTestPage() {
                         >
                           <span className={styles.modelCardTop}>
                             <span className={styles.modelCardLogo}>
-                              <ProviderIcon provider={provider} size={15} />
+                              <ProviderIcon provider={provider} size={13} />
                             </span>
+                            <span className={styles.modelCardName}>{shortModel(fqn)}</span>
                             <span className={styles.modelStatusIcon}>
-                              {stateLabel === "ok" && <CheckCircle2 size={14} strokeWidth={2} color="#16a34a" />}
-                              {stateLabel === "error" && <XCircle size={14} strokeWidth={2} color="#ef4444" />}
+                              {stateLabel === "ok" && <CheckCircle2 size={12} strokeWidth={2} color="#16a34a" />}
+                              {stateLabel === "error" && <XCircle size={12} strokeWidth={2} color="#ef4444" />}
                               {stateLabel === "idle" && <span className={styles.modelIdleDot} />}
                             </span>
                           </span>
-                          <span className={styles.modelCardName}>{shortModel(fqn)}</span>
-                          <span className={styles.modelCardProvider}>{provider || "model"}</span>
-                          <span className={styles.modelCardOrder}>
-                            {attempt ? `Attempt ${attempt.order}` : `Fallback ${idx + 1}`}
+                          <span className={styles.modelCardSub}>
+                            {provider || "model"} · {attempt ? `attempt ${attempt.order}` : `fallback ${idx + 1}`}
                           </span>
                         </button>
                       </React.Fragment>
@@ -829,9 +824,6 @@ export function LiveTestPage() {
                   </div>
                 )}
 
-                {!modelTrace && !modelTraceLoading && (
-                  <p className={styles.emptyNote}>Send a message in the preview to see which model answered — and why any fell back.</p>
-                )}
               </>
             ) : (
               <p className={styles.emptyNote}>Connect your gateway in Step 2 to load the chat-bot-llm fallback chain.</p>
