@@ -56,7 +56,7 @@ function HeroVideo() {
   return (
     <div className={styles.videoEmbed}>
       <iframe
-        src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+        src="https://www.youtube.com/embed/RJMUyunJStk"
         title="ChatDock demo"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
