@@ -369,12 +369,18 @@ function TraceCard({ entry, seq }: { entry: StoredEntryProp; seq: number }) {
 // ── Sample prompts ────────────────────────────────────────────────────────────
 
 const SAMPLE_PROMPTS: { tier: TierKey; text: string; desc: string }[] = [
-  { tier: "guest",    text: "What is this chatbot and how do I embed it?",        desc: "search_docs_basic — no auth needed" },
-  { tier: "guest",    text: "How do I get started quickly?",                       desc: "get_quick_start — returns 5-step guide" },
-  { tier: "loggedIn", text: "What widget animation options are available?",        desc: "search_docs_standard — Logged-in tier" },
-  { tier: "loggedIn", text: "Generate a purple-themed chatbot config called Aria", desc: "generate_widget_config — returns TypeScript" },
-  { tier: "pro",      text: "Explain the SSE streaming protocol in detail",        desc: "search_docs_expert — Pro tier only" },
-  { tier: "pro",      text: "Give me a complete integration blueprint with code",  desc: "get_integration_blueprint — Pro tier only" },
+  { tier: "guest",    text: "What is ChatDock and how do I embed it on my site?",
+    desc: "→ search_docs_basic · open to everyone, no login" },
+  { tier: "guest",    text: "How do I get started quickly?",
+    desc: "→ get_quick_start · returns a 5-step setup guide" },
+  { tier: "loggedIn", text: "What widget animation styles can I choose from?",
+    desc: "→ search_docs_standard · unlocks at Logged-in tier" },
+  { tier: "loggedIn", text: "Generate a purple chatbot config called Aria with a pop animation and a glass surface",
+    desc: "→ generate_widget_config · turns your description into ready-to-paste TS" },
+  { tier: "pro",      text: "How does ChatDock's SSE event streaming protocol work under the hood?",
+    desc: "→ search_docs_expert · expert-level architecture docs, Pro only" },
+  { tier: "pro",      text: "Build a full integration blueprint for my gateway at https://acme.truefoundry.cloud — guest: gpt-4o-mini, logged-in: gpt-4o, pro: claude-3-opus",
+    desc: "→ get_integration_blueprint · personalized file structure & tier matrix, Pro only" },
 ];
 
 type GuardrailCategory = "content" | "sql";
@@ -499,14 +505,10 @@ export function LiveTestPage() {
     setTraceLog((prev) => [{ ...entry, receivedAt: Date.now() }, ...prev.slice(0, 49)]);
   }
 
-  function copyPrompt(text: string, tier?: TierKey) {
+  function copyPrompt(text: string) {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopiedPrompt(text);
     setTimeout(() => setCopiedPrompt(null), 1500);
-    // Sample prompts are written for a specific tier's tools — pasting a Pro prompt
-    // while simulating Guest/Logged-in produces a misleading "access denied" or
-    // hallucinated response. Auto-switch so the test actually matches the prompt.
-    if (tier && canSwitch && activeTier !== tier) setActiveTier(tier);
   }
 
   const botSlug = cfg.assistantName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-assistant";
@@ -694,7 +696,7 @@ export function LiveTestPage() {
           <div className={styles.section}>
             <div className={styles.sectionHead}>
               <h3 className={styles.sectionTitle}>Sample prompts</h3>
-              <span className={styles.sectionHint}>{promptTab === "prompts" ? "click to copy · switches tier to match" : "click to copy"}</span>
+              <span className={styles.sectionHint}>click to copy</span>
             </div>
 
             {/* Tab slider */}
@@ -741,8 +743,7 @@ export function LiveTestPage() {
                       <button
                         key={p.text}
                         className={`${styles.promptChip} ${copied ? styles.promptChipCopied : ""}`}
-                        onClick={() => copyPrompt(p.text, p.tier)}
-                        title={canSwitch ? `Copies the prompt and switches simulation to the ${TIER_LABELS[p.tier]} tier` : undefined}
+                        onClick={() => copyPrompt(p.text)}
                       >
                         <span
                           className={styles.promptTierTag}
