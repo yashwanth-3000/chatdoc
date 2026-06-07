@@ -537,6 +537,13 @@
   color: #9ca3af;
 }
 
+.modelTraceHint {
+  margin: 6px 0 0;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: #9ca3af;
+}
+
 .modelChainRow {
   display: flex;
   align-items: center;

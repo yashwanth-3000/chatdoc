@@ -607,7 +607,8 @@ export function LiveTestPage() {
   }
 
   // Pull the per-model fallback chain for the response that just finished — the
-  // gateway's trace spans take a moment to land, so retry briefly before giving up.
+  // gateway's trace spans take ~60-90s to become queryable after a response
+  // completes, so we have to wait that out rather than poll fast and bail.
   function handleDone(info: { model: string; resolvedTarget: string | null; latencyMs: number; traceId: string | null }) {
     if (info.model) setLastServedModel(info.model);
     setLastServedTarget(info.resolvedTarget ?? null);
@@ -619,7 +620,12 @@ export function LiveTestPage() {
     setModelTrace(null);
     setModelTraceLoading(true);
 
+    // Empirically: spans aren't queryable at ~36s but are by ~80s, so the first
+    // poll waits 20s and subsequent ones space out by 12s — ~9 attempts covers
+    // ~128s, comfortably past the observed lag, without hammering the API early.
     let cancelled = false;
+    const maxAttempts = 9;
+    const delayBeforeAttempt = (n: number) => (n === 1 ? 20000 : 12000);
     const attempt = (tryNum: number) => {
       fetch(`${BACKEND_URL}/api/chat/model-trace`, {
         method: "POST",
@@ -637,15 +643,15 @@ export function LiveTestPage() {
           if (data?.found && data.attempts.length > 0) {
             setModelTrace(data);
             setModelTraceLoading(false);
-          } else if (tryNum < 4) {
-            setTimeout(() => attempt(tryNum + 1), 1500);
+          } else if (tryNum < maxAttempts) {
+            setTimeout(() => attempt(tryNum + 1), delayBeforeAttempt(tryNum + 1));
           } else {
             setModelTraceLoading(false);
           }
         })
         .catch(() => { if (!cancelled) setModelTraceLoading(false); });
     };
-    attempt(1);
+    setTimeout(() => attempt(1), delayBeforeAttempt(1));
     return () => { cancelled = true; };
   }
 
@@ -798,6 +804,13 @@ export function LiveTestPage() {
                     );
                   })}
                 </div>
+
+                {modelTraceLoading && !modelTrace && (
+                  <p className={styles.modelTraceHint}>
+                    Fetching the per-model fallback trace for this turn — the gateway takes about a minute to make it
+                    queryable, so the cards above will light up green/red shortly.
+                  </p>
+                )}
 
                 {expandedModel && (() => {
                   const idx = routingInfo.targets.findIndex((t) => t.target === expandedModel);
