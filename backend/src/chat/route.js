@@ -160,10 +160,26 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
     throw Object.assign(new Error(`Gateway returned ${upstream.status}: ${errText.slice(0, 200)}`), { statusText: errText });
   }
 
+  // TEMP: investigating whether the gateway exposes per-attempt fallback diagnostics
+  // via response headers (x-tfy-resolved-model / x-tfy-applied-configurations).
+  const resolvedModelHeader = upstream.headers.get("x-tfy-resolved-model");
+  const appliedConfigHeader = upstream.headers.get("x-tfy-applied-configurations");
+  if (resolvedModelHeader || appliedConfigHeader) {
+    console.log("[gateway-headers] x-tfy-resolved-model:", resolvedModelHeader);
+    console.log("[gateway-headers] x-tfy-applied-configurations (raw):", appliedConfigHeader);
+    let parsedAppliedConfig = appliedConfigHeader;
+    try { parsedAppliedConfig = JSON.parse(appliedConfigHeader); } catch { /* not JSON, keep raw */ }
+    sse(res, "trace", {
+      icon: "🔬",
+      text: `Gateway headers — resolved-model: ${resolvedModelHeader ?? "(none)"} · applied-configurations: ${JSON.stringify(parsedAppliedConfig)}`,
+      ms: Date.now() - t0,
+    });
+  }
+
   const reader = upstream.body.getReader();
   const dec = new TextDecoder();
   let buf = "";
-  let usedModel = modelId;
+  let usedModel = resolvedModelHeader || modelId;
   let accumulated = "";
   let finishReason = null;
   const toolCallMap = {};
