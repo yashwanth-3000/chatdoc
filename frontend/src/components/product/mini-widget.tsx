@@ -38,7 +38,7 @@ export type ChaosMode = null | "rate-limit" | "kill-primary" | "slow";
 
 export interface TraceEntry { icon: string; text: string; ms: number; }
 
-export interface DoneInfo { model: string; latencyMs: number; traceId: string | null }
+export interface DoneInfo { model: string; resolvedTarget: string | null; latencyMs: number; traceId: string | null }
 
 export interface LiveConfig {
   gatewayUrl: string;
@@ -303,6 +303,7 @@ export function MiniWidget({
                 setStreamingText("");
                 onDone?.({
                   model: (payload.model as string) ?? "",
+                  resolvedTarget: (payload.resolvedTarget as string | null) ?? null,
                   latencyMs: (payload.latencyMs as number) ?? 0,
                   traceId: (payload.traceId as string | null) ?? null,
                 });

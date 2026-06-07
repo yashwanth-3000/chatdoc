@@ -160,10 +160,19 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
     throw Object.assign(new Error(`Gateway returned ${upstream.status}: ${errText.slice(0, 200)}`), { statusText: errText });
   }
 
-  // The gateway returns the resolved (actually-used) model and a feedback-target-id
-  // that encodes {spanId, traceId} for the request's root trace span — this is what
-  // lets us later pull the full per-model fallback attempt chain via the spans API.
-  const resolvedModelHeader = upstream.headers.get("x-tfy-resolved-model");
+  // x-tfy-applied-rules carries the routing decision in structured form — the
+  // resolved target in the SAME "provider/model" slug format as the virtual
+  // model's load_balance_targets (e.g. "openai/gpt-4o"), so it matches exactly,
+  // no fuzzy comparison needed. x-tfy-feedback-target-id encodes {spanId, traceId}
+  // for the request's root trace span, used to pull per-attempt fallback errors.
+  let resolvedTarget = null;
+  const appliedRulesHeader = upstream.headers.get("x-tfy-applied-rules");
+  if (appliedRulesHeader) {
+    try {
+      const parsed = JSON.parse(appliedRulesHeader);
+      resolvedTarget = parsed?.routing_config?.resolved_model || null;
+    } catch { /* not decodable */ }
+  }
   let traceId = null;
   const feedbackTargetId = upstream.headers.get("x-tfy-feedback-target-id");
   if (feedbackTargetId) {
@@ -172,12 +181,12 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
       traceId = decoded.traceId || null;
     } catch { /* not decodable — leave traceId null */ }
   }
-  console.log(`[gateway] resolvedModel=${resolvedModelHeader} feedbackTargetId=${feedbackTargetId ? "present" : "MISSING"} traceId=${traceId}`);
+  console.log(`[gateway] resolvedTarget=${resolvedTarget} traceId=${traceId}`);
 
   const reader = upstream.body.getReader();
   const dec = new TextDecoder();
   let buf = "";
-  let usedModel = resolvedModelHeader || modelId;
+  let usedModel = resolvedTarget || modelId;
   let accumulated = "";
   let finishReason = null;
   const toolCallMap = {};
@@ -218,7 +227,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
   }
 
   const toolCalls = Object.values(toolCallMap).filter((tc) => tc.name);
-  return { text: accumulated, toolCalls, usedModel, finishReason, traceId };
+  return { text: accumulated, toolCalls, usedModel, resolvedTarget, finishReason, traceId };
 }
 
 // ── Chat route ────────────────────────────────────────────────────────────────
@@ -404,7 +413,7 @@ router.post("/", async (req, res) => {
           }
           const followUpServedBy = followUp.usedModel && followUp.usedModel !== primary ? ` resolved to ${followUp.usedModel}` : "";
           sse(res, "trace", { icon: "✅", text: `Done — ${primary}${followUpServedBy} (${latencyMs}ms, ${pendingCalls.length} tool call(s))`, ms: latencyMs });
-          sse(res, "done", { model: followUp.usedModel, latencyMs, traceId: followUp.traceId });
+          sse(res, "done", { model: followUp.usedModel, resolvedTarget: followUp.resolvedTarget, latencyMs, traceId: followUp.traceId });
           res.end();
           return;
         }
@@ -434,7 +443,7 @@ router.post("/", async (req, res) => {
     }
     const servedBy = first.usedModel && first.usedModel !== primary ? ` resolved to ${first.usedModel}` : "";
     sse(res, "trace", { icon: "✅", text: `Done — ${primary}${servedBy} (${latencyMs}ms, no tool calls)`, ms: latencyMs });
-    sse(res, "done",  { model: first.usedModel, latencyMs, traceId: first.traceId });
+    sse(res, "done",  { model: first.usedModel, resolvedTarget: first.resolvedTarget, latencyMs, traceId: first.traceId });
 
   } catch (err) {
     const rawMsg = err.message || "Gateway request failed.";

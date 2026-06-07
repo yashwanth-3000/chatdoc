@@ -483,9 +483,13 @@ export function LiveTestPage() {
   const [modelTrace, setModelTrace] = useState<ModelTraceResult | null>(null);
   const [modelTraceLoading, setModelTraceLoading] = useState(false);
   const [expandedModel, setExpandedModel] = useState<string | null>(null);
-  // Set straight from the gateway's `done` event (x-tfy-resolved-model) — independent
-  // of the slower spans lookup, so "now serving" is visible immediately every turn.
+  // Set straight from the gateway's `done` event — independent of the slower spans
+  // lookup, so "now serving" is visible immediately every turn. `lastServedTarget`
+  // is the routing-config "provider/model" slug (x-tfy-applied-rules.resolved_model)
+  // and matches routingInfo.targets[].target exactly; `lastServedModel` is the
+  // versioned display name (e.g. "gpt-5-2025-08-07") shown to the user.
   const [lastServedModel, setLastServedModel] = useState<string | null>(null);
+  const [lastServedTarget, setLastServedTarget] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/chat/mcp-tools`)
@@ -604,8 +608,9 @@ export function LiveTestPage() {
 
   // Pull the per-model fallback chain for the response that just finished — the
   // gateway's trace spans take a moment to land, so retry briefly before giving up.
-  function handleDone(info: { model: string; latencyMs: number; traceId: string | null }) {
+  function handleDone(info: { model: string; resolvedTarget: string | null; latencyMs: number; traceId: string | null }) {
     if (info.model) setLastServedModel(info.model);
+    setLastServedTarget(info.resolvedTarget ?? null);
     setExpandedModel(null);
 
     const controlPlaneUrl = tierCfg?.controlPlaneUrl;
@@ -730,7 +735,9 @@ export function LiveTestPage() {
                   {lastServedModel ? (
                     <span className={styles.modelTopServed}>
                       <ProviderIcon provider={
-                        providerOf(routingInfo.targets.find((t) => modelsMatch(lastServedModel, t.target))?.target) || providerOf(lastServedModel)
+                        providerOf(lastServedTarget) ||
+                        providerOf(routingInfo.targets.find((t) => modelsMatch(lastServedModel, t.target))?.target) ||
+                        providerOf(lastServedModel)
                       } size={12} />
                       <span className={styles.modelTopServedName}>{shortModel(lastServedModel)}</span>
                       <span className={styles.modelLiveDot} aria-hidden="true" />
@@ -749,7 +756,8 @@ export function LiveTestPage() {
                     const provider = providerOf(fqn);
                     const attempt = modelTrace?.attempts.find((a) => modelsMatch(a.model, fqn)) ?? null;
                     const isExpanded = expandedModel === fqn;
-                    const servedNow = !attempt && !!lastServedModel && modelsMatch(lastServedModel, fqn);
+                    const servedNow = !attempt && !!lastServedModel &&
+                      (lastServedTarget ? lastServedTarget === fqn : modelsMatch(lastServedModel, fqn));
                     const stateLabel: "ok" | "error" | "idle" =
                       attempt ? (attempt.status === "ok" ? "ok" : "error") : servedNow ? "ok" : "idle";
 
