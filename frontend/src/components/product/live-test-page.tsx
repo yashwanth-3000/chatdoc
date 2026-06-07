@@ -499,10 +499,14 @@ export function LiveTestPage() {
     setTraceLog((prev) => [{ ...entry, receivedAt: Date.now() }, ...prev.slice(0, 49)]);
   }
 
-  function copyPrompt(text: string) {
+  function copyPrompt(text: string, tier?: TierKey) {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopiedPrompt(text);
     setTimeout(() => setCopiedPrompt(null), 1500);
+    // Sample prompts are written for a specific tier's tools — pasting a Pro prompt
+    // while simulating Guest/Logged-in produces a misleading "access denied" or
+    // hallucinated response. Auto-switch so the test actually matches the prompt.
+    if (tier && canSwitch && activeTier !== tier) setActiveTier(tier);
   }
 
   const botSlug = cfg.assistantName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "my-assistant";
@@ -690,7 +694,7 @@ export function LiveTestPage() {
           <div className={styles.section}>
             <div className={styles.sectionHead}>
               <h3 className={styles.sectionTitle}>Sample prompts</h3>
-              <span className={styles.sectionHint}>click to copy</span>
+              <span className={styles.sectionHint}>{promptTab === "prompts" ? "click to copy · switches tier to match" : "click to copy"}</span>
             </div>
 
             {/* Tab slider */}
@@ -737,7 +741,8 @@ export function LiveTestPage() {
                       <button
                         key={p.text}
                         className={`${styles.promptChip} ${copied ? styles.promptChipCopied : ""}`}
-                        onClick={() => copyPrompt(p.text)}
+                        onClick={() => copyPrompt(p.text, p.tier)}
+                        title={canSwitch ? `Copies the prompt and switches simulation to the ${TIER_LABELS[p.tier]} tier` : undefined}
                       >
                         <span
                           className={styles.promptTierTag}
