@@ -1,0 +1,98 @@
+name: Deploy + TestSprite Loop
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ── Deploy frontend to Vercel ──────────────────────
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel (production)
+        id: deploy
+        run: |
+          DEPLOY_URL=$(vercel --prod --yes \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --cwd frontend 2>&1 | grep -oP 'https://[^ ]+\.vercel\.app' | tail -1)
+          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $DEPLOY_URL"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Wait for deployment to be reachable
+        run: |
+          echo "Waiting for https://chatdock-app.vercel.app to respond..."
+          for i in {1..12}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://chatdock-app.vercel.app)
+            if [ "$STATUS" = "200" ]; then
+              echo "App is up (HTTP $STATUS)"
+              break
+            fi
+            echo "Attempt $i: HTTP $STATUS — retrying in 10s..."
+            sleep 10
+          done
+
+      # ── Run TestSprite ─────────────────────────────────
+      - name: Install TestSprite CLI
+        run: npm install -g @testsprite/testsprite-cli
+
+      - name: Authenticate TestSprite
+        run: testsprite setup --from-env --yes --agent claude
+        env:
+          TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
+
+      - name: Run TestSprite tests
+        id: testsprite
+        run: |
+          testsprite test create \
+            --project ${{ secrets.TESTSPRITE_PROJECT_ID }} \
+            --type frontend \
+            --run --wait \
+            --output json > testsprite-result.json 2>&1 || true
+          cat testsprite-result.json
+
+      - name: Upload TestSprite results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: testsprite-results-${{ github.run_number }}
+          path: testsprite-result.json
+          retention-days: 14
+
+      # ── Append one line to LOOP.md ─────────────────────
+      - name: Update LOOP.md
+        run: |
+          TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
+          COMMIT_MSG=$(git log -1 --pretty=format:'%s')
+          PASS_FAIL=$(cat testsprite-result.json | python3 -c "
+          import sys, json
+          try:
+            d = json.load(sys.stdin)
+            status = d.get('status', d.get('result', 'unknown'))
+            print('PASS' if str(status).lower() in ['pass','passed','success'] else 'FAIL')
+          except:
+            print('UNKNOWN')
+          " 2>/dev/null || echo "UNKNOWN")
+
+          echo "| $TIMESTAMP | Claude Code | $COMMIT_MSG | $PASS_FAIL |" >> LOOP.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add LOOP.md
+          git diff --staged --quiet || git commit -m "chore: loop iteration — $PASS_FAIL [$TIMESTAMP]"
+          git push
