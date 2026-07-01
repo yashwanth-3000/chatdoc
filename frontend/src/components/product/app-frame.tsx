@@ -13,8 +13,6 @@ export function AppFrame({ children, currentPage }: AppFrameProps) {
   return (
     <div className={styles.page}>
       <div className={styles.gridBackdrop} aria-hidden="true" />
-      <div className={styles.heroGlowOrange} aria-hidden="true" />
-      <div className={styles.heroGlowViolet} aria-hidden="true" />
 
       <SiteHeader currentPage={currentPage} />
 

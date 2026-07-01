@@ -357,28 +357,55 @@
 }
 
 .flowSection {
-  margin-top: 38px;
+  margin-top: 48px;
+  position: relative;
 }
 
 .flowGrid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
   counter-reset: build-flow;
   list-style: none;
 }
 
+/* Dashed rail connecting the step badges — sits behind the cards, so it only
+   shows through the gaps, reading as connectors between sequential steps. */
+.flowGrid::before {
+  content: "";
+  position: absolute;
+  top: 42px;
+  left: 9%;
+  right: 9%;
+  height: 2px;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(247, 92, 48, 0.4) 0,
+    rgba(247, 92, 48, 0.4) 6px,
+    transparent 6px,
+    transparent 13px
+  );
+}
+
 .flowGrid li {
+  position: relative;
+  z-index: 1;
   counter-increment: build-flow;
-  min-height: 220px;
+  min-height: 232px;
   display: grid;
   align-content: start;
   gap: 12px;
-  padding: 20px;
+  padding: 22px 20px;
   border: 1px solid rgba(13, 18, 33, 0.08);
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background: #ffffff;
   box-shadow: 0 14px 30px rgba(13, 18, 33, 0.05);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease;
 }
 
 .flowGrid li::before {
@@ -386,24 +413,36 @@
   display: grid;
   place-items: center;
   width: 40px;
-  height: 32px;
+  height: 40px;
   border-radius: 999px;
   color: #ffffff;
-  background: var(--token-ink);
-  font-size: 12px;
-  font-weight: 900;
+  background: linear-gradient(180deg, #ff7a4d 0%, var(--token-accent) 100%);
+  box-shadow: 0 6px 16px rgba(247, 92, 48, 0.32);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .flowGrid strong {
   color: var(--token-ink);
-  font-size: 18px;
-  line-height: 1.25;
+  font-family: var(--font-host-grotesk), sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.28;
 }
 
 .flowGrid span {
   color: var(--token-copy);
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+
+@media (hover: hover) {
+  .flowGrid li:hover {
+    transform: translateY(-4px);
+    border-color: rgba(247, 92, 48, 0.4);
+    box-shadow: 0 22px 46px rgba(13, 18, 33, 0.1);
+  }
 }
 
 @media (hover: hover) {
@@ -425,6 +464,10 @@
 
   .flowGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .flowGrid::before {
+    display: none;
   }
 }
 

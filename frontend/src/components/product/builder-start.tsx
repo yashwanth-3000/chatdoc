@@ -82,6 +82,7 @@ export function BuilderStart() {
               </div>
 
               <div className={styles.previewChecklist}>
+                <p className={styles.previewLabel}>Draft config</p>
                 {previewItems.map(({ icon: Icon, label, value }) => (
                   <div key={label} className={styles.previewItem}>
                     <span className={styles.previewIcon}>
@@ -93,6 +94,11 @@ export function BuilderStart() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              <div className={styles.previewFoot}>
+                <span className={styles.previewFootDot} aria-hidden="true" />
+                Live preview — updates as you configure
               </div>
             </aside>
           </div>
