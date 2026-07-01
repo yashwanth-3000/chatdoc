@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  PRODUCTION_URL: https://chatdock-app.vercel.app
+
 jobs:
   deploy-and-test:
     runs-on: ubuntu-latest
@@ -20,56 +23,70 @@ jobs:
           node-version: "20"
 
       # ── Deploy frontend to Vercel ──────────────────────
+      # Requires: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID in repo secrets
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
       - name: Deploy to Vercel (production)
-        id: deploy
+        if: ${{ secrets.VERCEL_TOKEN != '' }}
         run: |
-          DEPLOY_URL=$(vercel --prod --yes \
+          vercel --prod --yes \
             --token ${{ secrets.VERCEL_TOKEN }} \
-            --cwd frontend 2>&1 | grep -oP 'https://[^ ]+\.vercel\.app' | tail -1)
-          echo "url=$DEPLOY_URL" >> $GITHUB_OUTPUT
-          echo "Deployed to: $DEPLOY_URL"
+            --cwd frontend
+          echo "Deployed to ${{ env.PRODUCTION_URL }}"
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-      - name: Wait for deployment to be reachable
+      - name: Skip deploy (VERCEL_TOKEN not set)
+        if: ${{ secrets.VERCEL_TOKEN == '' }}
+        run: echo "⚠️  VERCEL_TOKEN not set — skipping deploy, using existing live URL"
+
+      - name: Wait for live URL to respond
         run: |
-          echo "Waiting for https://chatdock-app.vercel.app to respond..."
           for i in {1..12}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://chatdock-app.vercel.app)
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" ${{ env.PRODUCTION_URL }})
             if [ "$STATUS" = "200" ]; then
-              echo "App is up (HTTP $STATUS)"
+              echo "✓ App is up (HTTP $STATUS)"
               break
             fi
             echo "Attempt $i: HTTP $STATUS — retrying in 10s..."
             sleep 10
           done
 
-      # ── Run TestSprite ─────────────────────────────────
+      # ── TestSprite ─────────────────────────────────────
+      # Requires: TESTSPRITE_API_KEY, TESTSPRITE_PROJECT_ID in repo secrets
       - name: Install TestSprite CLI
+        if: ${{ secrets.TESTSPRITE_API_KEY != '' }}
         run: npm install -g @testsprite/testsprite-cli
 
       - name: Authenticate TestSprite
+        if: ${{ secrets.TESTSPRITE_API_KEY != '' }}
         run: testsprite setup --from-env --yes --agent claude
         env:
           TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
 
       - name: Run TestSprite tests
+        if: ${{ secrets.TESTSPRITE_API_KEY != '' && secrets.TESTSPRITE_PROJECT_ID != '' }}
         id: testsprite
         run: |
           testsprite test create \
             --project ${{ secrets.TESTSPRITE_PROJECT_ID }} \
             --type frontend \
             --run --wait \
-            --output json > testsprite-result.json 2>&1 || true
+            --output json > testsprite-result.json 2>&1
           cat testsprite-result.json
+        continue-on-error: true
+        env:
+          TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
+
+      - name: Skip TestSprite (secrets not set)
+        if: ${{ secrets.TESTSPRITE_API_KEY == '' }}
+        run: echo "⚠️  TESTSPRITE_API_KEY not set — skipping TestSprite. Add it in repo Settings → Secrets."
 
       - name: Upload TestSprite results
         uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ secrets.TESTSPRITE_API_KEY != '' }}
         with:
           name: testsprite-results-${{ github.run_number }}
           path: testsprite-result.json
@@ -77,13 +94,15 @@ jobs:
 
       # ── Append one line to LOOP.md ─────────────────────
       - name: Update LOOP.md
+        if: ${{ secrets.TESTSPRITE_API_KEY != '' }}
         run: |
           TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
           COMMIT_MSG=$(git log -1 --pretty=format:'%s')
-          PASS_FAIL=$(cat testsprite-result.json | python3 -c "
-          import sys, json
+          PASS_FAIL=$(python3 -c "
+          import json, sys
           try:
-            d = json.load(sys.stdin)
+            with open('testsprite-result.json') as f:
+              d = json.load(f)
             status = d.get('status', d.get('result', 'unknown'))
             print('PASS' if str(status).lower() in ['pass','passed','success'] else 'FAIL')
           except:
@@ -94,5 +113,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add LOOP.md
-          git diff --staged --quiet || git commit -m "chore: loop iteration — $PASS_FAIL [$TIMESTAMP]"
+          git diff --staged --quiet || git commit -m "loop: $PASS_FAIL — $TIMESTAMP [skip ci]"
           git push
