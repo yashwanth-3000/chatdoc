@@ -581,97 +581,284 @@ function buildEnvSnippet(tierCfg: SavedTierConfig): string {
 }
 
 function buildClaudePrompt(cfg: WidgetConfig, tierCfg: SavedTierConfig, widgetCode: string, apiRouteCode: string, usageCode: string, envCode: string): string {
-  const gwUrl = tierCfg?.gatewayUrl ?? "https://your-org.truefoundry.cloud/api/llm";
+  const gwUrl    = tierCfg?.gatewayUrl        ?? "https://your-org.truefoundry.cloud/api/llm";
+  const guestM   = tierCfg?.tiers.guest.model?.name    ?? "gpt-4o-mini";
+  const loggedM  = tierCfg?.tiers.loggedIn.model?.name ?? "gpt-4o";
+  const proM     = tierCfg?.tiers.pro.model?.name      ?? "claude-3-5-sonnet";
   const hasTiers = tierCfg !== null;
+
   return [
-    `<task>`,
-    `Add a production chat widget to my Next.js project.`,
-    `I configured it in ChatDock and need you to create the files below exactly as written.`,
-    `</task>`,
+    `<role>`,
+    `You are a senior TypeScript / Next.js engineer. Your job is to integrate a production-ready`,
+    `AI chat widget — configured in ChatDock — into an existing Next.js 14+ App Router project.`,
+    `Work methodically: read every file in <files> fully before touching anything, then create`,
+    `or edit exactly the files listed in <steps>. Do not improvise, refactor, or rename anything.`,
+    `</role>`,
     ``,
     `<context>`,
-    `- Framework: Next.js 14+ (App Router)`,
-    `- Widget name: ${cfg.assistantName}`,
-    `- Gateway: TrueFoundry AI Gateway at ${gwUrl}`,
-    `- The widget has three user tiers: guest, loggedIn, pro — each gets a different model`,
-    `- All styles are self-contained (injected via <style> tag — no extra CSS files)`,
-    `- The widget uses Server-Sent Events for streaming responses`,
+    `  <project>`,
+    `    Framework : Next.js 14+ — App Router (TypeScript)`,
+    `    Runtime   : Standard Node.js (not Edge) — the API route uses the Node runtime`,
+    `    Styles    : The widget injects its own CSS via a <style> tag at runtime.`,
+    `                No Tailwind, no CSS modules, no extra stylesheet imports are needed.`,
+    `  </project>`,
+    ``,
+    `  <widget>`,
+    `    Name        : ${cfg.assistantName}`,
+    `    Accent color: ${cfg.accentColor}`,
+    `    Panel size  : ${cfg.panelSize} (${cfg.panelSize === "compact" ? "480px" : cfg.panelSize === "wide" ? "600px" : "560px"} tall)`,
+    `    Animation   : ${cfg.animation}`,
+    `    Surface     : ${cfg.surfaceStyle}`,
+    `    Corner radius: ${cfg.cornerRadius}px`,
+    `  </widget>`,
+    ``,
+    `  <gateway>`,
+    `    Provider : TrueFoundry AI Gateway (OpenAI-compatible API)`,
+    `    Base URL : ${gwUrl}`,
+    `    Auth     : Personal Access Token stored in TFY_API_KEY env var (server-side only)`,
+    `    Protocol : Server-Sent Events (SSE) — the route streams "delta", "done", and "error" events`,
+    `  </gateway>`,
+    ``,
+    `  <tier_routing>`,
+    `    The widget routes each request to a different model based on the user's tier:`,
+    `    - guest    → ${guestM}`,
+    `    - loggedIn → ${loggedM}`,
+    `    - pro      → ${proM}`,
+    `    The userTier prop is passed from your auth system (e.g. session/JWT claim).`,
+    `    Use "guest" as a safe default when auth is not yet wired up.`,
+    `  </tier_routing>`,
+    ``,
+    `  <architecture>`,
+    `    Two-file architecture:`,
+    `    1. components/ChatDockWidget.tsx  — React client component, runs in the browser`,
+    `       • Renders the floating launcher button and expandable chat panel`,
+    `       • All CSS is injected into <head> once on mount (no separate CSS files)`,
+    `       • Sends POST /api/chat and reads the SSE stream token-by-token`,
+    `    2. app/api/chat/route.ts          — Next.js Route Handler, runs on the server`,
+    `       • Accepts { messages, model, userTier } from the widget`,
+    `       • Calls TrueFoundry gateway using the OpenAI-compatible SDK`,
+    `       • Streams SSE delta events back: event: delta / data: { content }`,
+    `       • Sends event: done / data: { model } when the stream finishes`,
+    `       • TFY_API_KEY never leaves the server`,
+    `  </architecture>`,
     `</context>`,
     ``,
     `<files>`,
     ``,
-    `<file path="components/ChatDockWidget.tsx">`,
+    `  <file path="components/ChatDockWidget.tsx">`,
     widgetCode,
-    `</file>`,
+    `  </file>`,
     ``,
-    `<file path="app/api/chat/route.ts">`,
+    `  <file path="app/api/chat/route.ts">`,
     apiRouteCode,
-    `</file>`,
+    `  </file>`,
     ``,
-    `<file path=".env.local" action="append">`,
+    `  <file path="app/layout.tsx" action="edit_example">`,
+    `  <!-- This is an EXAMPLE showing where to add the widget import and JSX. -->`,
+    `  <!-- Adapt it to your actual layout.tsx — do not overwrite the whole file. -->`,
+    usageCode,
+    `  </file>`,
+    ``,
+    `  <file path=".env.local" action="append">`,
     envCode,
-    `</file>`,
+    `  </file>`,
     ``,
     `</files>`,
     ``,
-    `<instructions>`,
-    `1. Create \`components/ChatDockWidget.tsx\` with the exact code above — do not modify it.`,
-    `2. Create \`app/api/chat/route.ts\` with the exact code above.`,
-    `3. Add \`TFY_API_KEY=tfy-...\` to \`.env.local\` (fill in your real key).`,
-    hasTiers ? `4. Import ChatDockWidget and add <ChatDockWidget userTier={userTier} /> to your layout.tsx.` : `4. Import ChatDockWidget and add <ChatDockWidget /> to your layout.tsx.`,
-    `5. Install the openai package if not already installed: npm install openai`,
-    `6. Run npm run dev to test.`,
-    `</instructions>`,
+    `<steps>`,
+    `  Execute these steps in order. Confirm each one before moving to the next.`,
     ``,
-    `<usage_example>`,
-    usageCode,
-    `</usage_example>`,
+    `  <step n="1" title="Install dependency">`,
+    `    Run in the project root:`,
+    `      npm install openai`,
+    `    (or: pnpm add openai / yarn add openai)`,
+    `    The TrueFoundry gateway uses the OpenAI-compatible SDK — this is the only new package.`,
+    `  </step>`,
+    ``,
+    `  <step n="2" title="Create ChatDockWidget.tsx">`,
+    `    Copy the code from <file path="components/ChatDockWidget.tsx"> above EXACTLY as written.`,
+    `    Save it to components/ChatDockWidget.tsx.`,
+    `    IMPORTANT: Do not rename variables, add TypeScript types, change CSS strings,`,
+    `    or restructure the component. It is already production-ready.`,
+    `  </step>`,
+    ``,
+    `  <step n="3" title="Create app/api/chat/route.ts">`,
+    `    Copy the code from <file path="app/api/chat/route.ts"> above EXACTLY as written.`,
+    `    Save it to app/api/chat/route.ts.`,
+    `    IMPORTANT: Do not convert to pages/api format. This must be a Next.js Route Handler.`,
+    `  </step>`,
+    ``,
+    `  <step n="4" title="Set the API key">`,
+    `    Append to .env.local (create it if it does not exist):`,
+    `      TFY_API_KEY=tfy-...`,
+    `    Replace tfy-... with your real TrueFoundry Personal Access Token.`,
+    `    Verify that .env.local is listed in .gitignore — never commit this file.`,
+    `    Restart the Next.js dev server after adding the key.`,
+    `  </step>`,
+    ``,
+    `  <step n="5" title="Add widget to layout.tsx">`,
+    `    Open app/layout.tsx. Add this import at the top:`,
+    `      import { ChatDockWidget } from "@/components/ChatDockWidget";`,
+    `    Inside the <body> tag (after {children}), add:`,
+    hasTiers
+      ? `      <ChatDockWidget userTier={userTier} />`
+      : `      <ChatDockWidget />`,
+    `    Replace userTier with the real tier value from your auth system`,
+    `    ("guest" | "loggedIn" | "pro"). Use "guest" as default until auth is wired up.`,
+    `  </step>`,
+    ``,
+    `  <step n="6" title="Run and verify">`,
+    `    npm run dev`,
+    `    Open http://localhost:3000 in a browser and verify:`,
+    `    ✓ Orange launcher button visible in the bottom-right corner`,
+    `    ✓ Clicking launcher opens the chat panel with the greeting message`,
+    `    ✓ Typing a message and pressing Enter sends it`,
+    `    ✓ Response streams in token-by-token`,
+    `    ✓ Network tab → /api/chat shows POST with SSE response (text/event-stream)`,
+    `    ✓ TFY_API_KEY does not appear in any browser Network requests`,
+    `  </step>`,
+    `</steps>`,
+    ``,
+    `<troubleshooting>`,
+    `  If something does not work, check these in order:`,
+    `  - Widget not visible           → Is <ChatDockWidget /> inside <body> in layout.tsx?`,
+    `  - "TFY_API_KEY is not set"     → Add it to .env.local and restart the dev server`,
+    `  - 401 Unauthorized from gateway → Your TFY_API_KEY is invalid or expired`,
+    `  - 404 on /api/chat              → Confirm the file is at app/api/chat/route.ts (App Router)`,
+    `  - CORS error                    → You are calling TrueFoundry directly from the browser.`,
+    `                                    All calls must go through app/api/chat/route.ts.`,
+    `  - Responses not streaming       → Check that you did not accidentally add "use server" to`,
+    `                                    ChatDockWidget.tsx; it must be a client component.`,
+    `</troubleshooting>`,
   ].join("\n");
 }
 
 function buildCodexPrompt(cfg: WidgetConfig, tierCfg: SavedTierConfig, widgetCode: string, apiRouteCode: string, usageCode: string, envCode: string): string {
-  const gwUrl = tierCfg?.gatewayUrl ?? "https://your-org.truefoundry.cloud/api/llm";
+  const gwUrl   = tierCfg?.gatewayUrl        ?? "https://your-org.truefoundry.cloud/api/llm";
+  const guestM  = tierCfg?.tiers.guest.model?.name    ?? "gpt-4o-mini";
+  const loggedM = tierCfg?.tiers.loggedIn.model?.name ?? "gpt-4o";
+  const proM    = tierCfg?.tiers.pro.model?.name      ?? "claude-3-5-sonnet";
+  const hasTiers = tierCfg !== null;
+
   return [
-    `# Add ChatDock Widget to My Next.js App`,
+    `## Role`,
+    `You are a senior TypeScript / Next.js engineer. Integrate a production-ready AI chat widget`,
+    `into an existing Next.js 14+ App Router project. Work step-by-step, create files exactly`,
+    `as provided, and do not refactor or rename anything.`,
     ``,
-    `## Goal`,
-    `Create a self-contained AI chat widget and backend proxy for my Next.js 14 project.`,
-    `The widget was configured in ChatDock (TrueFoundry AI Gateway at ${gwUrl}).`,
+    `---`,
     ``,
-    `## Widget spec`,
-    `- Name: ${cfg.assistantName}`,
-    `- Accent: ${cfg.accentColor}  Panel: ${cfg.panelColor}`,
-    `- Animation: ${cfg.animation}  Shadow: ${cfg.shadow}  Size: ${cfg.panelSize}`,
-    `- Corner radius: ${cfg.cornerRadius}px  Surface: ${cfg.surfaceStyle}`,
+    `## What you are building`,
+    ``,
+    `A two-file integration:`,
+    ``,
+    `| File | Purpose |`,
+    `|------|---------|`,
+    `| \`components/ChatDockWidget.tsx\` | Self-contained React client component. Renders the floating chat UI. All CSS is injected via a \`<style>\` tag at runtime — no CSS files needed. |`,
+    `| \`app/api/chat/route.ts\` | Next.js Route Handler (server-side proxy). Calls TrueFoundry AI Gateway with the OpenAI SDK and streams SSE token events back to the widget. The API key never reaches the browser. |`,
+    ``,
+    `---`,
+    ``,
+    `## Project context`,
+    ``,
+    `- **Framework**: Next.js 14+ — App Router, TypeScript`,
+    `- **Widget name**: ${cfg.assistantName}`,
+    `- **Accent color**: ${cfg.accentColor} | **Panel size**: ${cfg.panelSize} | **Animation**: ${cfg.animation}`,
+    `- **Gateway**: TrueFoundry AI Gateway (OpenAI-compatible) at \`${gwUrl}\``,
+    `- **Auth**: API key lives in \`TFY_API_KEY\` env var (server-side only, never in the browser)`,
+    ``,
+    `### User tier → model routing`,
+    ``,
+    `| Tier | Model |`,
+    `|------|-------|`,
+    `| guest | \`${guestM}\` |`,
+    `| loggedIn | \`${loggedM}\` |`,
+    `| pro | \`${proM}\` |`,
+    ``,
+    `### How streaming works`,
+    `1. Widget POSTs \`{ messages, model, userTier }\` to \`/api/chat\``,
+    `2. Route Handler calls TrueFoundry gateway via OpenAI SDK with \`stream: true\``,
+    `3. Route streams SSE events back:  \`event: delta\` → token chunk,  \`event: done\` → finished`,
+    `4. Widget appends each token to the UI as it arrives (token-by-token rendering)`,
+    ``,
+    `---`,
     ``,
     `## Files to create`,
     ``,
-    `### components/ChatDockWidget.tsx`,
+    `> **IMPORTANT**: Copy these files exactly as written. Do not refactor, rename variables,`,
+    `> add TypeScript types, or restructure. They are production-ready as-is.`,
+    ``,
+    `### \`components/ChatDockWidget.tsx\``,
     `\`\`\`tsx`,
     widgetCode,
     `\`\`\``,
     ``,
-    `### app/api/chat/route.ts`,
+    `### \`app/api/chat/route.ts\``,
     `\`\`\`ts`,
     apiRouteCode,
     `\`\`\``,
     ``,
-    `### .env.local (append)`,
+    `### \`.env.local\` — append these lines`,
     `\`\`\``,
     envCode,
     `\`\`\``,
     ``,
-    `## How to use in layout.tsx`,
+    `---`,
+    ``,
+    `## Step-by-step integration`,
+    ``,
+    `**Step 1 — Install the OpenAI package**`,
+    `\`\`\`bash`,
+    `npm install openai   # or: pnpm add openai`,
+    `\`\`\``,
+    `The TrueFoundry gateway is OpenAI-compatible — this is the only new dependency.`,
+    ``,
+    `**Step 2 — Create ChatDockWidget.tsx**`,
+    `Copy the code above into \`components/ChatDockWidget.tsx\`. Create the \`components/\` folder`,
+    `if it does not exist. Do not modify the file.`,
+    ``,
+    `**Step 3 — Create app/api/chat/route.ts**`,
+    `Copy the code above into \`app/api/chat/route.ts\`. This must be a Next.js Route Handler`,
+    `(App Router) — do not convert to \`pages/api\` format.`,
+    ``,
+    `**Step 4 — Set the API key**`,
+    `Append to \`.env.local\`:`,
+    `\`\`\``,
+    `TFY_API_KEY=tfy-...   ← replace with your real TrueFoundry Personal Access Token`,
+    `\`\`\``,
+    `Confirm \`.env.local\` is in \`.gitignore\`. Restart the dev server after adding the key.`,
+    ``,
+    `**Step 5 — Add widget to \`app/layout.tsx\`**`,
     `\`\`\`tsx`,
     usageCode,
     `\`\`\``,
+    hasTiers
+      ? `Replace \`getUserTier()\` with your real auth logic that returns "guest" | "loggedIn" | "pro".`
+      : `Use \`"guest"\` as the default tier until you wire up auth.`,
     ``,
-    `## Steps`,
-    `1. Create the two files above exactly as written`,
-    `2. Append the env vars to .env.local and set TFY_API_KEY`,
-    `3. npm install openai (if not already installed)`,
-    `4. Add <ChatDockWidget /> to app/layout.tsx inside <body>`,
-    `5. Run npm run dev and open the app — click the launcher button to test`,
+    `**Step 6 — Run and verify**`,
+    `\`\`\`bash`,
+    `npm run dev`,
+    `\`\`\``,
+    `Open http://localhost:3000 and confirm:`,
+    `- [ ] Orange launcher button visible in the bottom-right corner`,
+    `- [ ] Clicking it opens the chat panel with a greeting message`,
+    `- [ ] Sending a message returns a streamed AI response`,
+    `- [ ] DevTools Network → \`/api/chat\` shows \`text/event-stream\` response`,
+    `- [ ] \`TFY_API_KEY\` does not appear in any browser network request`,
+    ``,
+    `---`,
+    ``,
+    `## Troubleshooting`,
+    ``,
+    `| Symptom | Fix |`,
+    `|---------|-----|`,
+    `| Widget not visible | Add \`<ChatDockWidget />\` inside \`<body>\` in \`layout.tsx\` |`,
+    `| "TFY_API_KEY is not set" | Add to \`.env.local\` and restart the dev server |`,
+    `| 401 Unauthorized | Your \`TFY_API_KEY\` is invalid or expired |`,
+    `| 404 on \`/api/chat\` | File must be at \`app/api/chat/route.ts\` (App Router format) |`,
+    `| CORS error | All requests must go through \`/api/chat\` — never call TrueFoundry directly from the browser |`,
+    `| Responses not streaming | Ensure \`ChatDockWidget.tsx\` has \`"use client"\` at the top and is not marked as a Server Component |`,
   ].join("\n");
 }
 
@@ -689,6 +876,68 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
     <button className={`${styles.copyBtn} ${copied ? styles.copyBtnDone : ""}`} onClick={copy}>
       {copied ? "✓ Copied" : label}
     </button>
+  );
+}
+
+// ── Collapsible section ───────────────────────────────────────────────────────
+
+function CollapsibleSection({
+  num,
+  title,
+  desc,
+  filename,
+  code,
+  copyLabel,
+  children,
+}: {
+  num: number;
+  title: string;
+  desc: React.ReactNode;
+  filename: string;
+  code: string;
+  copyLabel?: string;
+  children?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={styles.section}>
+      <button
+        type="button"
+        className={styles.sectionHeadBtn}
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <div className={styles.sectionNum}>{num}</div>
+        <div>
+          <h2 className={styles.sectionHeadTitle}>
+            {title}
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"
+              style={{ color: "#9ca3af", flexShrink: 0, transition: "transform 200ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </h2>
+          {desc && <p>{desc}</p>}
+        </div>
+      </button>
+      {open && (
+        <div className={styles.codeBlock} style={{ marginTop: 14 }}>
+          <div className={styles.codeHeader}>
+            <span className={styles.codeFileName}>{filename}</span>
+          </div>
+          {children ?? (
+            <div className={styles.codeScrollable}>
+              <pre><code>{code}</code></pre>
+            </div>
+          )}
+          <CopyButton text={code} label={copyLabel ?? "Copy"} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -874,104 +1123,63 @@ export function PublishPage() {
         ) : null}
 
         {/* Step 1: Install */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionNum}>1</div>
-            <div>
-              <h2>Install the OpenAI SDK</h2>
-              <p>The backend proxy uses the OpenAI-compatible client to call your TrueFoundry gateway.</p>
-            </div>
+        <CollapsibleSection
+          num={1}
+          title="Install the OpenAI SDK"
+          desc="The backend proxy uses the OpenAI-compatible client to call your TrueFoundry gateway."
+          filename="terminal"
+          code="npm install openai"
+          copyLabel="Copy"
+        >
+          <div className={styles.codeRow}>
+            <span className={styles.codePrompt}>$</span>
+            <code>npm install openai</code>
           </div>
-          <div className={styles.codeBlock}>
-            <div className={styles.codeRow}>
-              <span className={styles.codePrompt}>$</span>
-              <code>npm install openai</code>
-            </div>
-            <div className={styles.codeRow}>
-              <span className={styles.codePrompt}>$</span>
-              <code>pnpm add openai</code>
-            </div>
-            <CopyButton text="npm install openai" />
+          <div className={styles.codeRow}>
+            <span className={styles.codePrompt}>$</span>
+            <code>pnpm add openai</code>
           </div>
-        </div>
+        </CollapsibleSection>
 
         {/* Step 2: Widget component */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionNum}>2</div>
-            <div>
-              <h2>ChatDockWidget.tsx</h2>
-              <p>
-                Self-contained React component — all styles are injected at runtime via a{" "}
-                <code>&lt;style&gt;</code> tag. No CSS files, no extra packages.
-                Drop it into <code>components/ChatDockWidget.tsx</code>.
-              </p>
-            </div>
-          </div>
-          <div className={styles.codeBlock}>
-            <div className={styles.codeScrollable}>
-              <pre><code>{widgetCode}</code></pre>
-            </div>
-            <CopyButton text={widgetCode} label="Copy ChatDockWidget.tsx" />
-          </div>
-        </div>
+        <CollapsibleSection
+          num={2}
+          title="ChatDockWidget.tsx"
+          desc={<>Self-contained React component — all styles are injected at runtime via a{" "}<code>&lt;style&gt;</code> tag. No CSS files, no extra packages. Drop it into <code>components/ChatDockWidget.tsx</code>.</>}
+          filename="components/ChatDockWidget.tsx"
+          code={widgetCode}
+          copyLabel="Copy ChatDockWidget.tsx"
+        />
 
         {/* Step 3: Backend proxy */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionNum}>3</div>
-            <div>
-              <h2>app/api/chat/route.ts</h2>
-              <p>
-                Server-side proxy — your TrueFoundry API key never reaches the browser.
-                Streams SSE deltas back to the widget. Uses the OpenAI-compatible client.
-              </p>
-            </div>
-          </div>
-          <div className={styles.codeBlock}>
-            <div className={styles.codeScrollable}>
-              <pre><code>{apiRouteCode}</code></pre>
-            </div>
-            <CopyButton text={apiRouteCode} label="Copy route.ts" />
-          </div>
-        </div>
+        <CollapsibleSection
+          num={3}
+          title="app/api/chat/route.ts"
+          desc="Server-side proxy — your TrueFoundry API key never reaches the browser. Streams SSE deltas back to the widget. Uses the OpenAI-compatible client."
+          filename="app/api/chat/route.ts"
+          code={apiRouteCode}
+          copyLabel="Copy route.ts"
+        />
 
         {/* Step 4: Add to layout */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionNum}>4</div>
-            <div>
-              <h2>Add to your layout</h2>
-              <p>
-                Import <code>ChatDockWidget</code> and render it inside <code>&lt;body&gt;</code>.
-                {hasTiers ? " Pass the resolved user tier so the right model is selected." : ""}
-              </p>
-            </div>
-          </div>
-          <div className={styles.codeBlock}>
-            <div className={styles.codeScrollable}>
-              <pre><code>{usageCode}</code></pre>
-            </div>
-            <CopyButton text={usageCode} label="Copy usage" />
-          </div>
-        </div>
+        <CollapsibleSection
+          num={4}
+          title="Add to your layout"
+          desc={<>Import <code>ChatDockWidget</code> and render it inside <code>&lt;body&gt;</code>.{hasTiers ? " Pass the resolved user tier so the right model is selected." : ""}</>}
+          filename="app/layout.tsx"
+          code={usageCode}
+          copyLabel="Copy usage"
+        />
 
         {/* Step 5: Env vars */}
-        <div className={styles.section}>
-          <div className={styles.sectionHead}>
-            <div className={styles.sectionNum}>5</div>
-            <div>
-              <h2>Environment variables</h2>
-              <p>Add your TrueFoundry API key to <code>.env.local</code> — never commit this file.</p>
-            </div>
-          </div>
-          <div className={styles.codeBlock}>
-            <div className={styles.codeScrollable}>
-              <pre><code>{envCode}</code></pre>
-            </div>
-            <CopyButton text={envCode} label="Copy .env snippet" />
-          </div>
-        </div>
+        <CollapsibleSection
+          num={5}
+          title="Environment variables"
+          desc={<>Add your TrueFoundry API key to <code>.env.local</code> — never commit this file.</>}
+          filename=".env.local"
+          code={envCode}
+          copyLabel="Copy .env snippet"
+        />
 
         {/* What's included */}
         <div className={styles.section}>

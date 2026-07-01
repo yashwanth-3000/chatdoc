@@ -476,6 +476,7 @@ export function LiveTestPage() {
   const [traceLog, setTraceLog] = useState<StoredEntry[]>([]);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
   const [mcpCounts, setMcpCounts] = useState<Record<TierKey, number> | null>(null);
+  const [promptsOpen, setPromptsOpen] = useState(false);
   const [promptTab, setPromptTab] = useState<"prompts" | "guardrails">("prompts");
   const [guardrailFilter, setGuardrailFilter] = useState<GuardrailCategory | "all">("all");
   const [tierFilter, setTierFilter] = useState<TierKey | "all">("all");
@@ -974,11 +975,28 @@ export function LiveTestPage() {
 
           {/* ── Sample prompts ── */}
           <div className={styles.section}>
-            <div className={styles.sectionHead}>
-              <h3 className={styles.sectionTitle}>Sample prompts</h3>
-              <span className={styles.sectionHint}>click to copy</span>
-            </div>
+            <button
+              type="button"
+              className={styles.sectionHead}
+              onClick={() => setPromptsOpen((o) => !o)}
+              aria-expanded={promptsOpen}
+              style={{ width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+            >
+              <h3 className={styles.sectionTitle}>
+                Sample prompts
+                <svg
+                  width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ color: "#9ca3af", flexShrink: 0, transition: "transform 220ms ease", transform: promptsOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </h3>
+              {!promptsOpen && <span className={styles.sectionHint}>click to copy</span>}
+            </button>
 
+            {promptsOpen && <>
             {/* Tab slider */}
             <div className={styles.promptSegment}>
               <button
@@ -1121,6 +1139,7 @@ export function LiveTestPage() {
                 )}
               </div>
             )}
+            </>}
           </div>
 
         </div>
