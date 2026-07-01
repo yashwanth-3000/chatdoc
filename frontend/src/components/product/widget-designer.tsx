@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./widget-designer.module.css";
+import { MiniWidget } from "./mini-widget";
 
 type PanelSize = "compact" | "standard" | "wide";
 type AnimationStyle = "slide" | "pop" | "fade" | "spring" | "drawer" | "flip" | "zoom";
@@ -657,186 +658,48 @@ export function WidgetDesigner() {
             </SidebarSection>
           </div>
 
-          <div className={styles.controlsFooter}>
-            <Link className={styles.primaryButton} href="/builder/step-two/existing-foundry-user">
-              Continue to Step 2
-            </Link>
-          </div>
         </form>
 
         <aside className={styles.previewPane}>
-          <div className={styles.previewHeader}>
-            <div>
-              <p className={styles.kicker}>Interactive preview</p>
-              <h2>Chatbot preview</h2>
+          <div className={styles.browserMock}>
+            <div className={styles.browserBar}>
+              <div className={styles.browserDots}>
+                <span style={{ background: "#ef4444" }} />
+                <span style={{ background: "#f59e0b" }} />
+                <span style={{ background: "#22c55e" }} />
+              </div>
+              <div className={styles.browserUrl}>chatdock-assistant.yoursite.com</div>
             </div>
-            <div className={styles.previewStatus}>
-              <span>
-                <i />
-                {isOpen ? "Open" : "Minimized"}
-              </span>
-              <button type="button" onClick={() => setIsOpen((current) => !current)}>
-                {isOpen ? "Minimize" : "Open"}
-              </button>
+            <div className={styles.browserBody} style={{ background: widget.stageBackground }}>
+              <div className={styles.pageContent} aria-hidden="true">
+                <div className={styles.pageNav}>
+                  <span className={styles.pageNavLogo} />
+                  <span className={styles.pageNavLink} />
+                  <span className={styles.pageNavLink} />
+                  <span className={styles.pageNavLink} />
+                </div>
+                <div className={styles.pageHero}>
+                  <span className={styles.pageH1} />
+                  <span className={styles.pageH1b} />
+                  <span className={styles.pageLead} />
+                  <span className={styles.pageLead2} />
+                  <div className={styles.pageActions}>
+                    <span className={styles.pagePrimaryBtn} />
+                    <span className={styles.pageSecondaryBtn} />
+                  </div>
+                </div>
+                <div className={styles.pageSection}>
+                  <span /><span /><span />
+                </div>
+                <div className={styles.pageSection}>
+                  <span /><span />
+                </div>
+              </div>
+              <MiniWidget cfg={widget} liveConfig={null} onTrace={() => {}} />
             </div>
-          </div>
-
-          <div
-            className={stageClass}
-            style={
-              {
-                ...previewStyle,
-                "--agent-accent": widget.accentColor,
-              } as CSSProperties
-            }
-          >
-            <div className={styles.stageGlow} aria-hidden="true" />
-            <div className={styles.widgetDock}>
-              <AnimatePresence mode="popLayout">
-                {isOpen && (
-                <motion.div
-                  className={panelClass}
-                  {...panelMotion}
-                >
-                  <div className={styles.chatHeader}>
-                    <div className={styles.avatar}>
-                      {currentAgent.icon}
-                    </div>
-                    <div className={styles.chatIdentity}>
-                      <strong>{widget.assistantName || "Website Assistant"}</strong>
-                      <span>
-                        <i />
-                        {currentAgent.name} · {currentAgent.role}
-                      </span>
-                    </div>
-                    <div className={styles.chatActions}>
-                      <button type="button" aria-label="Minimize chat" onClick={() => setIsOpen(false)}>
-                        -
-                      </button>
-                      <button type="button" aria-label="Close chat" onClick={() => setIsOpen(false)}>
-                        x
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className={styles.messageList} ref={messageListRef}>
-                    {messages.map((message) => (
-                      <motion.div
-                        key={message.id}
-                        layout
-                        className={message.role === "assistant" ? styles.assistantMessage : styles.userMessage}
-                        {...getMessageMotion(message.role, Boolean(shouldReduceMotion))}
-                      >
-                        {message.role === "assistant" && (
-                          <div className={styles.messageAvatar}>
-                            {currentAgent.icon}
-                          </div>
-                        )}
-                        <div className={styles.messageStack}>
-                          <div
-                            className={
-                              message.role === "assistant" ? styles.assistantBubble : styles.userBubble
-                            }
-                          >
-                            {message.text}
-                          </div>
-                          <span className={styles.messageMeta}>
-                            {message.role === "assistant" ? currentAgent.name : "Visitor"} · just now
-                          </span>
-                        </div>
-                      </motion.div>
-                    ))}
-                    <AnimatePresence>
-                      {isTyping && (
-                        <motion.div
-                          className={styles.assistantMessage}
-                          aria-label="Assistant is typing"
-                          layout
-                          initial={
-                            shouldReduceMotion
-                              ? { opacity: 0 }
-                              : { opacity: 0, x: -10, y: 8, scale: 0.98 }
-                          }
-                          animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
-                          exit={
-                            shouldReduceMotion
-                              ? { opacity: 0 }
-                              : { opacity: 0, x: -6, y: 4, scale: 0.98 }
-                          }
-                          transition={
-                            shouldReduceMotion
-                              ? { duration: 0.16 }
-                              : { type: "spring", stiffness: 420, damping: 32, mass: 0.8 }
-                          }
-                        >
-                          <div className={styles.messageAvatar}>
-                            {currentAgent.icon}
-                          </div>
-                          <div className={styles.typingBubble}>
-                            <span />
-                            <span />
-                            <span />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  <AnimatePresence>
-                    {shouldShowSuggestions && (
-                      <motion.div
-                        className={styles.quickReplies}
-                        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
-                      >
-                        {suggestedActions.map((reply) => (
-                          <motion.button
-                            key={reply.title}
-                            type="button"
-                            whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                            whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-                            onClick={() => sendMessage(reply.prompt)}
-                          >
-                            <strong>{reply.title}</strong>
-                            <span>{reply.detail}</span>
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  <form className={styles.composer} onSubmit={handleSubmit}>
-                    <input
-                      aria-label="Preview chat message"
-                      placeholder="Ask a question..."
-                      value={draft}
-                      onChange={(event) => setDraft(event.target.value)}
-                    />
-                    <motion.button
-                      type="submit"
-                      whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
-                      whileTap={shouldReduceMotion ? undefined : { scale: 0.96 }}
-                    >
-                      Send
-                    </motion.button>
-                  </form>
-                </motion.div>
-                )}
-              </AnimatePresence>
-
-              <motion.button
-                type="button"
-                className={`${styles.launcherPreview} ${styles.launcher_circle}`}
-                onClick={() => setIsOpen((current) => !current)}
-                aria-label={isOpen ? "Minimize chatbot preview" : "Open chatbot preview"}
-                animate={isOpen ? { y: 0, scale: 1 } : { y: [0, -4, 0], scale: 1 }}
-                whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.04 }}
-                whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
-                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {isOpen ? "x" : widget.launcherLabel || "AI"}
-              </motion.button>
+            <div className={styles.browserFooter}>
+              <span className={styles.offlineBadge}>offline</span>
+              <span className={styles.guestBadge}>Guest</span>
             </div>
           </div>
         </aside>

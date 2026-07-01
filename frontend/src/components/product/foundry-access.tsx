@@ -828,20 +828,6 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                 />
               </div>
 
-              <div className={`${styles.gwFormField} ${styles.gwFormFieldFull}`}>
-                <label className={styles.gwFormLabel}>
-                  Gateway base URL{" "}
-                  <span className={styles.gwFormOptional}>optional — defaults to /api/llm</span>
-                </label>
-                <input
-                  className={styles.gwFormInput}
-                  type="url"
-                  placeholder="https://your-org.truefoundry.cloud/api/llm"
-                  value={form.gatewayBaseUrl}
-                  onChange={(e) => setForm((c) => ({ ...c, gatewayBaseUrl: e.target.value }))}
-                />
-              </div>
-
               {error ? (
                 <p className={`${styles.errorText} ${styles.gwFormFieldFull}`}>{error}</p>
               ) : null}

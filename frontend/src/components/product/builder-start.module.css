@@ -1239,46 +1239,52 @@
 .gwConnect {
   display: grid;
   place-items: center;
-  padding: 48px 20px;
+  padding: 56px 20px;
 }
 
 .gwConnectCard {
   display: grid;
-  gap: 28px;
+  gap: 32px;
   width: 100%;
-  max-width: 560px;
-  padding: 32px;
-  border: 1px solid rgba(13, 18, 33, 0.09);
-  border-radius: 18px;
+  max-width: 520px;
+  padding: 40px;
+  border: 1px solid rgba(13, 18, 33, 0.08);
+  border-radius: 24px;
   background: #ffffff;
+  box-shadow:
+    0 2px 4px rgba(13, 18, 33, 0.04),
+    0 8px 24px rgba(13, 18, 33, 0.07);
 }
 
 .gwConnectHead {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .gwConnectHead h2 {
   color: #f75c30;
-  font-size: 24px;
+  font-family: var(--font-host-grotesk), sans-serif;
+  font-size: 26px;
+  font-weight: 600;
   line-height: 1.15;
+  letter-spacing: -0.3px;
 }
 
 .gwConnectHead p {
   color: #5b5a66;
   font-size: 14px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .gwConnectBody {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: 1fr;
+  gap: 18px;
 }
 
 .gwFormField {
   display: grid;
-  gap: 6px;
+  gap: 7px;
 }
 
 .gwFormFieldFull {
@@ -1291,90 +1297,119 @@
   gap: 6px;
   color: #2e2937;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.4;
+  letter-spacing: 0.1px;
 }
 
 .gwFormOptional {
   color: #7b7785;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .gwFormInput {
-  min-height: 42px;
+  min-height: 46px;
   width: 100%;
-  padding: 0 12px;
-  border: 1px solid rgba(13, 18, 33, 0.12);
-  border-radius: 10px;
+  padding: 0 14px;
+  border: 1.5px solid rgba(13, 18, 33, 0.1);
+  border-radius: 12px;
   color: #0d1221;
-  background: #ffffff;
+  background: #f9fafb;
   font: inherit;
   font-size: 14px;
   outline: none;
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.gwFormInput:hover {
+  background: #ffffff;
+  border-color: rgba(13, 18, 33, 0.18);
 }
 
 .gwFormInput:focus {
-  border-color: rgba(247, 92, 48, 0.7);
-  box-shadow: 0 0 0 3px rgba(247, 92, 48, 0.1);
+  background: #ffffff;
+  border-color: rgba(247, 92, 48, 0.6);
+  box-shadow: 0 0 0 3px rgba(247, 92, 48, 0.09);
 }
 
 .gwFormActions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  padding-top: 4px;
 }
 
 .gwPrimaryBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0 20px;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 22px;
   border: none;
-  border-radius: 999px;
+  border-radius: 32px;
   color: #ffffff;
-  background: #161425;
+  background: linear-gradient(180deg, #2e2937 0%, #161425 100%);
+  box-shadow: 0 8px 20px rgba(13, 18, 33, 0.2);
   font: inherit;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 13.5px;
+  font-weight: 700;
   cursor: pointer;
   text-decoration: none;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gwPrimaryBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(13, 18, 33, 0.28);
+}
+
+.gwPrimaryBtn:active {
+  transform: translateY(0) scale(0.985);
 }
 
 .gwPrimaryBtn:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: wait;
+  transform: none;
+  box-shadow: none;
 }
 
 .gwSecondaryBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0 16px;
-  border: 1px solid rgba(13, 18, 33, 0.12);
-  border-radius: 999px;
-  color: #0d1221;
-  background: #ffffff;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1.5px solid rgba(13, 18, 33, 0.12);
+  border-radius: 32px;
+  color: #37373d;
+  background: rgba(13, 18, 33, 0.04);
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 13.5px;
+  font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.gwSecondaryBtn:hover {
+  background: rgba(13, 18, 33, 0.08);
+  border-color: rgba(13, 18, 33, 0.18);
 }
 
 .gwSecondaryBtn:disabled {
-  opacity: 0.65;
+  opacity: 0.6;
   cursor: wait;
 }
 
 .gwConnectFoot {
-  padding-top: 16px;
-  border-top: 1px solid rgba(13, 18, 33, 0.07);
-  color: #7b7785;
+  padding-top: 20px;
+  border-top: 1px solid rgba(13, 18, 33, 0.06);
+  color: #9ca3af;
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 /* ─── Gateway: inventory browser ─────────────────── */
