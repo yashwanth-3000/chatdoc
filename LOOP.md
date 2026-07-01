@@ -4,3 +4,4 @@
 
 | Timestamp (UTC) | Maker | What ran | Verdict |
 |---|---|---|---|
+| 2026-07-01 16:25 UTC | Claude Code | Homepage hero loads — ChatDock heading, "Configure a bot", "View demo" CTAs, lead paragraph | PASS (HTML-verified) |

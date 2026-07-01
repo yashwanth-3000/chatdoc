@@ -1,0 +1,27 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Demo page — loads and shows chat widget launcher",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/demo"
+    },
+    {
+      "type": "assertion",
+      "description": "The page loads without a blank screen or error message"
+    },
+    {
+      "type": "assertion",
+      "description": "A floating circular launcher button is visible in the bottom-right corner of the page"
+    },
+    {
+      "type": "action",
+      "description": "Click the floating launcher button"
+    },
+    {
+      "type": "assertion",
+      "description": "A chat panel slides open showing a greeting message from the assistant"
+    }
+  ]
+}

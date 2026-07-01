@@ -1,0 +1,23 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Widget designer — changing assistant name updates the preview",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/step-one"
+    },
+    {
+      "type": "action",
+      "description": "Click on the 'Content' section to expand it"
+    },
+    {
+      "type": "action",
+      "description": "Find the input field for the assistant name (which shows 'ChatDock Assistant' by default) and clear it, then type 'Acme Support Bot'"
+    },
+    {
+      "type": "assertion",
+      "description": "The browser mockup preview updates to show 'Acme Support Bot' as the widget title or greeting"
+    }
+  ]
+}

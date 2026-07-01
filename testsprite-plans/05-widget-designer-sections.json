@@ -1,0 +1,31 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Widget designer — config sections and live preview visible",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/step-one"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a section labelled 'Content'"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a section labelled 'Behavior'"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a section labelled 'Theme'"
+    },
+    {
+      "type": "assertion",
+      "description": "The URL bar inside the browser mockup shows the text 'chatdock-assistant.yoursite.com'"
+    },
+    {
+      "type": "assertion",
+      "description": "A circular launcher button is visible inside the browser mockup preview at the bottom-right"
+    }
+  ]
+}

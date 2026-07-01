@@ -1,0 +1,27 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Builder start — Continue navigates to widget designer",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder"
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Continue' link"
+    },
+    {
+      "type": "assertion",
+      "description": "The URL is now https://chatdock-app.vercel.app/builder/step-one"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a browser-style mockup preview panel on the right side"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a configuration panel with the text 'Content'"
+    }
+  ]
+}

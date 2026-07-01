@@ -1,0 +1,27 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Publish page — collapsible sections expand to reveal code",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/final"
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Install the OpenAI SDK' section heading button"
+    },
+    {
+      "type": "assertion",
+      "description": "A code block appears below the heading containing the text 'npm install openai'"
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Install the OpenAI SDK' section heading button again"
+    },
+    {
+      "type": "assertion",
+      "description": "The code block containing 'npm install openai' is no longer visible (section collapsed)"
+    }
+  ]
+}

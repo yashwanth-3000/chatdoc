@@ -1,0 +1,31 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Builder start — shows 4 workflow steps and Continue button",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the text 'Design the widget'"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the text 'Connect intelligence'"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the text 'Live test the recovery'"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the text 'Ship the code'"
+    },
+    {
+      "type": "assertion",
+      "description": "A link with the text 'Continue' is visible and points to /builder/step-one"
+    }
+  ]
+}

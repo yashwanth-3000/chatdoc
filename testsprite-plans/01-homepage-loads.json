@@ -1,0 +1,27 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Homepage — hero loads with CTA buttons",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the text 'ChatDock' in the heading area"
+    },
+    {
+      "type": "assertion",
+      "description": "A link or button with the text 'Configure a bot' is visible on the page"
+    },
+    {
+      "type": "assertion",
+      "description": "A link or button with the text 'View demo' is visible on the page"
+    },
+    {
+      "type": "assertion",
+      "description": "The lead paragraph contains the text 'ChatDock lets teams design a website chat widget'"
+    }
+  ]
+}

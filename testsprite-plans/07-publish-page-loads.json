@@ -1,0 +1,31 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Publish page — key sections and copy buttons visible",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/final"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a section titled 'Install the OpenAI SDK'"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains a section titled 'Your gateway configuration'"
+    },
+    {
+      "type": "assertion",
+      "description": "A button with the text 'Copy for Claude' is visible"
+    },
+    {
+      "type": "assertion",
+      "description": "A button with the text 'Copy for ChatGPT' is visible"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the text 'One-click implementation'"
+    }
+  ]
+}

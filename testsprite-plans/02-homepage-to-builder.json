@@ -1,0 +1,23 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Homepage — 'Configure a bot' navigates to /builder",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app"
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Configure a bot' link"
+    },
+    {
+      "type": "assertion",
+      "description": "The URL is now https://chatdock-app.vercel.app/builder"
+    },
+    {
+      "type": "assertion",
+      "description": "The page contains the heading 'A clean path from draft to embed.'"
+    }
+  ]
+}
