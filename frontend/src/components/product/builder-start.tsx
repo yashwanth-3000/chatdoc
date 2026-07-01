@@ -63,6 +63,10 @@ export function BuilderStart() {
                   </div>
                 </article>
               ))}
+              <Link className={styles.builderPrimary} href="/builder/step-one" aria-label="Continue to widget designer">
+                Start building
+                <ArrowRight size={15} />
+              </Link>
             </div>
 
             <aside className={styles.builderPreview} aria-label="Builder preview">
