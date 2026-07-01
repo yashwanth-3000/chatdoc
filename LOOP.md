@@ -8,3 +8,4 @@
 | 2026-07-01 16:34 UTC | Claude Code | Publish page — "Install the OpenAI SDK", "Your gateway configuration", "Copy for Claude", "Copy for ChatGPT", "One-click implementation" all present | PASS |
 | 2026-07-01 16:37 UTC | Claude Code | Builder start — 4 workflow steps present (8/9 pass); FAIL: "Continue" link not visible after scroll — CTA only exists at page top, scrolls out of view | FAIL |
 | 2026-07-01 16:38 UTC | Claude Code | Fix: added "Start building" CTA at bottom of workflow list so primary action is reachable without scrolling back up | FIX |
+| 2026-07-01 16:39 UTC | Claude Code | ci: fix workflow — use env vars for secret availability checks [skip ci] | FAIL |
