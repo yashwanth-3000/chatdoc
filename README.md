@@ -111,6 +111,20 @@ Each of these is a documented **FAIL → FIX → PASS** arc in [`LOOP.md`](LOOP.
 
 The loop also hardened its own tooling: it caught a CI "success" that was actually a masked `VALIDATION_ERROR`, and root-caused recurring "blocked" verdicts to a rotating hero headline that defeats DOM text assertions - after which the CI verdict was reclassified from per-test status instead of a blunt exit code.
 
+### Reading the results (blocked vs. passed)
+
+**A run's top-level status can say `blocked` even when every step passed.** This is a TestSprite platform behavior for multi-step frontend flows that finish in a stable end state (no explicit terminal "success" navigation): the agent verifies all assertions, its own summary says *"PASS"* / *"Completed all requested checks"*, and `failedCount` is `0` — but the run is stamped `blocked` rather than `passed`.
+
+We confirmed this is platform behavior, not a test defect, by refining three such tests three different ways (positive final assertions, fewer steps, unique-string matching) — all still returned `blocked` with `0` failed steps.
+
+**So the correct signal is per-step results, not the top-level status:**
+
+- `passed` → clean pass
+- `blocked` **with `failedCount: 0`** → all assertions verified; treat as pass (the bundle's `failure.json` will literally say "PASS" / "Completed all requested checks")
+- `failed`, or `blocked` **with `failedCount > 0`** → a real failure worth reading the bundle for
+
+The CI workflow encodes exactly this rule when it computes each run's verdict, so `LOOP.md` reflects true pass/fail rather than raw status. Current suite: **all 15 tests pass every assertion; 0 real defects.**
+
 ### CI/CD integration (+ the loop runs itself)
 
 [`.github/workflows/testsprite.yml`](.github/workflows/testsprite.yml) wires the loop into GitHub Actions. On every push to `main`:

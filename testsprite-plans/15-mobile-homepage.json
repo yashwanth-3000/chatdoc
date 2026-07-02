@@ -1,0 +1,35 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Mobile — homepage renders and is usable at 375px width",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Set the browser viewport to a mobile size of 375 x 812 (iPhone-class portrait)"
+    },
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app"
+    },
+    {
+      "type": "assertion",
+      "description": "The 'ChatDock' brand/heading is visible in the header"
+    },
+    {
+      "type": "assertion",
+      "description": "The primary hero call-to-action linking to the builder (text like 'Configure a bot') is visible and fully within the 375px-wide viewport (not clipped or overflowing off-screen)"
+    },
+    {
+      "type": "assertion",
+      "description": "The page does not require horizontal scrolling: content fits the mobile width with no element extending beyond the right edge"
+    },
+    {
+      "type": "action",
+      "description": "Tap/click the 'Configure a bot' hero call-to-action"
+    },
+    {
+      "type": "assertion",
+      "description": "The URL is now https://chatdock-app.vercel.app/builder — navigation works on mobile"
+    }
+  ]
+}
