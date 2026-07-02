@@ -102,11 +102,11 @@ Each of these is a documented **FAIL → FIX → PASS** arc in [`LOOP.md`](LOOP.
 
 | TestSprite caught | Root cause | Fix |
 |---|---|---|
+| **Public URL behind a Vercel login wall** *(would block judges entirely)* | A manual deploy from the repo root shipped to the wrong Vercel project (deployment protection on) and re-aliased the public URL to it | Redeployed from the correct project and re-pinned the alias |
+| **Production called a dead backend** *(live chat silently broken for weeks)* | `NEXT_PUBLIC_CHATDOCK_BACKEND_URL` pointed at a deleted Railway app | Repointed to the current backend and redeployed |
+| **Resilience story couldn't be triggered** ("No matches found for 429") | The live-test UI hardcoded `chaosMode = null`, so the backend's failure-simulation support was unreachable | Added the **Simulate failure** panel (rate limit / provider down / timeout) wired to the gateway fallback trace |
+| Demo page promised a live widget that wasn't there | The page's copy described a widget that was never rendered | Mounted the builder's own widget as a floating assistant on `/demo` (found the dead-backend bug while wiring this) |
 | "Continue" CTA not visible after scroll | The only CTA lived at the top of the builder page and scrolled out of view | Added a persistent "Start building" CTA at the bottom of the workflow list |
-| Demo page promised a live widget that wasn't there | The page's copy described a widget that was never rendered | Mounted the builder's own widget as a floating assistant on `/demo` |
-| *(found while fixing above)* Production called a **dead backend** | `NEXT_PUBLIC_CHATDOCK_BACKEND_URL` pointed at a deleted Railway app for weeks - live chat was silently broken | Repointed to the current backend and redeployed |
-| Resilience story couldn't be triggered ("No matches found for 429") | The live-test UI hardcoded `chaosMode = null`, so the backend's failure-simulation support was unreachable | Added the **Simulate failure** panel (rate limit / provider down / timeout) wired to the gateway fallback trace |
-| Public URL behind a **Vercel login wall** | A manual deploy from the repo root shipped to the wrong Vercel project (deployment protection on) and re-aliased the public URL to it | Redeployed from the correct project and re-pinned the alias |
 
 The loop also hardened its own tooling: it caught a CI "success" that was actually a masked `VALIDATION_ERROR`, and root-caused recurring "blocked" verdicts to a rotating hero headline that defeats DOM text assertions - after which the CI verdict was reclassified from per-test status instead of a blunt exit code.
 
