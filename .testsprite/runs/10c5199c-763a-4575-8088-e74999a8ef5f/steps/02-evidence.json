@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 2,
+    "summary": "Step 2 'Navigate to the builder page at https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user and wait for it to load' passed.",
+    "path": "steps/02-snapshot.html"
+  }
+]

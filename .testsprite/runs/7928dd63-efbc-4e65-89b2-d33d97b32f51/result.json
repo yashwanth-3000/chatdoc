@@ -1,0 +1,18 @@
+{
+  "testId": "957617d0-0c30-4aa7-b3d7-4247ae02983a",
+  "status": "blocked",
+  "startedAt": "2026-07-02T09:35:22.226Z",
+  "finishedAt": "2026-07-02T09:47:49.466Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782985669279667//tmp/618165c0-bd4c-4baf-ab11-198c4326007d/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_cbef84e9408df61b",
+  "runIdIfAvailable": "7928dd63-efbc-4e65-89b2-d33d97b32f51",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 18,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Found 9 elements matching \"div[type=button]\":\n\n[0] <div> \"chat-bot-llm resolved to gpt-5-2025-08-07agentsuccess21.4s9\" (6 children)\n[1] <div> \"Output guardrail · passedsystemsuccess21.4s8\" (6 children)\n[2] <div> \"MCP toolssystemsuccess144ms7\" (6 children)\n[3] <div> \"Input guardrail · activesystemwarning144ms6\" (6 children)\n[4] <div> \"Tier: guestssystemsuccess144ms5\" (6 children)\n[5] <div> \"Eventsystemsuccess144ms4\" (6 children)\n[6] <div>…"
+}

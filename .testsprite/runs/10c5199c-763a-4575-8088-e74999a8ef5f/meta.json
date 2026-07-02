@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "cli-v1",
+  "snapshotId": "snap_c6fde7e8abd0d375",
+  "testId": "957617d0-0c30-4aa7-b3d7-4247ae02983a",
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "codeVersion": "v1",
+  "runIdIfAvailable": "10c5199c-763a-4575-8088-e74999a8ef5f",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "failedStepIndex": 3,
+  "failureKind": null,
+  "capturedAt": "2026-07-02T09:32:53.507Z",
+  "fetchedAt": "2026-07-02T12:42:51.725Z"
+}

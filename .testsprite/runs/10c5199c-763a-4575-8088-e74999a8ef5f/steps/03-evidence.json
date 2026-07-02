@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 3,
+    "summary": "Step 3 'Expected a section titled 'Simulate failure' (or similar) to be visible on the page.' failed. Error: TEST BLOCKED\n\nThe test could not be run — the UI requires Vercel authentication which prevents reaching the ChatDock builder and running the resilience simulation.\n\nObservations:\n- The page shows 'Log in to Vercel' with an email input and provider sign-in buttons.\n- No ChatDock builder UI or the 'Continue as judge — use demo tenant' button is visible on the page.\n- Access is redirected to Vercel SSO and no credentials were provided to authenticate.",
+    "path": "steps/03-snapshot.html"
+  }
+]

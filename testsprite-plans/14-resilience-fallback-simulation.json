@@ -1,0 +1,43 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Resilience — simulate primary-model failure and verify fallback recovery in live test",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user"
+    },
+    {
+      "type": "action",
+      "description": "Click the button 'Continue as judge — use demo tenant' and wait up to 60 seconds for the 'Foundry inventory' browser to load"
+    },
+    {
+      "type": "action",
+      "description": "Proceed through the tier configuration flow by clicking the primary continue/next button(s) until the live test page loads. Accept any pre-filled defaults."
+    },
+    {
+      "type": "assertion",
+      "description": "The live test page loads: heading 'Test your chatbot live' is visible"
+    },
+    {
+      "type": "assertion",
+      "description": "A resilience/failure simulation control is present: a section titled 'Simulate failure' (or similar) with a clickable control to inject a rate limit / primary-model failure before sending a message"
+    },
+    {
+      "type": "action",
+      "description": "Activate the 'Rate limit' (429) failure simulation control"
+    },
+    {
+      "type": "action",
+      "description": "Send a message such as 'What is ChatDock?' in the chat widget"
+    },
+    {
+      "type": "assertion",
+      "description": "Within 40 seconds the request trace shows the injected failure and recovery: a trace entry indicating the primary model was rate-limited (e.g. '429' or 'Rate limited') AND a trace entry indicating a fallback occurred (e.g. 'Falling back to')"
+    },
+    {
+      "type": "assertion",
+      "description": "Despite the simulated failure, a final assistant response still appears in the chat — the conversation recovered rather than showing a hard error"
+    }
+  ]
+}

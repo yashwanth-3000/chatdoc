@@ -1,0 +1,18 @@
+{
+  "testId": "957617d0-0c30-4aa7-b3d7-4247ae02983a",
+  "status": "blocked",
+  "startedAt": "2026-07-02T09:31:29.903Z",
+  "finishedAt": "2026-07-02T09:32:53.507Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782984773323494//tmp/77b0b4c1-205d-4590-8be0-e88817303697/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_c6fde7e8abd0d375",
+  "runIdIfAvailable": "10c5199c-763a-4575-8088-e74999a8ef5f",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 3,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED\n\nThe test could not be run — the UI requires Vercel authentication which prevents reaching the ChatDock builder and running the resilience simulation.\n\nObservations:\n- The page shows 'Log in to Vercel' with an email input and provider sign-in buttons.\n- No ChatDock builder UI or the 'Continue as judge — use demo tenant' button is visible on the page.\n- Access is redirected to Vercel SSO and no credentials were provided to authenticate."
+}

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { ProviderIcon } from "./provider-icons";
 import { MiniWidget, BACKEND_URL } from "./mini-widget";
-import type { LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
+import type { ChaosMode, LiveConfig, TraceEntry, WidgetConfig } from "./mini-widget";
 import styles from "./live-test-page.module.css";
 import stepStyles from "./widget-designer.module.css";
 
@@ -491,6 +491,10 @@ export function LiveTestPage() {
   // versioned display name (e.g. "gpt-5-2025-08-07") shown to the user.
   const [lastServedModel, setLastServedModel] = useState<string | null>(null);
   const [lastServedTarget, setLastServedTarget] = useState<string | null>(null);
+  // Resilience simulator: inject a primary-model failure so judges can watch the
+  // gateway's fallback + trace recovery on demand, without waiting to hit a real
+  // rate limit. null = normal request. Cleared to null after each send fires.
+  const [chaosMode, setChaosMode] = useState<ChaosMode>(null);
 
   useEffect(() => {
     fetch(`${BACKEND_URL}/api/chat/mcp-tools`)
@@ -595,9 +599,18 @@ export function LiveTestPage() {
 4. NEVER pad, embellish, or extrapolate beyond what the tool result literally contains — no invented code snippets, file names, env variables, commands, or steps that the tool didn't give you. If the tool result is short, partial, or generic, your answer must be equally short and partial — never present a thin result as a "complete" or "detailed" answer.
 5. If a tool returns "No results", or your available tools only cover part of the question, or a tool result says the tier lacks access: tell the user plainly, in one or two sentences, that the requested depth of detail needs a higher access tier (say "Pro tier" / "Logged-in tier" by name when you can tell which one), and that they're welcome to ask a more basic version of the question instead. This is a normal, valid product question — do not call it off-topic, and do not fabricate the missing depth yourself.`;
 
+  // Fallback label for the resilience trace: the next fallback candidate in the
+  // gateway's routing chain, if one exists, else the active model itself.
+  const fallbackTargetLabel = (() => {
+    const targets = routingInfo?.targets ?? [];
+    const fallback = targets.find((t) => t.fallbackCandidate && t.target !== lastServedTarget)
+      ?? targets.find((t) => t.fallbackCandidate);
+    return fallback ? shortModel(fallback.target) : (activeModel?.name ?? "fallback model");
+  })();
+
   const liveConfig: LiveConfig | null = liveGatewayUrl && activeModel && liveKey ? {
     gatewayUrl: liveGatewayUrl, modelId: activeModel.id, apiKey: liveKey,
-    chaosMode: null, primaryModelLabel: activeModel.name, fallbackModelLabel: activeModel.name,
+    chaosMode, primaryModelLabel: activeModel.name, fallbackModelLabel: fallbackTargetLabel,
     userTier: activeTier, controlPlaneUrl: tierCfg?.controlPlaneUrl ?? "",
     systemPrompt: builtSystemPrompt,
     guardrailNames: activeTierData?.guardrails.map((g) => g.name) ?? [],
@@ -614,6 +627,7 @@ export function LiveTestPage() {
     if (info.model) setLastServedModel(info.model);
     setLastServedTarget(info.resolvedTarget ?? null);
     setExpandedModel(null);
+    setChaosMode(null); // one-shot: disarm the failure sim after the turn completes
 
     const controlPlaneUrl = tierCfg?.controlPlaneUrl;
     if (!info.traceId || !controlPlaneUrl || !liveKey) return;
@@ -924,6 +938,55 @@ export function LiveTestPage() {
               </div>
             ) : (
               <p className={styles.emptyNote}>Connect your gateway in Step 2 to load tier policies.</p>
+            )}
+          </div>
+
+          {/* ── Resilience simulator ── */}
+          <div className={styles.section}>
+            <div className={styles.sectionHead}>
+              <h3 className={styles.sectionTitle}>Simulate failure</h3>
+              <span className={styles.sectionHint}>inject on next send</span>
+            </div>
+            <p className={styles.sectionHint} style={{ marginBottom: 10 }}>
+              Force the primary model to fail on your next message and watch the gateway&apos;s
+              fallback + trace recovery — the same resilience path that fires on a real outage.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+              {([
+                { mode: "rate-limit" as ChaosMode, icon: <XCircle size={13} strokeWidth={2.2} />, label: "Rate limit", sub: "429" },
+                { mode: "kill-primary" as ChaosMode, icon: <AlertCircle size={13} strokeWidth={2.2} />, label: "Provider down", sub: "503" },
+                { mode: "slow" as ChaosMode, icon: <Clock size={13} strokeWidth={2.2} />, label: "Timeout", sub: "slow 3.1s" },
+              ]).map(({ mode, icon, label, sub }) => {
+                const isActive = chaosMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => canSwitch && setChaosMode(isActive ? null : mode)}
+                    disabled={!canSwitch}
+                    aria-pressed={isActive}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 3,
+                      padding: "9px 11px", borderRadius: 9, cursor: canSwitch ? "pointer" : "not-allowed",
+                      border: `1.5px solid ${isActive ? "#ef4444" : "#e5e7eb"}`,
+                      background: isActive ? "rgba(239,68,68,0.06)" : "#fff",
+                      color: isActive ? "#b91c1c" : "#6b7280",
+                      opacity: canSwitch ? 1 : 0.55, textAlign: "left", transition: "all 120ms ease",
+                    }}
+                  >
+                    <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 700 }}>
+                      {isActive ? <Check size={12} strokeWidth={3} /> : icon}
+                      {label}
+                    </span>
+                    <span style={{ fontSize: 10.5, opacity: 0.75, fontFamily: "ui-monospace, monospace" }}>{sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+            {chaosMode && (
+              <p className={styles.sectionHint} style={{ marginTop: 9, color: "#b91c1c" }}>
+                Armed — your next message will trigger a simulated {chaosMode === "rate-limit" ? "429 rate limit" : chaosMode === "kill-primary" ? "503 provider outage" : "response timeout"} and fall back to {fallbackTargetLabel}.
+              </p>
             )}
           </div>
 

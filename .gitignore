@@ -44,3 +44,4 @@ backend/data/
 .env*
 .DS_Store
 *.pem
+.vercel

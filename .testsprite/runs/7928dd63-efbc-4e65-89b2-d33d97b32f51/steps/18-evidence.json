@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 18,
+    "summary": "Step 18 'The 'Rate limit 429' failure-simulation control is visible on the page.' failed. Error: TEST BLOCKED: Found 9 elements matching \"div[type=button]\":\n\n[0] <div> \"chat-bot-llm resolved to gpt-5-2025-08-07agentsuccess21.4s9\" (6 children)\n[1] <div> \"Output guardrail · passedsystemsuccess21.4s8\" (6 children)\n[2] <div> \"MCP toolssystemsuccess144ms7\" (6 children)\n[3] <div> \"Input guardrail · activesystemwarning144ms6\" (6 children)\n[4] <div> \"Tier: guestssystemsuccess144ms5\" (6 children)\n[5] <div> \"Eventsystemsuccess144ms4\" (6 children)\n[6] <div> \"Errorsystemerror144ms3\" (6 children)\n[7] <div> \"chat-bot-llmagentpending4ms2\" (6 children)\n[8] <div> \"Eventsystemsuccess1\" (6 children)",
+    "path": "steps/18-snapshot.html"
+  }
+]
