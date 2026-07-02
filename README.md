@@ -34,8 +34,6 @@ You do **not** need your own TrueFoundry tenant to evaluate ChatDock end to end:
 2. Below the credentials form, click **"Continue as judge - use demo tenant"**.
 3. ChatDock connects using its own TrueFoundry service account and loads the full inventory (models, MCP servers, guardrails, rate-limit policies). Configure tiers, run the live test, simulate failures, and publish - exactly as a real user would.
 
-> **Security:** the demo tenant's credential is a service-account token stored **only in backend environment variables**. The browser holds a sentinel string (`__chatdock_demo__`); the real key is never sent to, or visible in, the frontend, network responses, or this repository.
-
 The floating assistant in the bottom-right of the **[demo page](https://chatdock-app.vercel.app/demo)** is not a mock - it is the builder's own output widget, answering live through the gateway.
 
 ## Architecture
@@ -56,20 +54,22 @@ This repository is not just an app - it is a record of an **autonomous test-fix 
 ### The loop
 
 ```
-   ┌─────────────────────────────────────────────────────────────┐
-   │                                                             │
-   ▼                                                             │
-① WRITE      Agent (Claude Code) ships a change and deploys it      │
-   │                                                             │
-   ▼                                                             │
-② VERIFY     TestSprite CLI runs the plan against the LIVE URL      │
-   │          and returns a real pass/fail verdict + evidence      │
-   ▼                                                             │
-③ FIX        Agent reads the failure bundle, finds the root       │
-   │          cause, and ships the fix                            │
-   ▼                                                             │
-④ VERIFY     TestSprite re-runs the same test; a pass closes       │
-   AGAIN     the loop - every result is logged to LOOP.md ────────┘
+ +----------------------------------------------------------+
+ |                                                          |
+ v                                                          |
+ [1] WRITE     Agent ships a change and deploys it          |
+  |                                                         |
+  v                                                         |
+ [2] VERIFY    TestSprite runs the plan on the LIVE         |
+               site: real pass/fail verdict + evidence      |
+  |                                                         |
+  v                                                         |
+ [3] FIX       Agent reads the failure bundle and           |
+               ships a fix for the root cause               |
+  |                                                         |
+  v                                                         |
+ [4] VERIFY    a passing re-run closes the loop;            |
+ +--- AGAIN     every result is appended to LOOP.md         +
 ```
 
 ### Where to look
