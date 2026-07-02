@@ -7,7 +7,7 @@ import styles from "./hero.module.css";
 
 const leadLine = "Build chatbots that survive real";
 
-// Trailing phrase that cycles — each names a real failure mode a production
+// Trailing phrase that cycles - each names a real failure mode a production
 // chatbot has to ride out, which is exactly what ChatDock configures for.
 const rotatingPhrases = [
   "traffic.",

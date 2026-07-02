@@ -96,7 +96,7 @@ function nestedRecord(value: unknown, key: string) {
   return isRecord(child) ? child : null;
 }
 
-function textValue(value: unknown, fallback = "—"): string {
+function textValue(value: unknown, fallback = "-"): string {
   if (typeof value === "string" && value.trim()) return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return value.map((v) => textValue(v, "")).filter(Boolean).join(", ") || fallback;
@@ -104,7 +104,7 @@ function textValue(value: unknown, fallback = "—"): string {
 }
 
 function dateValue(value: unknown) {
-  if (typeof value !== "string" || !value) return "—";
+  if (typeof value !== "string" || !value) return "-";
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -159,7 +159,7 @@ function flattenRecord(record: InventoryRecord, prefix = "", depth = 0): Array<[
 // ── Item display helpers ──────────────────────────────────────────────────────
 
 function getItemTitle(record: InventoryRecord, sectionKey: string, index: number): string {
-  // Gateway config sections — configs have name in root, metadata, or spec
+  // Gateway config sections - configs have name in root, metadata, or spec
   if (sectionKey === "routingConfigs") {
     // Virtual model provider accounts: name from manifest or root
     const manifest = isRecord(record.manifest) ? record.manifest as InventoryRecord : null;
@@ -197,7 +197,7 @@ function getItemMeta(record: InventoryRecord, sectionKey: string): Array<[string
   if (sectionKey === "recentRequestsLedger") {
     const time = dateValue(record.startTime ?? record.Timestamp ?? record.createdAt);
     const status = textValue(record.statusCode ?? record.status, "");
-    if (time !== "—") pairs.push(["Time", time]);
+    if (time !== "-") pairs.push(["Time", time]);
     if (status) pairs.push(["Status", status]);
     if (record.traceId) pairs.push(["Trace", textValue(record.traceId).slice(0, 12) + "…"]);
     return pairs;
@@ -368,7 +368,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
     setError(null);
     try {
       const result = await connectDemoFoundry();
-      // Sentinel instead of a real key — the backend swaps it server-side
+      // Sentinel instead of a real key - the backend swaps it server-side
       try { sessionStorage.setItem("chatdock_api_key", DEMO_API_KEY_SENTINEL); } catch { /* ignore */ }
       setInventory(result);
       setInventorySource("demo");
@@ -411,7 +411,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
       const result = await fetchSavedExistingFoundryInventory();
       setInventory(result);
       setInventorySource("saved");
-      // Saved snapshot has no credentials — clear any stale key so Step 3 shows accurate offline state
+      // Saved snapshot has no credentials - clear any stale key so Step 3 shows accurate offline state
       try { sessionStorage.removeItem("chatdock_api_key"); } catch { /* ignore */ }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unable to load saved inventory.");
@@ -476,7 +476,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
     }
 
     // Sync addedItems so the browser view shows "✓ applied" for every auto-configured item.
-    // The browser uses index-based keys ("mcpServers-0", "guardrails-1", etc.) — match that format.
+    // The browser uses index-based keys ("mcpServers-0", "guardrails-1", etc.) - match that format.
     const autoAdded = new Map<string, string>();
     allMcpTools.forEach((item, i)    => autoAdded.set(`mcpServers-${i}`,       item.name));
     allGuardrails.forEach((item, i)  => autoAdded.set(`guardrails-${i}`,        item.name));
@@ -487,7 +487,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inventory]);
 
-  // Returns only virtual-model provider accounts — these are the names TrueFoundry gateway accepts
+  // Returns only virtual-model provider accounts - these are the names TrueFoundry gateway accepts
   function getVirtualModels(): TierItemRef[] {
     if (!inventory) return [];
     const section = inventory.sections.find((s) => s.key === "providerAccounts");
@@ -607,7 +607,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                         setTiers((prev) => ({ ...prev, [tierKey]: { ...prev[tierKey], model: opt } }));
                       }}
                     >
-                      <option value="">— None selected —</option>
+                      <option value="">- None selected -</option>
                       {availableModels.map((m) => (
                         <option key={m.id} value={m.id}>{m.name}</option>
                       ))}
@@ -630,7 +630,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                         setTiers((prev) => ({ ...prev, [tierKey]: { ...prev[tierKey], rateLimitPolicy: opt } }));
                       }}
                     >
-                      <option value="">— No policy —</option>
+                      <option value="">- No policy -</option>
                       {availableRateLimits.map((r) => (
                         <option key={r.id} value={r.id}>{r.name}</option>
                       ))}
@@ -759,7 +759,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
           </h1>
           <p>
             {inventory
-              ? `${inventory.connection.okSections} sections loaded · Browse models, tools, and rules — click + to add to your chatbot.`
+              ? `${inventory.connection.okSections} sections loaded · Browse models, tools, and rules - click + to add to your chatbot.`
               : "Enter your TrueFoundry credentials to browse models, guardrails, MCP tools, and workspace resources."}
           </p>
         </div>
@@ -881,7 +881,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                 <div className={styles.gwFormFieldFull} style={{ borderTop: "1px solid rgba(0,0,0,0.08)", paddingTop: 14 }}>
                   <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 10px" }}>
                     <strong>No TrueFoundry account?</strong> Judges and evaluators can connect
-                    with ChatDock&apos;s own demo tenant — credentials stay on the server and are
+                    with ChatDock&apos;s own demo tenant - credentials stay on the server and are
                     never sent to your browser.
                   </p>
                   <button
@@ -890,7 +890,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                     disabled={loading || layoutLoading || demoLoading}
                     onClick={handleDemoConnect}
                   >
-                    {demoLoading ? "Connecting…" : "Continue as judge — use demo tenant"}
+                    {demoLoading ? "Connecting…" : "Continue as judge - use demo tenant"}
                   </button>
                 </div>
               </div>
@@ -916,7 +916,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                 <div className={styles.gwAutoConfigLeft}>
                   <span className={styles.gwAutoConfigCheck}>✓</span>
                   <span className={styles.gwAutoConfigText}>
-                    Auto-configured from inventory —{" "}
+                    Auto-configured from inventory -{" "}
                     {vms.length === 1 ? <><strong>{vms[0].name}</strong> virtual model</> : `${vms.length} virtual models`}
                     {allRateLimits.length > 0 ? `, ${allRateLimits.length} rate limit rule${allRateLimits.length !== 1 ? "s" : ""}` : ""}
                     {allGuardrails.length > 0 ? `, ${allGuardrails.length} guardrail${allGuardrails.length !== 1 ? "s" : ""}` : ""}
@@ -1032,7 +1032,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                           <span
                             className={styles.gwNavBadge}
                             data-status={section.status === "unavailable" ? "unavailable" : section.status}
-                            title={section.status === "unavailable" ? "Could not load — click to see details" : undefined}
+                            title={section.status === "unavailable" ? "Could not load - click to see details" : undefined}
                           >
                             {section.status === "unavailable" ? "!" : section.count}
                           </span>
@@ -1111,7 +1111,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                             const isExpanded = expandedItemId === id;
                             const isHealth = Boolean(record._isHealth);
                             const title = isHealth
-                              ? `Gateway — ${textValue(record.status, "ok")}`
+                              ? `Gateway - ${textValue(record.status, "ok")}`
                               : getItemTitle(record, activeSectionKey, i);
                             const meta = getItemMeta(record, activeSectionKey);
                             const detailPairs = isExpanded ? flattenRecord(record) : [];
@@ -1324,7 +1324,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                 </section>
               ) : null}
 
-              {/* Footer — added items */}
+              {/* Footer - added items */}
               {addedItems.size > 0 ? (
                 <div className={styles.gwFooter}>
                   <div className={styles.gwFooterItems}>

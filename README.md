@@ -7,51 +7,51 @@
 | 🌐 **Live app** | https://chatdock-app.vercel.app |
 | ⚙️ **Backend health** | https://chat-dock-backend-production.up.railway.app/api/health |
 | 🎥 **Demo video** | https://youtu.be/RJMUyunJStk |
-| 🧪 **Built for** | TestSprite Hackathon S3 — see [the loop section](#-the-testsprite-loop-how-this-app-was-hardened) |
+| 🧪 **Built for** | TestSprite Hackathon S3 - see [the loop section](#-the-testsprite-loop-how-this-app-was-hardened) |
 
-> 🧑‍⚖️ **Judges & evaluators:** you don't need a TrueFoundry account — use the built-in **demo tenant** ([one-click instructions below](#-for-judges--evaluators-no-truefoundry-account-needed)).
+> 🧑‍⚖️ **Judges & evaluators:** you don't need a TrueFoundry account - use the built-in **demo tenant** ([one-click instructions below](#-for-judges--evaluators-no-truefoundry-account-needed)).
 
 ---
 
 ## The problem
 
-Most chatbot demos look simple: add a widget, connect an LLM, answer questions. Real chatbots fail in less obvious ways — models hit rate limits, providers go down, tools need permissions, guardrails have to run *before* risky calls, and someone has to figure out exactly where a request broke.
+Most chatbot demos look simple: add a widget, connect an LLM, answer questions. Real chatbots fail in less obvious ways - models hit rate limits, providers go down, tools need permissions, guardrails have to run *before* risky calls, and someone has to figure out exactly where a request broke.
 
 ChatDock turns *"we need a support chatbot"* into a configured, production-ready widget **without hand-wiring any of that resilience plumbing yourself**. It connects to your existing TrueFoundry tenant, auto-discovers your models, virtual models, MCP servers, guardrails, and rate-limit policies, lets you configure tiered access (Guest / Logged-in / Pro), live-tests the bot against real failure modes with a full request trace, and finally generates ready-to-embed code.
 
 ## How it works
 
-1. **Connect** — provide a TrueFoundry control-plane URL and API key (or use judge mode). ChatDock fetches your models, virtual models, MCP servers, guardrails, rate-limit policies, and budgets. The key is used only to read inventory and is not stored permanently.
-2. **Configure** — map rate-limit policies to Guest / Logged-in / Pro tiers, attach guardrails and MCP servers, and pick a model fallback chain — all pre-filled from your tenant, all editable.
-3. **Live test** — chat with the configured bot and watch a full request trace: tier resolution, model routing and fallback, guardrail checks, MCP tool calls, and the streamed answer. Use the **Simulate failure** controls to inject a 429 rate limit, a 503 provider outage, or a slow timeout and watch the fallback chain recover in the trace.
-4. **Publish** — get a self-contained React widget, a Next.js API route that keeps your TrueFoundry key server-side, environment-variable snippets, and a ready-made prompt for an AI coding assistant (Claude, Cursor, Codex, ChatGPT) to wire it into your project.
+1. **Connect** - provide a TrueFoundry control-plane URL and API key (or use judge mode). ChatDock fetches your models, virtual models, MCP servers, guardrails, rate-limit policies, and budgets. The key is used only to read inventory and is not stored permanently.
+2. **Configure** - map rate-limit policies to Guest / Logged-in / Pro tiers, attach guardrails and MCP servers, and pick a model fallback chain - all pre-filled from your tenant, all editable.
+3. **Live test** - chat with the configured bot and watch a full request trace: tier resolution, model routing and fallback, guardrail checks, MCP tool calls, and the streamed answer. Use the **Simulate failure** controls to inject a 429 rate limit, a 503 provider outage, or a slow timeout and watch the fallback chain recover in the trace.
+4. **Publish** - get a self-contained React widget, a Next.js API route that keeps your TrueFoundry key server-side, environment-variable snippets, and a ready-made prompt for an AI coding assistant (Claude, Cursor, Codex, ChatGPT) to wire it into your project.
 
 ## 🧑‍⚖️ For judges & evaluators (no TrueFoundry account needed)
 
 You do **not** need your own TrueFoundry tenant to evaluate ChatDock end to end:
 
 1. Open the **[gateway connect step](https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user)**.
-2. Below the credentials form, click **"Continue as judge — use demo tenant"**.
-3. ChatDock connects using its own TrueFoundry service account and loads the full inventory (models, MCP servers, guardrails, rate-limit policies). Configure tiers, run the live test, simulate failures, and publish — exactly as a real user would.
+2. Below the credentials form, click **"Continue as judge - use demo tenant"**.
+3. ChatDock connects using its own TrueFoundry service account and loads the full inventory (models, MCP servers, guardrails, rate-limit policies). Configure tiers, run the live test, simulate failures, and publish - exactly as a real user would.
 
 > **Security:** the demo tenant's credential is a service-account token stored **only in backend environment variables**. The browser holds a sentinel string (`__chatdock_demo__`); the real key is never sent to, or visible in, the frontend, network responses, or this repository.
 
-The floating assistant in the bottom-right of the **[demo page](https://chatdock-app.vercel.app/demo)** is not a mock — it is the builder's own output widget, answering live through the gateway.
+The floating assistant in the bottom-right of the **[demo page](https://chatdock-app.vercel.app/demo)** is not a mock - it is the builder's own output widget, answering live through the gateway.
 
 ## Architecture
 
 Four protocol boundaries keep the agent legible under failure:
 
-- **React widget (client)** — self-contained component; streams tokens over SSE, renders markdown, preserves conversation state across fallback events. No gateway secrets ever reach the browser.
-- **Express API (proxy)** — keeps the TrueFoundry key server-side, forwards through the AI Gateway using the OpenAI-compatible client, injects MCP auth, and streams `delta` / `trace` / `done` / `error` SSE events back to the widget.
-- **TrueFoundry AI Gateway** — model routing, fallback chains, per-tier rate limits, and budgets live in gateway policy, not application code.
-- **MCP Gateway + guardrails** — a Railway-hosted MCP server exposes tiered tools over HTTP JSON-RPC 2.0; `content-moderation` and `sql-sanitizer` guardrails run at input, tool-argument, and output phases.
+- **React widget (client)** - self-contained component; streams tokens over SSE, renders markdown, preserves conversation state across fallback events. No gateway secrets ever reach the browser.
+- **Express API (proxy)** - keeps the TrueFoundry key server-side, forwards through the AI Gateway using the OpenAI-compatible client, injects MCP auth, and streams `delta` / `trace` / `done` / `error` SSE events back to the widget.
+- **TrueFoundry AI Gateway** - model routing, fallback chains, per-tier rate limits, and budgets live in gateway policy, not application code.
+- **MCP Gateway + guardrails** - a Railway-hosted MCP server exposes tiered tools over HTTP JSON-RPC 2.0; `content-moderation` and `sql-sanitizer` guardrails run at input, tool-argument, and output phases.
 
 ---
 
 ## 🧪 The TestSprite loop: how this app was hardened
 
-This repository is not just an app — it is a record of an **autonomous test-fix loop** run against the live deployment with [TestSprite](https://www.testsprite.com/). Every fix below was driven by a real test failure against the production URL, not written from imagination.
+This repository is not just an app - it is a record of an **autonomous test-fix loop** run against the live deployment with [TestSprite](https://www.testsprite.com/). Every fix below was driven by a real test failure against the production URL, not written from imagination.
 
 ### The loop
 
@@ -69,16 +69,16 @@ This repository is not just an app — it is a record of an **autonomous test-fi
    │          cause, and ships the fix                            │
    ▼                                                             │
 ④ VERIFY     TestSprite re-runs the same test; a pass closes       │
-   AGAIN     the loop — every result is logged to LOOP.md ────────┘
+   AGAIN     the loop - every result is logged to LOOP.md ────────┘
 ```
 
 ### Where to look
 
 | Artifact | What it is |
 |---|---|
-| **[`LOOP.md`](LOOP.md)** | The agent-written loop log — one line per iteration: *who ran it · what test ran · the verdict · what was fixed.* 26 iterations and counting. |
+| **[`LOOP.md`](LOOP.md)** | The agent-written loop log - one line per iteration: *who ran it · what test ran · the verdict · what was fixed.* 26 iterations and counting. |
 | **[`testsprite-plans/`](testsprite-plans/)** | The 14 human-readable test plans (JSON), each a sequence of `action` and `assertion` steps run against the live site. |
-| **[`.testsprite/`](.testsprite/)** | Failure bundles for every failed run — per-step evidence, HTML snapshots, the generated test code, and a **video recording** of the browser session. |
+| **[`.testsprite/`](.testsprite/)** | Failure bundles for every failed run - per-step evidence, HTML snapshots, the generated test code, and a **video recording** of the browser session. |
 | **[`.github/workflows/testsprite.yml`](.github/workflows/testsprite.yml)** | CI/CD integration (see below). |
 
 ### What TestSprite is asked to test (14 plans)
@@ -104,11 +104,11 @@ Each of these is a documented **FAIL → FIX → PASS** arc in [`LOOP.md`](LOOP.
 |---|---|---|
 | "Continue" CTA not visible after scroll | The only CTA lived at the top of the builder page and scrolled out of view | Added a persistent "Start building" CTA at the bottom of the workflow list |
 | Demo page promised a live widget that wasn't there | The page's copy described a widget that was never rendered | Mounted the builder's own widget as a floating assistant on `/demo` |
-| *(found while fixing above)* Production called a **dead backend** | `NEXT_PUBLIC_CHATDOCK_BACKEND_URL` pointed at a deleted Railway app for weeks — live chat was silently broken | Repointed to the current backend and redeployed |
+| *(found while fixing above)* Production called a **dead backend** | `NEXT_PUBLIC_CHATDOCK_BACKEND_URL` pointed at a deleted Railway app for weeks - live chat was silently broken | Repointed to the current backend and redeployed |
 | Resilience story couldn't be triggered ("No matches found for 429") | The live-test UI hardcoded `chaosMode = null`, so the backend's failure-simulation support was unreachable | Added the **Simulate failure** panel (rate limit / provider down / timeout) wired to the gateway fallback trace |
 | Public URL behind a **Vercel login wall** | A manual deploy from the repo root shipped to the wrong Vercel project (deployment protection on) and re-aliased the public URL to it | Redeployed from the correct project and re-pinned the alias |
 
-The loop also hardened its own tooling: it caught a CI "success" that was actually a masked `VALIDATION_ERROR`, and root-caused recurring "blocked" verdicts to a rotating hero headline that defeats DOM text assertions — after which the CI verdict was reclassified from per-test status instead of a blunt exit code.
+The loop also hardened its own tooling: it caught a CI "success" that was actually a masked `VALIDATION_ERROR`, and root-caused recurring "blocked" verdicts to a rotating hero headline that defeats DOM text assertions - after which the CI verdict was reclassified from per-test status instead of a blunt exit code.
 
 ### CI/CD integration (+ the loop runs itself)
 
@@ -141,11 +141,11 @@ testsprite test rerun --all --project <project-id> --wait
 ## Repository layout
 
 ```
-frontend/            Next.js app — product site + guided builder UI
-backend/             Express API — inventory discovery, gateway config,
+frontend/            Next.js app - product site + guided builder UI
+backend/             Express API - inventory discovery, gateway config,
                      chat proxy (routing, fallback, guardrails, MCP, SSE, tracing),
                      and judge/demo-mode credential handling
-packages/chatdock-mcp/   Custom MCP server (Streamable HTTP) — tiered docs & tools
+packages/chatdock-mcp/   Custom MCP server (Streamable HTTP) - tiered docs & tools
 testsprite-plans/    14 TestSprite test plans (JSON)
 .testsprite/         Failure bundles: evidence, snapshots, videos
 LOOP.md              Agent-written loop log (one line per iteration)
@@ -187,17 +187,17 @@ Exposes six tools split across tiers (Guest: docs search and quick start; Logged
 
 ## Main routes
 
-- `/` — product overview and demo video
-- `/builder` — the guided chatbot configuration builder (connect → design → live test → publish)
-- `/demo` — judge-facing walkthrough with the live floating assistant
+- `/` - product overview and demo video
+- `/builder` - the guided chatbot configuration builder (connect → design → live test → publish)
+- `/demo` - judge-facing walkthrough with the live floating assistant
 
 ## Stack
 
-- **Frontend** — Next.js, React, TypeScript (Vercel)
-- **Backend** — Express, Node.js (Railway)
-- **MCP server** — TypeScript, `@modelcontextprotocol/sdk`, Streamable HTTP transport (Railway)
-- **AI infrastructure** — TrueFoundry AI Gateway: virtual models with priority-based routing and fallback, rate limits, budgets, guardrails, MCP Gateway, and observability/tracing
-- **Testing / loop** — TestSprite CLI + GitHub Actions
+- **Frontend** - Next.js, React, TypeScript (Vercel)
+- **Backend** - Express, Node.js (Railway)
+- **MCP server** - TypeScript, `@modelcontextprotocol/sdk`, Streamable HTTP transport (Railway)
+- **AI infrastructure** - TrueFoundry AI Gateway: virtual models with priority-based routing and fallback, rate limits, budgets, guardrails, MCP Gateway, and observability/tracing
+- **Testing / loop** - TestSprite CLI + GitHub Actions
 
 ## Deployment
 

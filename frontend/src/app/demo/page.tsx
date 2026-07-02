@@ -459,7 +459,7 @@ export default function DemoPage() {
         <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
           <p>
             The chat widget running on the ChatDock website is the exact output of the builder
-            flow: widget design, gateway config, MCP tool selection, and guardrail attachment —
+            flow: widget design, gateway config, MCP tool selection, and guardrail attachment -
             all configured through the same UI judges are viewing right now. This is a
             self-referential proof: the product that builds chatbots was tested by building itself.
           </p>

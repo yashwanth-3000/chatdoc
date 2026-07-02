@@ -3,7 +3,7 @@ import { AppFrame } from "@/components/product/app-frame";
 import { LiveTestPage } from "@/components/product/live-test-page";
 
 export const metadata: Metadata = {
-  title: "Live Test — ChatDock",
+  title: "Live Test - ChatDock",
   description: "Test your chatbot live against your TrueFoundry gateway and simulate failures.",
 };
 

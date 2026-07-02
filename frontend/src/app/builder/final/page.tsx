@@ -3,7 +3,7 @@ import { AppFrame } from "@/components/product/app-frame";
 import { PublishPage } from "@/components/product/publish-page";
 
 export const metadata: Metadata = {
-  title: "Publish — ChatDock",
+  title: "Publish - ChatDock",
   description: "Install the chatdock-widget package and embed your configured AI chatbot in minutes.",
 };
 

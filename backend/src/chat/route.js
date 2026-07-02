@@ -13,10 +13,10 @@ const SNAPSHOT_PATH = path.resolve(
 
 const MCP_SERVER_URL = (process.env.MCP_SERVER_URL ?? "https://chatdock-mcp-production.up.railway.app").replace(/\/+$/, "");
 
-// Auth param names the MCP server uses — backend injects these, LLM never sees them
+// Auth param names the MCP server uses - backend injects these, LLM never sees them
 const MCP_AUTH_PARAMS = ["truefoundry_api_key", "control_plane_url"];
 
-// Read the guardrail policy from the snapshot on every request — no permanent cache.
+// Read the guardrail policy from the snapshot on every request - no permanent cache.
 // This ensures the updated policy is picked up immediately after applyGuardrailPolicy()
 // writes the guardrailPolicy section without requiring a backend restart.
 async function getGuardrailPolicy() {
@@ -141,15 +141,15 @@ async function callMcpTool(toolName, args) {
 
 // ── Stream one gateway request ────────────────────────────────────────────────
 
-// Reasoning models (e.g. gpt-5) can sit completely silent for 30s+ — both while the
+// Reasoning models (e.g. gpt-5) can sit completely silent for 30s+ - both while the
 // gateway is still waiting on the model for a first response token (i.e. during the
 // `fetch()` call itself, before headers even arrive) and later mid-stream between
 // content chunks. Either gap is long enough for an idle proxy/CDN in front of this
 // SSE response to decide the connection is dead and kill it client-side (surfaces as
 // a generic network failure, e.g. Safari's "Load failed", even though the upstream
 // call eventually succeeds). A `: comment` line is valid-but-ignored SSE per spec, so
-// re-racing the SAME pending promise against a periodic timeout — and writing one
-// each time the timeout wins — keeps the connection alive without the client ever
+// re-racing the SAME pending promise against a periodic timeout - and writing one
+// each time the timeout wins - keeps the connection alive without the client ever
 // seeing it as a real event or us calling the underlying read()/fetch() concurrently.
 async function withHeartbeat(promise, res, intervalMs = 10000) {
   const heartbeat = Symbol("heartbeat");
@@ -186,7 +186,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
     throw Object.assign(new Error(`Gateway returned ${upstream.status}: ${errText.slice(0, 200)}`), { statusText: errText });
   }
 
-  // x-tfy-applied-rules carries the routing decision in structured form — the
+  // x-tfy-applied-rules carries the routing decision in structured form - the
   // resolved target in the SAME "provider/model" slug format as the virtual
   // model's load_balance_targets (e.g. "openai/gpt-4o"), so it matches exactly,
   // no fuzzy comparison needed. x-tfy-feedback-target-id encodes {spanId, traceId}
@@ -205,7 +205,7 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
     try {
       const decoded = JSON.parse(Buffer.from(feedbackTargetId, "base64").toString("utf8"));
       traceId = decoded.traceId || null;
-    } catch { /* not decodable — leave traceId null */ }
+    } catch { /* not decodable - leave traceId null */ }
   }
 
   const reader = upstream.body.getReader();
@@ -294,7 +294,7 @@ router.post("/", async (req, res) => {
     if (chaosMode && CHAOS[chaosMode]) {
       const c = CHAOS[chaosMode];
       if (chaosMode === "slow") {
-        sse(res, "trace", { icon: "🟡", text: `Chaos: slow mode active — adding 3.1s delay`, ms: Date.now() - t0 });
+        sse(res, "trace", { icon: "🟡", text: `Chaos: slow mode active - adding 3.1s delay`, ms: Date.now() - t0 });
         await new Promise((r) => setTimeout(r, c.delayMs));
       } else {
         sse(res, "trace", { icon: "⚡", text: `Calling ${primary}…`, ms: Date.now() - t0 });
@@ -324,7 +324,7 @@ router.post("/", async (req, res) => {
       : [{ role: "system", content: systemPrompt }, ...messages];
 
     // Fetch ALL MCP tool definitions; auth params stripped so LLM only sees domain args.
-    // Then scope down to only the tools the SIMULATED tier may use — this is what makes
+    // Then scope down to only the tools the SIMULATED tier may use - this is what makes
     // "Simulate user tier" behave realistically: a Guest literally cannot see (let alone
     // call or hallucinate around) Logged-in/Pro-only tools such as search_docs_standard.
     const { openaiTools, authRequired } = await fetchMcpToolDefs();
@@ -340,7 +340,7 @@ router.post("/", async (req, res) => {
       const authNames = scopedTools.filter((t) => authRequired.has(t.function.name)).map((t) => t.function.name);
       sse(res, "trace", {
         icon: "🔌",
-        text: `MCP tools available to ${tier} tier: [${names}]${authNames.length > 0 ? ` — ${authNames.length} require auth: [${authNames.join(", ")}]` : ""}`,
+        text: `MCP tools available to ${tier} tier: [${names}]${authNames.length > 0 ? ` - ${authNames.length} require auth: [${authNames.join(", ")}]` : ""}`,
         ms: Date.now() - t0,
       });
     } else {
@@ -382,7 +382,7 @@ router.post("/", async (req, res) => {
           let args = {};
           try { args = JSON.parse(tc.arguments || "{}"); } catch { args = {}; }
 
-          // Backend injects auth transparently — LLM never provided these
+          // Backend injects auth transparently - LLM never provided these
           const needsAuth = authRequired.has(tc.name);
           if (needsAuth) {
             if (apiKey)         args.truefoundry_api_key = apiKey;
@@ -438,10 +438,10 @@ router.post("/", async (req, res) => {
         if (followUp.toolCalls.length === 0 || round === 2) {
           const latencyMs = Date.now() - t0;
           if (gp.output.length > 0) {
-            sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} — passed`, ms: latencyMs });
+            sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} - passed`, ms: latencyMs });
           }
           const followUpServedBy = followUp.usedModel && followUp.usedModel !== primary ? ` resolved to ${followUp.usedModel}` : "";
-          sse(res, "trace", { icon: "✅", text: `Done — ${primary}${followUpServedBy} (${latencyMs}ms, ${pendingCalls.length} tool call(s))`, ms: latencyMs });
+          sse(res, "trace", { icon: "✅", text: `Done - ${primary}${followUpServedBy} (${latencyMs}ms, ${pendingCalls.length} tool call(s))`, ms: latencyMs });
           sse(res, "done", { model: followUp.usedModel, resolvedTarget: followUp.resolvedTarget, latencyMs, traceId: followUp.traceId });
           res.end();
           return;
@@ -465,18 +465,18 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // ── No tool calls — direct response ──────────────────────────────────────
+    // ── No tool calls - direct response ──────────────────────────────────────
     const latencyMs = Date.now() - t0;
     if (gp.output.length > 0) {
-      sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} — passed`, ms: latencyMs });
+      sse(res, "trace", { icon: "🛡️", text: `Output guardrails: ${gp.output.join(", ")} - passed`, ms: latencyMs });
     }
     const servedBy = first.usedModel && first.usedModel !== primary ? ` resolved to ${first.usedModel}` : "";
-    sse(res, "trace", { icon: "✅", text: `Done — ${primary}${servedBy} (${latencyMs}ms, no tool calls)`, ms: latencyMs });
+    sse(res, "trace", { icon: "✅", text: `Done - ${primary}${servedBy} (${latencyMs}ms, no tool calls)`, ms: latencyMs });
     sse(res, "done",  { model: first.usedModel, resolvedTarget: first.resolvedTarget, latencyMs, traceId: first.traceId });
 
   } catch (err) {
     const rawMsg = err.message || "Gateway request failed.";
-    // err.statusText carries the FULL untruncated upstream error body — rawMsg may be
+    // err.statusText carries the FULL untruncated upstream error body - rawMsg may be
     // truncated (see the `.slice(0, 200)` in streamGatewayRequest), which can cut a JSON
     // error body mid-string and make it unparseable. Always extract from the full text.
     const fullText = err.statusText || rawMsg;
@@ -493,7 +493,7 @@ router.post("/", async (req, res) => {
     } catch { /* fall through to regex fallback below */ }
 
     // Fallback: even truncated/malformed JSON usually still has a complete "message" field
-    // near the start — pull it out directly with a regex if full JSON.parse failed.
+    // near the start - pull it out directly with a regex if full JSON.parse failed.
     if (!cleanMsg) {
       const msgMatch = fullText.match(/"message"\s*:\s*"([^"]+)"/);
       cleanMsg = msgMatch?.[1] || rawMsg;
@@ -513,7 +513,7 @@ router.post("/", async (req, res) => {
 });
 
 // ── MCP tool counts per tier ──────────────────────────────────────────────────
-// Derived purely from the MCP server's tool definitions — no hardcoding.
+// Derived purely from the MCP server's tool definitions - no hardcoding.
 // Guest = tools with no auth requirement
 // Logged-in = guest + tools that need auth but aren't pro-only
 // Pro = all tools
@@ -541,7 +541,7 @@ router.get("/mcp-tools", async (_req, res) => {
 
 // ── Per-request model fallback chain (from the gateway's trace spans) ────────
 // Surfaces exactly which fallback target served (or attempted to serve) a given
-// chat response, in call order, with the gateway's own per-attempt error reason —
+// chat response, in call order, with the gateway's own per-attempt error reason -
 // e.g. "Rate limit exceeded for model: openai/gpt-5 with rule: guests".
 router.post("/model-trace", async (req, res) => {
   const { traceId, controlPlaneUrl, dataRoutingDestination } = req.body;

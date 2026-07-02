@@ -25,7 +25,7 @@ const SITE_ASSISTANT_CONFIG: WidgetConfig = {
 };
 
 const SYSTEM_PROMPT = [
-  "You are the ChatDock Assistant, embedded on the ChatDock website — you are yourself a product demo:",
+  "You are the ChatDock Assistant, embedded on the ChatDock website - you are yourself a product demo:",
   "the exact widget produced by the ChatDock builder, running through the TrueFoundry AI Gateway",
   "with guardrails and tier-scoped MCP tools.",
   "ChatDock is a guided builder for governed website chatbots: connect a TrueFoundry tenant,",
@@ -37,7 +37,7 @@ const SYSTEM_PROMPT = [
 ].join(" ");
 
 /**
- * The ChatDock website's own assistant — the exact widget produced by the
+ * The ChatDock website's own assistant - the exact widget produced by the
  * builder flow, mounted as a floating launcher. Chat runs through the demo
  * tenant via the backend: the browser holds a sentinel, never a credential.
  */
@@ -80,7 +80,7 @@ export function SiteAssistant() {
         liveConfig={liveConfig}
         onTrace={() => {}}
         defaultOpen={false}
-        fallbackMessage="The demo gateway is warming up — try again in a moment, or open the builder's live-test panel with your own TrueFoundry gateway."
+        fallbackMessage="The demo gateway is warming up - try again in a moment, or open the builder's live-test panel with your own TrueFoundry gateway."
       />
     </div>
   );

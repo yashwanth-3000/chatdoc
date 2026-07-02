@@ -41,7 +41,7 @@ const guardrailOptions = [
 
 const initialForm: BotForm = {
   botName: "ChatDock Assistant",
-  business: "B2B SaaS — chat widget platform for AI-powered customer support",
+  business: "B2B SaaS - chat widget platform for AI-powered customer support",
   goal: "Help visitors choose a ChatDock plan, answer product and pricing questions, and guide them through integration.",
   tone: "calm, concise, helpful",
   position: "bottom-right",

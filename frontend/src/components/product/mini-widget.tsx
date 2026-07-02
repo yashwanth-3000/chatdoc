@@ -146,7 +146,7 @@ function renderMarkdown(text: string, textColor: string): React.ReactNode {
       i++; continue;
     }
 
-    // Bullet list — collect consecutive
+    // Bullet list - collect consecutive
     if (/^[-•*] /.test(line)) {
       const items: React.ReactNode[] = [];
       while (i < lines.length && /^[-•*] /.test(lines[i])) {
@@ -158,7 +158,7 @@ function renderMarkdown(text: string, textColor: string): React.ReactNode {
       continue;
     }
 
-    // Numbered list — collect consecutive
+    // Numbered list - collect consecutive
     if (/^\d+\. /.test(line)) {
       const items: React.ReactNode[] = [];
       while (i < lines.length && /^\d+\. /.test(lines[i])) {

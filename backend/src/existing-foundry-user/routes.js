@@ -24,7 +24,7 @@ existingFoundryUserRouter.get("/saved-inventory", async (_request, response, nex
   }
 });
 
-// Judge/demo mode — evaluators without a TrueFoundry tenant connect with
+// Judge/demo mode - evaluators without a TrueFoundry tenant connect with
 // ChatDock's own credentials, which never leave the server.
 existingFoundryUserRouter.get("/demo-availability", (_request, response) => {
   response.json(demoPublicConfig());

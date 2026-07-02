@@ -52,7 +52,7 @@ type ModelTraceResult = {
 };
 
 function shortModel(fqn: string | null | undefined): string {
-  if (!fqn) return "—";
+  if (!fqn) return "-";
   const slash = fqn.indexOf("/");
   return slash === -1 ? fqn : fqn.slice(slash + 1);
 }
@@ -65,7 +65,7 @@ function providerOf(fqn: string | null | undefined): string {
 
 // Trace spans report the resolved provider model verbatim (e.g. "gpt-5-2025-08-07"
 // or "openai/gpt-5-2025-08-07"), which carries a dated suffix the routing config's
-// target slug ("openai/gpt-5") doesn't have — so compare base names, not exact strings.
+// target slug ("openai/gpt-5") doesn't have - so compare base names, not exact strings.
 function normalizeModelName(name: string | null | undefined): string {
   if (!name) return "";
   let n = name.toLowerCase();
@@ -288,12 +288,12 @@ function TraceChip({ children, color = "neutral", variant = "soft", icon, style:
 type StoredEntryProp = TraceEntry & { receivedAt?: number };
 
 function deriveDisplayTitle(icon: string, text: string): string {
-  // Backend text format: "Done — {model} ({ms}ms, ...)" — uses U+2014 em-dash
+  // Backend text format: "Done - {model} ({ms}ms, ...)" - uses U+2014 em-dash
   if (icon === "✅") {
-    const m = text.match(/Done\s*—\s*(.+?)\s*\(/);
+    const m = text.match(/Done\s*-\s*(.+?)\s*\(/);
     return m ? m[1] : "Request complete";
   }
-  // Backend text format: "Calling {model}…" — uses U+2026 horizontal ellipsis
+  // Backend text format: "Calling {model}…" - uses U+2026 horizontal ellipsis
   if (icon === "⚡") {
     const m = text.match(/Calling\s+(.+)…/);
     return m ? m[1] : "Gateway request";
@@ -314,7 +314,7 @@ function deriveDisplayTitle(icon: string, text: string): string {
     const m = text.match(/MCP:\s*(.+?)\s*→/);
     return m ? m[1].trim() : "Tool result";
   }
-  // Backend text format: "MCP tools loaded: [...] — N require auth: [...]"
+  // Backend text format: "MCP tools loaded: [...] - N require auth: [...]"
   if (icon === "🔩" || icon === "🔌") {
     const total = text.match(/\[([^\]]+)\]/)?.[1]?.split(",").length ?? 0;
     const auth  = text.match(/(\d+) require auth/)?.[1] ?? "0";
@@ -327,7 +327,7 @@ function deriveDisplayTitle(icon: string, text: string): string {
   }
   // Backend text formats for 🛡️:
   //   "Input guardrails active: name1, name2"
-  //   "Output guardrails: name1, name2 — passed"
+  //   "Output guardrails: name1, name2 - passed"
   //   "Pre-invoke guardrails: name1"
   //   "Post-invoke guardrails: name1"
   if (icon === "🛡️") {
@@ -446,7 +446,7 @@ const SAMPLE_PROMPTS: { tier: TierKey; text: string; desc: string }[] = [
     desc: "→ generate_widget_config · turns your description into ready-to-paste TS" },
   { tier: "pro",      text: "How does ChatDock's SSE event streaming protocol work under the hood?",
     desc: "→ search_docs_expert · expert-level architecture docs, Pro only" },
-  { tier: "pro",      text: "Build a full integration blueprint for my gateway at https://acme.truefoundry.cloud — guest: gpt-4o-mini, logged-in: gpt-4o, pro: claude-3-opus",
+  { tier: "pro",      text: "Build a full integration blueprint for my gateway at https://acme.truefoundry.cloud - guest: gpt-4o-mini, logged-in: gpt-4o, pro: claude-3-opus",
     desc: "→ get_integration_blueprint · personalized file structure & tier matrix, Pro only" },
 ];
 
@@ -484,7 +484,7 @@ export function LiveTestPage() {
   const [modelTrace, setModelTrace] = useState<ModelTraceResult | null>(null);
   const [modelTraceLoading, setModelTraceLoading] = useState(false);
   const [expandedModel, setExpandedModel] = useState<string | null>(null);
-  // Set straight from the gateway's `done` event — independent of the slower spans
+  // Set straight from the gateway's `done` event - independent of the slower spans
   // lookup, so "now serving" is visible immediately every turn. `lastServedTarget`
   // is the routing-config "provider/model" slug (x-tfy-applied-rules.resolved_model)
   // and matches routingInfo.targets[].target exactly; `lastServedModel` is the
@@ -591,13 +591,13 @@ export function LiveTestPage() {
   const activeModel = activeTierData?.model ?? firstModel;
   const canSwitch = !!(liveGatewayUrl && liveKey);
 
-  const builtSystemPrompt = `You are ${cfg.assistantName}, a focused product assistant for ChatDock. The current user is on the ${TIER_LABELS[activeTier]} access tier — your tools are scoped to exactly what that tier can use. Rules you must follow without exception:
+  const builtSystemPrompt = `You are ${cfg.assistantName}, a focused product assistant for ChatDock. The current user is on the ${TIER_LABELS[activeTier]} access tier - your tools are scoped to exactly what that tier can use. Rules you must follow without exception:
 
 1. Greetings or simple acknowledgements: respond briefly and naturally, no tool needed.
-2. Off-topic / harmful requests — meaning requests with NOTHING to do with ChatDock (SQL injection how-tos, hacking instructions, security tutorials, general chit-chat unrelated to this product, etc.): respond with exactly one short sentence saying you can only help with ChatDock product questions. Do NOT explain the topic, do NOT give advice, do NOT write tutorials. Do NOT use this refusal for ChatDock product questions you simply lack the tools or tier to fully answer — those are NOT off-topic, see rule 5.
-3. For ANY ChatDock product question (features, setup, pricing, architecture, integration, technical details), you MUST call a search/docs tool first and build your answer ONLY from the text the tool actually returns — never answer from memory, training data, or assumptions, even if you feel confident. Guessing is worse than calling a tool.
-4. NEVER pad, embellish, or extrapolate beyond what the tool result literally contains — no invented code snippets, file names, env variables, commands, or steps that the tool didn't give you. If the tool result is short, partial, or generic, your answer must be equally short and partial — never present a thin result as a "complete" or "detailed" answer.
-5. If a tool returns "No results", or your available tools only cover part of the question, or a tool result says the tier lacks access: tell the user plainly, in one or two sentences, that the requested depth of detail needs a higher access tier (say "Pro tier" / "Logged-in tier" by name when you can tell which one), and that they're welcome to ask a more basic version of the question instead. This is a normal, valid product question — do not call it off-topic, and do not fabricate the missing depth yourself.`;
+2. Off-topic / harmful requests - meaning requests with NOTHING to do with ChatDock (SQL injection how-tos, hacking instructions, security tutorials, general chit-chat unrelated to this product, etc.): respond with exactly one short sentence saying you can only help with ChatDock product questions. Do NOT explain the topic, do NOT give advice, do NOT write tutorials. Do NOT use this refusal for ChatDock product questions you simply lack the tools or tier to fully answer - those are NOT off-topic, see rule 5.
+3. For ANY ChatDock product question (features, setup, pricing, architecture, integration, technical details), you MUST call a search/docs tool first and build your answer ONLY from the text the tool actually returns - never answer from memory, training data, or assumptions, even if you feel confident. Guessing is worse than calling a tool.
+4. NEVER pad, embellish, or extrapolate beyond what the tool result literally contains - no invented code snippets, file names, env variables, commands, or steps that the tool didn't give you. If the tool result is short, partial, or generic, your answer must be equally short and partial - never present a thin result as a "complete" or "detailed" answer.
+5. If a tool returns "No results", or your available tools only cover part of the question, or a tool result says the tier lacks access: tell the user plainly, in one or two sentences, that the requested depth of detail needs a higher access tier (say "Pro tier" / "Logged-in tier" by name when you can tell which one), and that they're welcome to ask a more basic version of the question instead. This is a normal, valid product question - do not call it off-topic, and do not fabricate the missing depth yourself.`;
 
   // Fallback label for the resilience trace: the next fallback candidate in the
   // gateway's routing chain, if one exists, else the active model itself.
@@ -620,7 +620,7 @@ export function LiveTestPage() {
     setTraceLog((prev) => [{ ...entry, receivedAt: Date.now() }, ...prev.slice(0, 49)]);
   }
 
-  // Pull the per-model fallback chain for the response that just finished — the
+  // Pull the per-model fallback chain for the response that just finished - the
   // gateway's trace spans take ~60-90s to become queryable after a response
   // completes, so we have to wait that out rather than poll fast and bail.
   function handleDone(info: { model: string; resolvedTarget: string | null; latencyMs: number; traceId: string | null }) {
@@ -636,7 +636,7 @@ export function LiveTestPage() {
     setModelTraceLoading(true);
 
     // Empirically: spans aren't queryable at ~36s but are by ~80s, so the first
-    // poll waits 20s and subsequent ones space out by 12s — ~9 attempts covers
+    // poll waits 20s and subsequent ones space out by 12s - ~9 attempts covers
     // ~128s, comfortably past the observed lag, without hammering the API early.
     let cancelled = false;
     const maxAttempts = 9;
@@ -731,7 +731,7 @@ export function LiveTestPage() {
             ) : (
               <div className={styles.statusDisconnected}>
                 <WifiOff size={13} strokeWidth={2} />
-                <span>{liveGatewayUrl && !liveKey ? "API key missing — reconnect in Step 2" : "Not connected — go back to Step 2"}</span>
+                <span>{liveGatewayUrl && !liveKey ? "API key missing - reconnect in Step 2" : "Not connected - go back to Step 2"}</span>
               </div>
             )}
           </div>
@@ -822,7 +822,7 @@ export function LiveTestPage() {
 
                 {modelTraceLoading && !modelTrace && (
                   <p className={styles.modelTraceHint}>
-                    Fetching the per-model fallback trace for this turn — the gateway takes about a minute to make it
+                    Fetching the per-model fallback trace for this turn - the gateway takes about a minute to make it
                     queryable, so the cards above will light up green/red shortly.
                   </p>
                 )}
@@ -856,7 +856,7 @@ export function LiveTestPage() {
                     <strong>All fallback targets failed on this turn.</strong>{" "}
                     {modelTrace.errorMessage
                       ?? modelTrace.attempts[modelTrace.attempts.length - 1]?.errorMessage
-                      ?? "The gateway exhausted every fallback target without producing a response — check the active tier's rate-limit policy."}
+                      ?? "The gateway exhausted every fallback target without producing a response - check the active tier's rate-limit policy."}
                   </div>
                 )}
 
@@ -907,14 +907,14 @@ export function LiveTestPage() {
                           <span className={styles.metricIcon}><Bot size={10} strokeWidth={2} /></span>
                           <span className={styles.metricLabel}>Model</span>
                           <strong className={styles.metricValue} style={!t.model ? { color: "#d1d5db" } : undefined}>
-                            {t.model?.name ?? "—"}
+                            {t.model?.name ?? "-"}
                           </strong>
                         </div>
                         <div className={styles.metric}>
                           <span className={styles.metricIcon}><Gauge size={10} strokeWidth={2} /></span>
                           <span className={styles.metricLabel}>Rate</span>
                           <strong className={styles.metricValue} style={!t.rateLimitPolicy ? { color: "#d1d5db" } : undefined}>
-                            {t.rateLimitPolicy?.name ?? "—"}
+                            {t.rateLimitPolicy?.name ?? "-"}
                           </strong>
                         </div>
                         {t.guardrails.length > 0 && (
@@ -949,7 +949,7 @@ export function LiveTestPage() {
             </div>
             <p className={styles.sectionHint} style={{ marginBottom: 10 }}>
               Force the primary model to fail on your next message and watch the gateway&apos;s
-              fallback + trace recovery — the same resilience path that fires on a real outage.
+              fallback + trace recovery - the same resilience path that fires on a real outage.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
               {([
@@ -985,7 +985,7 @@ export function LiveTestPage() {
             </div>
             {chaosMode && (
               <p className={styles.sectionHint} style={{ marginTop: 9, color: "#b91c1c" }}>
-                Armed — your next message will trigger a simulated {chaosMode === "rate-limit" ? "429 rate limit" : chaosMode === "kill-primary" ? "503 provider outage" : "response timeout"} and fall back to {fallbackTargetLabel}.
+                Armed - your next message will trigger a simulated {chaosMode === "rate-limit" ? "429 rate limit" : chaosMode === "kill-primary" ? "503 provider outage" : "response timeout"} and fall back to {fallbackTargetLabel}.
               </p>
             )}
           </div>

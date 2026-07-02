@@ -118,7 +118,7 @@
   gap: 4px;
 }
 
-/* Vertical path rail connecting the step badges — reinforces "a clean path". */
+/* Vertical path rail connecting the step badges - reinforces "a clean path". */
 .workflowList::before {
   content: "";
   position: absolute;
@@ -1168,7 +1168,7 @@
   font-weight: 700;
 }
 
-/* Right — feature cards */
+/* Right - feature cards */
 .chooseRight {
   display: grid;
   gap: 12px;
@@ -2171,7 +2171,7 @@
   word-break: break-all;
 }
 
-/* Footer — added items tray */
+/* Footer - added items tray */
 .gwFooter {
   display: flex;
   align-items: center;
@@ -2553,11 +2553,11 @@
 
 /* ─── Nav group label colors ─────────────────────── */
 
-.gwNavGroup:nth-child(1) .gwNavGroupLabel { color: #2563eb; } /* Gateway  — blue   */
-.gwNavGroup:nth-child(2) .gwNavGroupLabel { color: #7c3aed; } /* Registries — purple */
-.gwNavGroup:nth-child(3) .gwNavGroupLabel { color: #059669; } /* Platform  — green  */
-.gwNavGroup:nth-child(4) .gwNavGroupLabel { color: #d97706; } /* Access    — amber  */
-.gwNavGroup:nth-child(5) .gwNavGroupLabel { color: #0891b2; } /* Ledgers   — cyan   */
+.gwNavGroup:nth-child(1) .gwNavGroupLabel { color: #2563eb; } /* Gateway  - blue   */
+.gwNavGroup:nth-child(2) .gwNavGroupLabel { color: #7c3aed; } /* Registries - purple */
+.gwNavGroup:nth-child(3) .gwNavGroupLabel { color: #059669; } /* Platform  - green  */
+.gwNavGroup:nth-child(4) .gwNavGroupLabel { color: #d97706; } /* Access    - amber  */
+.gwNavGroup:nth-child(5) .gwNavGroupLabel { color: #0891b2; } /* Ledgers   - cyan   */
 
 /* ─── Responsive overrides ────────────────────────── */
 

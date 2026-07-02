@@ -370,7 +370,7 @@
   list-style: none;
 }
 
-/* Dashed rail connecting the step badges — sits behind the cards, so it only
+/* Dashed rail connecting the step badges - sits behind the cards, so it only
    shows through the gaps, reading as connectors between sequential steps. */
 .flowGrid::before {
   content: "";

@@ -102,7 +102,7 @@ export function BuilderStart() {
 
               <div className={styles.previewFoot}>
                 <span className={styles.previewFootDot} aria-hidden="true" />
-                Live preview — updates as you configure
+                Live preview - updates as you configure
               </div>
             </aside>
           </div>

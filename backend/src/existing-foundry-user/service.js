@@ -142,7 +142,7 @@ const INVENTORY_ENDPOINTS = [
     title: "Tracing projects",
     description: "Tracing projects used for Gateway observability.",
     method: "GET",
-    // Correct path per TrueFoundry API docs — tracing uses /api/ml/v1/, not /api/svc/v1/
+    // Correct path per TrueFoundry API docs - tracing uses /api/ml/v1/, not /api/svc/v1/
     path: `/api/ml/v1/tracing-projects?limit=${LIST_LIMIT}`,
     softFail: true,
   },
@@ -672,7 +672,7 @@ export async function connectExistingFoundryUser(input) {
 
   await saveInventorySnapshot(result);
 
-  // Automatically wire guardrails to the gateway — soft failure so connect always succeeds
+  // Automatically wire guardrails to the gateway - soft failure so connect always succeeds
   await _applyGuardrailPolicyFromSnapshot(result, input.apiKey, controlPlaneUrl).catch(() => {});
 
   return result;
