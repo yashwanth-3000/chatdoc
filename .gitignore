@@ -45,3 +45,4 @@ backend/data/
 .DS_Store
 *.pem
 .vercel
+kickbacks.vsix
