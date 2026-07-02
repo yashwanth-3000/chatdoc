@@ -1,0 +1,18 @@
+{
+  "testId": "f471509f-e5ff-498a-8979-842a2a4867fd",
+  "status": "blocked",
+  "startedAt": "2026-07-02T13:01:04.014Z",
+  "finishedAt": "2026-07-02T13:14:00.725Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782998040432853//tmp/2fb749b6-eb5e-4490-8517-f3a10d3c8b6a/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_602fffed7aa60be4",
+  "runIdIfAvailable": "3211ae5a-2f7e-4203-a36b-33c6e5602d0c",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 15,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Text '429 Rate limited' not found or not visible on page"
+}

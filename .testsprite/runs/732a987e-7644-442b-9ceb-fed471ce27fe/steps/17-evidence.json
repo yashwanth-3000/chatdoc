@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 17,
+    "summary": "Step 17 'Find and expand a Gateway trace entry containing the words 'fall back' or 'Falling back to' to confirm the fallback trace and that the assistant response recovered' passed.",
+    "path": "steps/17-snapshot.html"
+  }
+]

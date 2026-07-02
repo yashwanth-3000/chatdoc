@@ -1,0 +1,18 @@
+{
+  "testId": "957617d0-0c30-4aa7-b3d7-4247ae02983a",
+  "status": "blocked",
+  "startedAt": "2026-07-02T12:45:48.103Z",
+  "finishedAt": "2026-07-02T12:58:44.804Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782997124518542//tmp/aa15b3df-6f9e-4b5f-b0a5-623116bf81e6/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_c86d09a6577e6c5e",
+  "runIdIfAvailable": "732a987e-7644-442b-9ceb-fed471ce27fe",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 18,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Found 3 matches for \"fallback|Falling back|fall back|fell back\" on page:\n\n[1] ...foundry.cloudGuestModelsConnect your gateway in Step 2 to load the chat-bot-llm fallback chain.Simulate user tierclick card to switchGuestModelchat-bot-llmRateguestsGua... (in div.app-frame-module__jJAa2a__page > main.app-frame-module__jJAa2a__main > div.widget-designer-module__5IlQOW__designer > div.live-test-page-module__pGS3eW__layout > div.live-test-page…"
+}

@@ -374,7 +374,9 @@ function TraceCard({ entry, seq }: { entry: StoredEntryProp; seq: number }) {
   return (
     <CollapsiblePrimitive.Root open={open} onOpenChange={setOpen}>
       <CollapsiblePrimitive.CollapsibleTrigger asChild>
-        <div className={styles.traceCard} role="button" aria-expanded={open}>
+        {/* Real <button> (not a div[role=button]): valid HTML for the type="button"
+            Radix injects, and keeps trace cards out of control selectors. */}
+        <button className={styles.traceCard} aria-expanded={open} style={{ background: "none", border: "none", width: "100%", textAlign: "left", font: "inherit", cursor: "pointer" }}>
           <div className={styles.traceDotWrap}>
             <div className={styles.traceDot} style={{ background: m.color }} />
             {m.status === "pending" && <div className={styles.traceDotPulse} style={{ background: m.color }} />}
@@ -393,7 +395,7 @@ function TraceCard({ entry, seq }: { entry: StoredEntryProp; seq: number }) {
 
           <ChevronDown size={10} strokeWidth={2.5} style={{ color: "#9ca3af", marginLeft: "auto", flexShrink: 0, transform: open ? "rotate(180deg)" : "none", transition: "transform 180ms" }} />
           <span className={styles.traceSeq}>{seq}</span>
-        </div>
+        </button>
       </CollapsiblePrimitive.CollapsibleTrigger>
 
       <CollapsiblePrimitive.CollapsibleContent className={styles.traceCardDetail}>
@@ -962,6 +964,7 @@ export function LiveTestPage() {
                   <button
                     key={mode}
                     type="button"
+                    aria-label={`Simulate failure: ${label} (${sub})`}
                     onClick={() => canSwitch && setChaosMode(isActive ? null : mode)}
                     disabled={!canSwitch}
                     aria-pressed={isActive}
