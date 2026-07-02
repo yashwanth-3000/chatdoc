@@ -208,6 +208,46 @@ const DEMO_STEPS = [
   },
 ];
 
+const TESTSPRITE_STATS = [
+  { n: "14", l: "TestSprite tests in the suite" },
+  { n: "35+", l: "Loop iterations in LOOP.md" },
+  { n: "6", l: "Real bugs caught and fixed" },
+  { n: "100%", l: "Assertions passing in production" },
+];
+
+const TESTSPRITE_CATCHES = [
+  {
+    n: "01",
+    mode: "Public URL behind a Vercel login wall",
+    how: "A manual deploy shipped to the wrong Vercel project (deployment protection on) and re-aliased the public URL to it. TestSprite hit the SSO wall mid-run and flagged it. Redeployed from the correct project and re-pinned the alias.",
+  },
+  {
+    n: "02",
+    mode: "Production called a dead backend",
+    how: "NEXT_PUBLIC_CHATDOCK_BACKEND_URL pointed at a deleted Railway app - live chat was silently broken. Found while fixing the missing demo widget; repointed to the current backend and redeployed.",
+  },
+  {
+    n: "03",
+    mode: "Resilience story couldn't be triggered",
+    how: "The live-test UI hardcoded chaosMode to null, so the backend's failure-simulation support was unreachable. Added the Simulate failure panel (rate limit / provider down / timeout) wired to the gateway fallback trace.",
+  },
+  {
+    n: "04",
+    mode: "This page promised a widget that wasn't there",
+    how: "The copy described a live assistant that was never rendered. TestSprite reported no launcher anywhere on the page. The floating assistant you can open right now is the fix - the builder's own output, mounted for real.",
+  },
+  {
+    n: "05",
+    mode: "Trace cards were invalid HTML",
+    how: "Radix CollapsibleTrigger injected type=\"button\" onto a div, so nine trace cards all matched one selector and broke assertions and accessibility. Converted to real button elements with aria-labels.",
+  },
+  {
+    n: "06",
+    mode: "A CTA that scrolled out of reach",
+    how: "The builder page's only Continue link lived at the top and scrolled out of view. TestSprite scrolled, lost it, and failed the step. Added a persistent CTA at the bottom of the workflow list.",
+  },
+];
+
 const TECH_STACK = [
   {
     title: "React widget (client)",
@@ -530,6 +570,65 @@ export default function DemoPage() {
               </motion.div>
             ))}
           </div>
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
+        {/* ── TESTSPRITE LOOP ─────────────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          Built in the open · TestSprite Hackathon S3
+        </motion.p>
+
+        <AnimWord>This site was hardened by an autonomous test-fix loop.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            Every page you are reading was tested by <strong>TestSprite</strong>, an AI testing
+            agent that drives a real cloud browser against the live production URL - real clicks,
+            real navigation, real assertions. The loop is simple: the coding agent ships a change,
+            TestSprite verifies it live and returns a failure bundle (failing step, screenshots,
+            DOM snapshot, root cause), the agent fixes the root cause, and a passing rerun closes
+            the loop. Every iteration is one line in an agent-written{" "}
+            <a href="https://github.com/yashwanth-3000/chatdoc/blob/main/LOOP.md" target="_blank" rel="noreferrer" className={styles.inlineCode}>LOOP.md</a>,
+            with failure bundles (including session videos) committed under{" "}
+            <code className={styles.inlineCode}>.testsprite/</code>.
+          </p>
+          <p>
+            The suite covers the full judge journey: homepage, the four-step builder, the widget
+            designer, judge-mode connect, live gateway chat, tier switching, guardrail enforcement,
+            and the resilience simulation on this very site. A GitHub Actions pipeline replays the
+            entire suite against production on every push and <strong>fails the build</strong> on a
+            real regression - then commits its own verdict line and fresh failure bundles back to
+            the repo.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.statStrip} variants={fade(0.1)} initial="hidden" whileInView="show" viewport={vp}>
+          {TESTSPRITE_STATS.map((s) => (
+            <div key={s.l} className={styles.statCell}>
+              <p className={styles.statNumber}>{s.n}</p>
+              <p className={styles.statLabel}>{s.l}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            The loop did not just re-verify happy paths - it caught production-breaking defects
+            that human review had missed:
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.failureList} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          {TESTSPRITE_CATCHES.map((f) => (
+            <div key={f.n} className={styles.failureRow}>
+              <p className={styles.failureNum}>{f.n}</p>
+              <div>
+                <p className={styles.failureMode}>{f.mode}</p>
+                <p className={styles.failureHow}>{f.how}</p>
+              </div>
+            </div>
+          ))}
         </motion.div>
 
         <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />

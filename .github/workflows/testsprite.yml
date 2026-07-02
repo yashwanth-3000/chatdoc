@@ -153,3 +153,12 @@ jobs:
           git diff --staged --quiet || git commit -m "loop: $PASS_FAIL — $TIMESTAMP [skip ci]"
           git pull --rebase origin main
           git push
+
+      # ── Build gate: TestSprite is a required check ──────
+      # A FAIL verdict fails the pipeline (runs after LOOP.md is committed so
+      # the failing iteration is still logged).
+      - name: Gate the build on the TestSprite verdict
+        if: env.HAS_TESTSPRITE == 'true' && steps.verdict.outputs.verdict != 'PASS'
+        run: |
+          echo "TestSprite verdict: ${{ steps.verdict.outputs.verdict }} — failing the build"
+          exit 1
