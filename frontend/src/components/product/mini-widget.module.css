@@ -124,6 +124,7 @@
 .miniSendBtn:disabled { opacity: 0.5; cursor: wait; }
 
 .miniLauncher {
+  pointer-events: auto;
   width: 46px;
   height: 46px;
   border-radius: 999px;

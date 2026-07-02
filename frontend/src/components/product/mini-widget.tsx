@@ -195,14 +195,16 @@ export function MiniWidget({
   onTrace,
   onDone,
   fallbackMessage = "Connect a TrueFoundry gateway to enable live responses.",
+  defaultOpen = true,
 }: {
   cfg: WidgetConfig;
   liveConfig: LiveConfig | null;
   onTrace: (e: TraceEntry) => void;
   onDone?: (info: DoneInfo) => void;
   fallbackMessage?: string;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(defaultOpen);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string; id: number }>>([]);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);

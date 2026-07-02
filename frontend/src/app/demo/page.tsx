@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import { SiteAssistant } from "@/components/product/site-assistant";
 import styles from "./page.module.css";
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
@@ -604,6 +605,8 @@ export default function DemoPage() {
         </motion.div>
 
       </article>
+
+      <SiteAssistant />
 
       <footer className={styles.footer}>
         <p>© 2026 ChatDock · Built for the TrueFoundry Resilient Agents Hackathon</p>
