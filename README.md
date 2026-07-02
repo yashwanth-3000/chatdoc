@@ -36,15 +36,6 @@ You do **not** need your own TrueFoundry tenant to evaluate ChatDock end to end:
 
 The floating assistant in the bottom-right of the **[demo page](https://chatdock-app.vercel.app/demo)** is not a mock - it is the builder's own output widget, answering live through the gateway.
 
-## Architecture
-
-Four protocol boundaries keep the agent legible under failure:
-
-- **React widget (client)** - self-contained component; streams tokens over SSE, renders markdown, preserves conversation state across fallback events. No gateway secrets ever reach the browser.
-- **Express API (proxy)** - keeps the TrueFoundry key server-side, forwards through the AI Gateway using the OpenAI-compatible client, injects MCP auth, and streams `delta` / `trace` / `done` / `error` SSE events back to the widget.
-- **TrueFoundry AI Gateway** - model routing, fallback chains, per-tier rate limits, and budgets live in gateway policy, not application code.
-- **MCP Gateway + guardrails** - a Railway-hosted MCP server exposes tiered tools over HTTP JSON-RPC 2.0; `content-moderation` and `sql-sanitizer` guardrails run at input, tool-argument, and output phases.
-
 ---
 
 ## 🧪 The TestSprite loop: how this app was hardened
@@ -166,6 +157,15 @@ testsprite-plans/    14 TestSprite test plans (JSON)
 LOOP.md              Agent-written loop log (one line per iteration)
 .github/workflows/   CI: deploy → test → log → commit
 ```
+
+## Architecture
+
+Four protocol boundaries keep the agent legible under failure:
+
+- **React widget (client)** - self-contained component; streams tokens over SSE, renders markdown, preserves conversation state across fallback events. No gateway secrets ever reach the browser.
+- **Express API (proxy)** - keeps the TrueFoundry key server-side, forwards through the AI Gateway using the OpenAI-compatible client, injects MCP auth, and streams `delta` / `trace` / `done` / `error` SSE events back to the widget.
+- **TrueFoundry AI Gateway** - model routing, fallback chains, per-tier rate limits, and budgets live in gateway policy, not application code.
+- **MCP Gateway + guardrails** - a Railway-hosted MCP server exposes tiered tools over HTTP JSON-RPC 2.0; `content-moderation` and `sql-sanitizer` guardrails run at input, tool-argument, and output phases.
 
 ## Running locally
 
