@@ -19,3 +19,4 @@
 | 2026-07-02 08:10 UTC | Claude Code | Fix: mounted the builder-produced MiniWidget as a floating SiteAssistant on /demo (new defaultOpen prop, click-through fixed overlay). Bonus catch while wiring it: production NEXT_PUBLIC_CHATDOCK_BACKEND_URL pointed at a dead Railway app — replaced with the freshly deployed chat-dock-backend | FIX |
 | 2026-07-02 08:09 UTC | Claude Code | Publish page — collapsible sections: expand reveals "npm install openai" code block, collapse hides it again; 16/16 steps. (Tool's end-of-run text search reports "blocked" because the final step legitimately collapses the section) | PASS (16/16) |
 | 2026-07-02 08:10 UTC | Claude Code | Rerun demo page after SiteAssistant fix deployed — launcher renders, opens, greeting visible; second full FAIL→FIX→PASS cycle | PASS (8/8) |
+| 2026-07-02 08:25 UTC | GitHub Actions | Rerun all saved tests after: loop: demo page FAIL→FIX→PASS (8/8) + publish collapsible 16/16 [skip ci] | FAIL (exit 1) |
