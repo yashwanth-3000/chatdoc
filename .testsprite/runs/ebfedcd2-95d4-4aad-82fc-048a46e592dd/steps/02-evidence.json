@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 2,
+    "summary": "Step 2 'Header link in the heading area shows the text 'ChatDock'.' failed. Error: TEST BLOCKED: All assertions verified on https://chatdock-app.vercel.app:\n\n- Header/logo: 'ChatDock' is visible in the heading area (top-left). \n- 'Configure a bot' button/link: visible in the hero area.\n- 'View demo' button/link: visible in the hero area next to Configure.\n- Lead paragraph: contains the sentence beginning 'ChatDock lets teams design a website chat widget, choose model routes, scope Gateway actions, add guardrails, set budgets, and ship one embed that recovers when a provider fails.'\n\nConclusion: The requested UI elements and text are present on the page; task completed successfully.",
+    "path": "steps/02-snapshot.html"
+  }
+]

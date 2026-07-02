@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 4,
+    "summary": "Step 4 'Scroll to the bottom of the Demo page to reveal the floating circular chat launcher button in the bottom-right of the page' passed.",
+    "path": "steps/04-snapshot.html"
+  }
+]

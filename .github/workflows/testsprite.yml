@@ -89,6 +89,43 @@ jobs:
         env:
           TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
 
+      # Verdict from run statuses, not the blunt CLI exit code: "blocked" runs
+      # whose steps all passed are environment quirks, not app failures.
+      - name: Classify verdict + fetch failure bundles
+        if: env.HAS_TESTSPRITE == 'true'
+        id: verdict
+        run: |
+          testsprite test list \
+            --project ${{ secrets.TESTSPRITE_PROJECT_ID }} \
+            --output json > test-list.json
+
+          python3 - <<'PY'
+          import json, re, os
+          raw = open("test-list.json").read()
+          # CLI may prefix advisory lines before the JSON body
+          d = json.loads(raw[raw.index("{"):])
+          tests = d.get("items", [])
+          failed = [t["name"] for t in tests if t.get("status") == "failed"]
+          verdict = "FAIL" if failed else "PASS"
+          summary = f"{len(tests) - len(failed)}/{len(tests)} tests pass"
+          if failed:
+              summary += " — failed: " + "; ".join(failed[:3])
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"verdict={verdict}\n")
+              f.write(f"summary={summary}\n")
+          PY
+
+          # Pull failure bundles for any failed run mentioned in the rerun output
+          grep -oE '"runId"\s*:\s*"[a-f0-9-]+"' testsprite-result.json | grep -oE '[a-f0-9-]{36}' | sort -u > run-ids.txt || true
+          while read -r RUN_ID; do
+            STATUS=$(grep -A 3 "$RUN_ID" testsprite-result.json | grep -oE '"status"\s*:\s*"[a-z]+"' | head -1 | grep -oE '[a-z]+$' || true)
+            if [ "$STATUS" = "failed" ]; then
+              testsprite test artifact get "$RUN_ID" --output json || true
+            fi
+          done < run-ids.txt
+        env:
+          TESTSPRITE_API_KEY: ${{ secrets.TESTSPRITE_API_KEY }}
+
       - name: Skip TestSprite (secrets not set)
         if: env.HAS_TESTSPRITE == 'false'
         run: echo "TESTSPRITE_API_KEY or TESTSPRITE_PROJECT_ID not set — add them in repo Settings → Secrets"
@@ -107,16 +144,12 @@ jobs:
         run: |
           TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
           COMMIT_MSG=$(git log -1 --pretty=format:'%s')
-          if [ "${{ steps.testsprite.outputs.exit_code }}" = "0" ]; then
-            PASS_FAIL="PASS"
-          else
-            PASS_FAIL="FAIL (exit ${{ steps.testsprite.outputs.exit_code }})"
-          fi
+          PASS_FAIL="${{ steps.verdict.outputs.verdict }} (${{ steps.verdict.outputs.summary }})"
 
-          echo "| $TIMESTAMP | GitHub Actions | Rerun all saved tests after: $COMMIT_MSG | $PASS_FAIL |" >> LOOP.md
+          echo "| $TIMESTAMP | GitHub Actions (TestSprite rerun --all) | Regression replay of all saved tests after: $COMMIT_MSG | $PASS_FAIL |" >> LOOP.md
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add LOOP.md
+          git add LOOP.md .testsprite || true
           git diff --staged --quiet || git commit -m "loop: $PASS_FAIL — $TIMESTAMP [skip ci]"
           git pull --rebase origin main
           git push

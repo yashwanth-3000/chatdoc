@@ -1,0 +1,18 @@
+{
+  "testId": "05be3d2b-4980-41e0-a449-3bc5304dd0fe",
+  "status": "blocked",
+  "startedAt": "2026-07-02T08:53:58.918Z",
+  "finishedAt": "2026-07-02T08:54:39.963Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782982479679902//tmp/77861e6d-7cbe-49c6-926b-92095b5ffc88/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_5c4f0f616345c957",
+  "runIdIfAvailable": "ebfedcd2-95d4-4aad-82fc-048a46e592dd",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 2,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: All assertions verified on https://chatdock-app.vercel.app:\n\n- Header/logo: 'ChatDock' is visible in the heading area (top-left). \n- 'Configure a bot' button/link: visible in the hero area.\n- 'View demo' button/link: visible in the hero area next to Configure.\n- Lead paragraph: contains the sentence beginning 'ChatDock lets teams design a website chat widget, choose model routes, scope Gateway actions, add guardrails, set budgets, and sh…"
+}

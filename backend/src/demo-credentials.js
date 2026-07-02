@@ -12,7 +12,20 @@ export function demoConfig() {
     controlPlaneUrl,
     gatewayBaseUrl: (process.env.TFY_DEMO_GATEWAY_BASE_URL || "").trim() || undefined,
     dataRoutingDestination: (process.env.TFY_DEMO_DATA_ROUTING || "default").trim(),
+    modelId: (process.env.TFY_DEMO_MODEL_ID || "anthropic/claude-haiku-4-5").trim(),
     apiKey,
+  };
+}
+
+// Safe-to-publish subset: URLs and model id only, never the key.
+export function demoPublicConfig() {
+  const demo = demoConfig();
+  if (!demo) return { available: false };
+  return {
+    available: true,
+    controlPlaneUrl: demo.controlPlaneUrl,
+    gatewayUrl: demo.gatewayBaseUrl || `${demo.controlPlaneUrl.replace(/\/+$/, "")}/api/llm`,
+    modelId: demo.modelId,
   };
 }
 

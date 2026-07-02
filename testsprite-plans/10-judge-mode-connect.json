@@ -1,0 +1,31 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Judge mode — connect with demo tenant without credentials",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user"
+    },
+    {
+      "type": "assertion",
+      "description": "The heading 'Connect Foundry Gateway' is visible"
+    },
+    {
+      "type": "assertion",
+      "description": "A judge/evaluator option is visible containing the text 'No TrueFoundry account?'"
+    },
+    {
+      "type": "action",
+      "description": "Click the button 'Continue as judge — use demo tenant'"
+    },
+    {
+      "type": "assertion",
+      "description": "Within 60 seconds, the inventory browser appears: the heading 'Foundry inventory' is visible (the connect form is replaced)"
+    },
+    {
+      "type": "assertion",
+      "description": "The label 'demo tenant (judge mode)' is visible, indicating the inventory came from the demo tenant"
+    }
+  ]
+}

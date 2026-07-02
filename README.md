@@ -1,6 +1,10 @@
 # ChatDock
 
+**Live app:** https://chatdock-app.vercel.app · **Backend:** https://chat-dock-backend-production.up.railway.app/api/health
+
 ChatDock is a guided builder for governed website chatbots, powered by the **TrueFoundry AI Gateway**.
+
+> **Judges / evaluators without a TrueFoundry account:** open the [gateway connect step](https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user) and click **"Continue as judge — use demo tenant"** — no credentials needed. The demo tenant's key lives only in backend env vars and never reaches the browser. The floating assistant on the [demo page](https://chatdock-app.vercel.app/demo) is the builder's own output running live through the gateway.
 
 Most chatbot demos look simple: add a widget, connect an LLM, answer questions. Real chatbots fail in less obvious ways — models hit rate limits, providers go down, tools need permissions, guardrails need to run before risky calls, and someone has to figure out exactly where a request broke. ChatDock turns "we need a support chatbot" into a configured, production-ready widget without hand-wiring any of that resilience plumbing yourself: it connects to your existing TrueFoundry tenant, auto-discovers your models, virtual models, MCP servers, guardrails, and rate-limit policies, lets you configure tiered access (Guest / Logged-in / Pro), live-tests the bot against real failure modes with a full request trace, and finally generates ready-to-embed code.
 
@@ -67,6 +71,17 @@ Exposes six tools split across tiers (Guest: docs search and quick start; Logged
 
 ## Deployment
 
-- Frontend → Vercel
+- Frontend → Vercel (https://chatdock-app.vercel.app)
 - Backend → Railway
 - ChatDock MCP server → Railway
+
+## TestSprite loop (Hackathon S3)
+
+This repo runs an autonomous test-fix loop against the live deployment:
+
+- **[LOOP.md](LOOP.md)** — agent-written log, one line per iteration (agent, what ran, verdict, fix)
+- **`.testsprite/`** — failure bundles (per-step evidence, snapshots, videos) for every failed run
+- **`testsprite-plans/`** — the 13 test plans: homepage, builder wizard, widget designer, publish page, demo page, judge mode, live gateway chat, tier simulation, and guardrail enforcement
+- **`.github/workflows/testsprite.yml`** — CI: on every push, deploy to Vercel → rerun the full TestSprite suite against production → classify verdict → commit new failure bundles and a LOOP.md entry
+
+Loop catches so far include: a CTA that scrolled out of view, a promised-but-missing chat widget on the demo page, and a production env var pointing at a dead backend — each found by TestSprite, fixed by the agent, and verified by a passing rerun.

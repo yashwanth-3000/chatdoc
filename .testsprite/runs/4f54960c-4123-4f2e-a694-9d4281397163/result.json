@@ -1,0 +1,18 @@
+{
+  "testId": "d64d2091-a4af-4456-b655-442bc20cbe05",
+  "status": "failed",
+  "startedAt": "2026-07-02T07:56:20.697Z",
+  "finishedAt": "2026-07-02T08:00:01.195Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782979198069966//tmp/782a9729-e51c-47ed-8bf6-836008d44b74/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_6ec0f93cd2ff0f5d",
+  "runIdIfAvailable": "4f54960c-4123-4f2e-a694-9d4281397163",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 5,
+  "failureKind": "unknown",
+  "verdict": "failed",
+  "executionStatus": "completed",
+  "summary": "Failed: TEST FAILURE\n\nThe floating chat launcher is missing from the Demo page; the feature cannot be tested.\n\nObservations:\n- The Demo page loaded normally and displayed hero and demo content (no blank screen or error).\n- No floating circular launcher button was visible in the bottom-right corner of the page; the page's interactive elements list contains no launcher/button entries.\n- A search for 'chat' returned 34 text matches on the page, but no clickable launcher control or button element w…"
+}

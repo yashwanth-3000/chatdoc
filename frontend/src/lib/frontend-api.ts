@@ -89,9 +89,12 @@ export async function fetchSavedExistingFoundryInventory() {
 export const DEMO_API_KEY_SENTINEL = "__chatdock_demo__";
 
 export async function fetchDemoAvailability() {
-  return fetchBackend<{ available: boolean }>(
-    "/api/existing-foundry-user/demo-availability",
-  );
+  return fetchBackend<{
+    available: boolean;
+    controlPlaneUrl?: string;
+    gatewayUrl?: string;
+    modelId?: string;
+  }>("/api/existing-foundry-user/demo-availability");
 }
 
 export async function connectDemoFoundry() {

@@ -1,0 +1,35 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Tier simulation — judge connects, reaches live test, switches Guest to Pro",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user"
+    },
+    {
+      "type": "action",
+      "description": "Click the button 'Continue as judge — use demo tenant' and wait up to 60 seconds for the 'Foundry inventory' browser to load"
+    },
+    {
+      "type": "action",
+      "description": "Proceed through the tier configuration flow: look for and click the primary continue/next button(s) that lead from the inventory browser toward the live test step (step 3). Accept any pre-filled defaults."
+    },
+    {
+      "type": "assertion",
+      "description": "The live test page loads: heading 'Test your chatbot live' is visible"
+    },
+    {
+      "type": "assertion",
+      "description": "A section titled 'Simulate user tier' is visible with clickable tier cards labeled 'Guest', 'Logged-in', and 'Pro'"
+    },
+    {
+      "type": "action",
+      "description": "Click the 'Pro' tier card"
+    },
+    {
+      "type": "assertion",
+      "description": "The 'Pro' tier card becomes the active/selected card (visually highlighted, aria-pressed true), demonstrating tier switching between user access levels"
+    }
+  ]
+}

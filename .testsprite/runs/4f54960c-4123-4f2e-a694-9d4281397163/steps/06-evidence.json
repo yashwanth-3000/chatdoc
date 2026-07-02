@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 6,
+    "summary": "Step 6 'Expected the footer 'Home' link to be visible indicating the page loaded without an error message.' failed. Error: TEST FAILURE\n\nThe floating chat launcher is missing from the Demo page; the feature cannot be tested.\n\nObservations:\n- The Demo page loaded normally and displayed hero and demo content (no blank screen or error).\n- No floating circular launcher button was visible in the bottom-right corner of the page; the page's interactive elements list contains no launcher/button entries.\n- A search for 'chat' returned 34 text matches on the page, but no clickable launcher control or button element was present to open a chat panel.",
+    "path": "steps/06-snapshot.html"
+  }
+]

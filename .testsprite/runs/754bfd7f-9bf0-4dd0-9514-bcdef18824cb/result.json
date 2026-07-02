@@ -1,0 +1,18 @@
+{
+  "testId": "38d8eef4-7e9e-4eb3-a356-f66fe9850c45",
+  "status": "blocked",
+  "startedAt": "2026-07-01T16:27:47.392Z",
+  "finishedAt": "2026-07-01T16:37:01.326Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782923820997146//tmp/6dd634f9-2532-4a59-b0e1-655242b279b7/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_28e5d55bc457a880",
+  "runIdIfAvailable": "754bfd7f-9bf0-4dd0-9514-bcdef18824cb",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 9,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Task results — verification summary:\n\nRequirements checked (from user request):\n- Navigate to https://chatdock-app.vercel.app/builder — Completed (page visited earlier).\n- Page contains the text 'Design the widget' — Found on the /builder page (search matches recorded).\n- Page contains the text 'Connect intelligence' — Found on the /builder page (search matches recorded).\n- Page contains the text 'Live test the recovery' — Found on the /…"
+}

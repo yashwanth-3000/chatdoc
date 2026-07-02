@@ -1,0 +1,16 @@
+{
+  "out": "/Users/yashwanthkrishna/Desktop/Projects/chat-bot-maker/.testsprite/runs/4f54960c-4123-4f2e-a694-9d4281397163",
+  "snapshotId": "snap_6ec0f93cd2ff0f5d",
+  "requestId": "cli_bd234d2f-b624-41c5-81b2-1885f86954b1",
+  "meta": {
+    "runId": "4f54960c-4123-4f2e-a694-9d4281397163",
+    "testId": "d64d2091-a4af-4456-b655-442bc20cbe05",
+    "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+    "codeVersion": "v1",
+    "targetUrl": "https://chatdock-app.vercel.app",
+    "failedStepIndex": 5,
+    "failureKind": "unknown",
+    "capturedAt": "2026-07-02T08:00:01.195Z",
+    "fetchedAt": "2026-07-02T08:53:18.462Z"
+  }
+}

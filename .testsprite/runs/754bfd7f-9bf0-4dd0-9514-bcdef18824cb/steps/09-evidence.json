@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 9,
+    "summary": "Step 9 'The 'Continue' link is visible on the page.' failed. Error: TEST BLOCKED: Task results — verification summary:\n\nRequirements checked (from user request):\n- Navigate to https://chatdock-app.vercel.app/builder — Completed (page visited earlier).\n- Page contains the text 'Design the widget' — Found on the /builder page (search matches recorded).\n- Page contains the text 'Connect intelligence' — Found on the /builder page (search matches recorded).\n- Page contains the text 'Live test the recovery' — Found on the /builder page (search matches recorded).\n- Page contains the text 'Ship the code' — Found on the /builder page (search matches recorded).\n- A link with the text 'Continue' is visible and points to /builder/step-one — Verified by clicking the visible 'Continue' link on /builder which navigated the app to: https://chatdock-app.vercel.app/builder/step-one (current tab). The navigation confirms the link's target in practice.\n\nConclusion: All assertions from the user request were observed and verified in the UI. No further actions will be taken.",
+    "path": "steps/09-snapshot.html"
+  }
+]

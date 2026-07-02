@@ -1,0 +1,27 @@
+{
+  "projectId": "60e1a48d-2b89-44b5-81d2-a8615e2a490b",
+  "type": "frontend",
+  "name": "Demo page — SiteAssistant widget answers a real question via the gateway",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to https://chatdock-app.vercel.app/demo"
+    },
+    {
+      "type": "action",
+      "description": "Click the floating circular chat launcher button in the bottom-right corner (aria-label 'Open chat')"
+    },
+    {
+      "type": "assertion",
+      "description": "The chat panel opens showing the assistant name 'ChatDock Assistant' and the greeting 'Questions about ChatDock?'"
+    },
+    {
+      "type": "action",
+      "description": "Type 'What is ChatDock in one sentence?' into the input with placeholder 'Type a message…' and press Enter"
+    },
+    {
+      "type": "assertion",
+      "description": "Within 30 seconds, an assistant reply bubble appears containing the word 'ChatDock' — a real streamed model response, not an error message and not the text 'Connection failed'"
+    }
+  ]
+}

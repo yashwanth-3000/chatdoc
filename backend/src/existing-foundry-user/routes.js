@@ -5,7 +5,7 @@ import {
   getSavedExistingFoundryInventory,
   applyGuardrailPolicy,
 } from "./service.js";
-import { DEMO_SENTINEL, demoConfig, resolveApiKey } from "../demo-credentials.js";
+import { DEMO_SENTINEL, demoConfig, demoPublicConfig, resolveApiKey } from "../demo-credentials.js";
 
 const connectSchema = z.object({
   controlPlaneUrl: z.string().trim().min(1, "TrueFoundry control plane URL is required."),
@@ -27,7 +27,7 @@ existingFoundryUserRouter.get("/saved-inventory", async (_request, response, nex
 // Judge/demo mode — evaluators without a TrueFoundry tenant connect with
 // ChatDock's own credentials, which never leave the server.
 existingFoundryUserRouter.get("/demo-availability", (_request, response) => {
-  response.json({ available: Boolean(demoConfig()) });
+  response.json(demoPublicConfig());
 });
 
 existingFoundryUserRouter.post("/demo-connect", async (_request, response, next) => {
