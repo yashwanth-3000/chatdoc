@@ -46,3 +46,4 @@ backend/data/
 *.pem
 .vercel
 kickbacks.vsix
+.vercel

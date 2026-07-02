@@ -8,6 +8,11 @@ on:
 permissions:
   contents: write
 
+# Serialize loop runs: two racing runs otherwise conflict on the LOOP.md append
+concurrency:
+  group: testsprite-loop
+  cancel-in-progress: false
+
 jobs:
   deploy-and-test:
     runs-on: ubuntu-latest
@@ -146,13 +151,22 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=format:'%s')
           PASS_FAIL="${{ steps.verdict.outputs.verdict }} (${{ steps.verdict.outputs.summary }})"
 
-          echo "| $TIMESTAMP | GitHub Actions (TestSprite rerun --all) | Regression replay of all saved tests after: $COMMIT_MSG | $PASS_FAIL |" >> LOOP.md
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add LOOP.md .testsprite || true
-          git diff --staged --quiet || git commit -m "loop: $PASS_FAIL — $TIMESTAMP [skip ci]"
-          git pull --rebase origin main
-          git push
+
+          # Conflict-proof append: sync to latest main FIRST, then append and
+          # push; retry the whole cycle if another writer lands in between.
+          for ATTEMPT in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            echo "| $TIMESTAMP | GitHub Actions (TestSprite rerun --all) | Regression replay of all saved tests after: $COMMIT_MSG | $PASS_FAIL |" >> LOOP.md
+            git add LOOP.md .testsprite || true
+            git diff --staged --quiet && break
+            git commit -m "loop: $PASS_FAIL — $TIMESTAMP [skip ci]"
+            git push && break
+            echo "push race (attempt $ATTEMPT) — retrying"
+            sleep 5
+          done
 
       # ── Build gate: TestSprite is a required check ──────
       # A FAIL verdict fails the pipeline (runs after LOOP.md is committed so

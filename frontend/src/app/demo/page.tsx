@@ -317,7 +317,7 @@ export default function DemoPage() {
 
         {/* ── OPENING ─────────────────────────────────────────── */}
         <motion.span className={styles.openKicker} variants={fade(0)} initial="hidden" animate="show">
-          Resilient Agents · TrueFoundry Hackathon · June 2026
+          Built in the open · TestSprite Hackathon S3 · July 2026
         </motion.span>
 
         <motion.h1 className={styles.mainTitle} variants={wordLine} initial="hidden" animate="show">
@@ -335,244 +335,6 @@ export default function DemoPage() {
         </motion.p>
 
         <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" animate="show" />
-
-        {/* ── THE RESILIENCE PROBLEM ──────────────────────────── */}
-        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          The challenge
-        </motion.p>
-
-        <AnimWord>Production agents fail in six predictable ways.</AnimWord>
-
-        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <p>
-            The hackathon theme is resilience: agents that maintain functionality when infrastructure
-            fails, rate limits are hit, timeouts occur, or tools break. This is not a theoretical
-            concern. Every agent that reaches real traffic will encounter at least one of these
-            failure modes within its first week.
-          </p>
-          <p>
-            The difference between a fragile agent and a resilient one is not the model it uses.
-            It is the governance layer underneath: routing policy, fallback chain, tool boundary,
-            and runtime safety all running independently of the agent&apos;s code.
-          </p>
-        </motion.div>
-
-        <motion.div className={styles.statStrip} variants={fade(0.1)} initial="hidden" whileInView="show" viewport={vp}>
-          {STATS.map((s) => (
-            <div key={s.l} className={styles.statCell}>
-              <p className={styles.statNumber}>{s.n}</p>
-              <p className={styles.statLabel}>{s.l}</p>
-            </div>
-          ))}
-        </motion.div>
-
-        {/* Failure modes */}
-        <motion.div className={styles.failureList} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          {FAILURE_MODES.map((f) => (
-            <div key={f.n} className={styles.failureRow}>
-              <p className={styles.failureNum}>{f.n}</p>
-              <div>
-                <p className={styles.failureMode}>{f.mode}</p>
-                <p className={styles.failureHow}>{f.how}</p>
-              </div>
-            </div>
-          ))}
-        </motion.div>
-
-        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
-
-        {/* ── AI GATEWAY ──────────────────────────────────────── */}
-        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          Judging criterion 1 · AI Gateway
-        </motion.p>
-
-        <AnimWord>Routing, fallback, and observability live in the gateway not in code.</AnimWord>
-
-        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <p>
-            ChatDock sends every assistant request through TrueFoundry AI Gateway using the
-            OpenAI-compatible client. The gateway is the single point of truth for model routing.
-            Primary model, fallback order, rate limit policy, and daily budget all declared once,
-            enforced for every request, observable in real time.
-          </p>
-          <p>
-            When the primary model returns a 429 or the provider is unreachable, the gateway
-            reroutes to the fallback model without any code change. The backend proxy emits a
-            dedicated SSE trace event so the live-test panel shows exactly when and why a fallback
-            fired. Rate limit events are surfaced as <code className={styles.inlineCode}>🚫 Rate limit: [message]</code> trace
-            cards with the gateway&apos;s error detail parsed and displayed.
-          </p>
-        </motion.div>
-
-        <motion.div className={styles.msGrid} variants={fadeUp(0.08)} initial="hidden" whileInView="show" viewport={vp}>
-          {GATEWAY_CARDS.map((card, i) => (
-            <motion.div key={card.name} className={styles.msCard} variants={fadeUp(i * 0.05)} initial="hidden" whileInView="show" viewport={vp}>
-              <p className={styles.msCardTag}>{card.tag}</p>
-              <p className={styles.msCardName}>{card.name}</p>
-              <p className={styles.msCardDesc}>{card.desc}</p>
-              <p className={styles.msCardDetail}>{card.detail}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
-
-        {/* ── MCP GATEWAY ─────────────────────────────────────── */}
-        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          Judging criterion 2 · MCP Gateway
-        </motion.p>
-
-        <AnimWord>Tools are a permission layer, not an open door.</AnimWord>
-
-        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <p>
-            ChatDock uses MCP Model Context Protocol over HTTP JSON-RPC 2.0. The MCP server
-            is deployed on Railway at a dedicated endpoint. Every tool the assistant can invoke is
-            declared in an allowlist. The backend proxy injects auth credentials server-side before
-            each MCP call. The React widget in the browser never touches a gateway key.
-          </p>
-          <p>
-            Tool access is enforced per user tier. A guest user can invoke <code className={styles.inlineCode}>common-tools</code>.
-            A logged-in or pro user also gets <code className={styles.inlineCode}>chatdock-mcp</code> which
-            surfaces ChatDock-specific context. Each tier&apos;s allowlist is declared once in the
-            gateway config and applied to every request for that tier. No per-endpoint configuration,
-            no scattered conditionals.
-          </p>
-        </motion.div>
-
-        <motion.div className={styles.msGrid} variants={fadeUp(0.08)} initial="hidden" whileInView="show" viewport={vp}>
-          {MCP_CARDS.map((card, i) => (
-            <motion.div key={card.name} className={`${styles.msCard} ${styles.msCardGreen}`} variants={fadeUp(i * 0.05)} initial="hidden" whileInView="show" viewport={vp}>
-              <p className={`${styles.msCardTag} ${styles.msCardTagGreen}`}>{card.tag}</p>
-              <p className={styles.msCardName}>{card.name}</p>
-              <p className={styles.msCardDesc}>{card.desc}</p>
-              <p className={`${styles.msCardDetail} ${styles.msCardDetailGreen}`}>{card.detail}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
-
-        {/* ── GUARDRAILS ──────────────────────────────────────── */}
-        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          Judging criterion 3 · Guardrails
-        </motion.p>
-
-        <AnimWord>Safety runs at input, tool call, and output not as a disclaimer.</AnimWord>
-
-        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <p>
-            Two guardrails are active on every request: <strong>content-moderation</strong> and
-            <strong> sql-sanitizer</strong>. They run at the backend middleware layer, before any
-            data reaches the model or an MCP tool. When a guardrail fires, the backend emits a
-            <code className={styles.inlineCode}> 🚫</code> trace event with the rule name and action so the
-            live-test panel shows the safety system working, not just the final answer.
-          </p>
-        </motion.div>
-
-        <motion.div className={styles.guardrailTable} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <div className={styles.guardrailHeader}>
-            <span>Guardrail</span>
-            <span>Phase</span>
-            <span>Action</span>
-            <span>Scope</span>
-          </div>
-          {GUARDRAIL_ROWS.map((row) => (
-            <div key={row.name} className={styles.guardrailRow}>
-              <code className={styles.guardrailName}>{row.name}</code>
-              <span className={styles.guardrailPhase}>{row.phase}</span>
-              <span className={styles.guardrailAction}>{row.action}</span>
-              <span className={styles.guardrailTier}>{row.tier}</span>
-            </div>
-          ))}
-        </motion.div>
-
-        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
-
-        {/* ── REAL WORLD PROOF ────────────────────────────────── */}
-        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          Judging criterion 5 · Real-world applicability
-        </motion.p>
-
-        <AnimWord>The ChatDock assistant was configured inside ChatDock.</AnimWord>
-
-        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <p>
-            The chat widget running on the ChatDock website is the exact output of the builder
-            flow: widget design, gateway config, MCP tool selection, and guardrail attachment -
-            all configured through the same UI judges are viewing right now. This is a
-            self-referential proof: the product that builds chatbots was tested by building itself.
-          </p>
-          <p>
-            Three user tiers, each with a different model route, rate limit policy, tool allowlist,
-            and guardrail set all controlled through TrueFoundry AI Gateway. The tier the
-            assistant operates under is determined by the request context. Governance is centrally
-            declared, not scattered across routes.
-          </p>
-        </motion.div>
-
-        <motion.div className={styles.tierTable} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <div className={styles.tierTableHead}>
-            <span>Tier</span>
-            <span>Model</span>
-            <span>Rate limit</span>
-            <span>Guardrails</span>
-            <span>MCP tools</span>
-          </div>
-          {TIERS.map((tier) => (
-            <div key={tier.key} className={styles.tierTableRow}>
-              <span>
-                <span className={styles.tierPill} style={{ background: tier.color }}>{tier.key}</span>
-              </span>
-              <code className={styles.tierCode}>{tier.model}</code>
-              <span className={styles.tierMuted}>{tier.rateLimit}</span>
-              <span className={styles.tierMuted}>{tier.guardrails}</span>
-              <span className={styles.tierMuted}>{tier.tools}</span>
-            </div>
-          ))}
-        </motion.div>
-
-        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
-
-        {/* ── DEMO FLOW ───────────────────────────────────────── */}
-        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          Judging criterion 6 · Demo clarity
-        </motion.p>
-
-        <AnimWord>Every failure mode is observable in one panel.</AnimWord>
-
-        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
-          <p>
-            The live-test panel in the ChatDock builder is the demo surface. It runs the real
-            widget against the real TrueFoundry gateway. Every step of every request model route,
-            MCP tool call, guardrail result, fallback event appears as a labelled, collapsible
-            trace card alongside the streamed response. Judges do not need to read logs or inspect
-            network requests: the recovery story is inline with the answer.
-          </p>
-        </motion.div>
-
-        <motion.div className={styles.logCard} variants={fadeUp(0.08)} initial="hidden" whileInView="show" viewport={vp}>
-          <div className={styles.logCardHeader}>
-            <p className={styles.logCardTitle}>Demo run-of-show</p>
-            <p className={styles.logCardMeta}>normal request → tool call → guardrail block → rate-limit recovery → trace</p>
-          </div>
-          <div className={styles.logPanel}>
-            {DEMO_STEPS.map((step, i) => (
-              <motion.div key={step.title} className={styles.logStep} variants={fadeUp(i * 0.05)} initial="hidden" whileInView="show" viewport={vp}>
-                <div className={styles.logBulletCol}>
-                  <span className={styles.logBullet} />
-                  {i < DEMO_STEPS.length - 1 && <span className={styles.logLine} />}
-                </div>
-                <div className={styles.logStepContent}>
-                  <p className={styles.logStepTitle}>{step.title}</p>
-                  <p className={styles.logStepDetail}>{step.detail}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
 
         {/* ── TESTSPRITE LOOP ─────────────────────────────────── */}
         <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
@@ -633,6 +395,244 @@ export default function DemoPage() {
 
         <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
 
+        {/* ── THE RESILIENCE PROBLEM ──────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          The challenge
+        </motion.p>
+
+        <AnimWord>Production agents fail in six predictable ways.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            The bar ChatDock sets is resilience: agents that maintain functionality when
+            infrastructure fails, rate limits are hit, timeouts occur, or tools break. This is not
+            a theoretical concern. Every agent that reaches real traffic will encounter at least
+            one of these failure modes within its first week.
+          </p>
+          <p>
+            The difference between a fragile agent and a resilient one is not the model it uses.
+            It is the governance layer underneath: routing policy, fallback chain, tool boundary,
+            and runtime safety all running independently of the agent&apos;s code.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.statStrip} variants={fade(0.1)} initial="hidden" whileInView="show" viewport={vp}>
+          {STATS.map((s) => (
+            <div key={s.l} className={styles.statCell}>
+              <p className={styles.statNumber}>{s.n}</p>
+              <p className={styles.statLabel}>{s.l}</p>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* Failure modes */}
+        <motion.div className={styles.failureList} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          {FAILURE_MODES.map((f) => (
+            <div key={f.n} className={styles.failureRow}>
+              <p className={styles.failureNum}>{f.n}</p>
+              <div>
+                <p className={styles.failureMode}>{f.mode}</p>
+                <p className={styles.failureHow}>{f.how}</p>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
+        {/* ── AI GATEWAY ──────────────────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          Governance pillar 1 · AI Gateway
+        </motion.p>
+
+        <AnimWord>Routing, fallback, and observability live in the gateway not in code.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            ChatDock sends every assistant request through TrueFoundry AI Gateway using the
+            OpenAI-compatible client. The gateway is the single point of truth for model routing.
+            Primary model, fallback order, rate limit policy, and daily budget all declared once,
+            enforced for every request, observable in real time.
+          </p>
+          <p>
+            When the primary model returns a 429 or the provider is unreachable, the gateway
+            reroutes to the fallback model without any code change. The backend proxy emits a
+            dedicated SSE trace event so the live-test panel shows exactly when and why a fallback
+            fired. Rate limit events are surfaced as <code className={styles.inlineCode}>🚫 Rate limit: [message]</code> trace
+            cards with the gateway&apos;s error detail parsed and displayed.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.msGrid} variants={fadeUp(0.08)} initial="hidden" whileInView="show" viewport={vp}>
+          {GATEWAY_CARDS.map((card, i) => (
+            <motion.div key={card.name} className={styles.msCard} variants={fadeUp(i * 0.05)} initial="hidden" whileInView="show" viewport={vp}>
+              <p className={styles.msCardTag}>{card.tag}</p>
+              <p className={styles.msCardName}>{card.name}</p>
+              <p className={styles.msCardDesc}>{card.desc}</p>
+              <p className={styles.msCardDetail}>{card.detail}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
+        {/* ── MCP GATEWAY ─────────────────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          Governance pillar 2 · MCP Gateway
+        </motion.p>
+
+        <AnimWord>Tools are a permission layer, not an open door.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            ChatDock uses MCP Model Context Protocol over HTTP JSON-RPC 2.0. The MCP server
+            is deployed on Railway at a dedicated endpoint. Every tool the assistant can invoke is
+            declared in an allowlist. The backend proxy injects auth credentials server-side before
+            each MCP call. The React widget in the browser never touches a gateway key.
+          </p>
+          <p>
+            Tool access is enforced per user tier. A guest user can invoke <code className={styles.inlineCode}>common-tools</code>.
+            A logged-in or pro user also gets <code className={styles.inlineCode}>chatdock-mcp</code> which
+            surfaces ChatDock-specific context. Each tier&apos;s allowlist is declared once in the
+            gateway config and applied to every request for that tier. No per-endpoint configuration,
+            no scattered conditionals.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.msGrid} variants={fadeUp(0.08)} initial="hidden" whileInView="show" viewport={vp}>
+          {MCP_CARDS.map((card, i) => (
+            <motion.div key={card.name} className={`${styles.msCard} ${styles.msCardGreen}`} variants={fadeUp(i * 0.05)} initial="hidden" whileInView="show" viewport={vp}>
+              <p className={`${styles.msCardTag} ${styles.msCardTagGreen}`}>{card.tag}</p>
+              <p className={styles.msCardName}>{card.name}</p>
+              <p className={styles.msCardDesc}>{card.desc}</p>
+              <p className={`${styles.msCardDetail} ${styles.msCardDetailGreen}`}>{card.detail}</p>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
+        {/* ── GUARDRAILS ──────────────────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          Governance pillar 3 · Guardrails
+        </motion.p>
+
+        <AnimWord>Safety runs at input, tool call, and output not as a disclaimer.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            Two guardrails are active on every request: <strong>content-moderation</strong> and
+            <strong> sql-sanitizer</strong>. They run at the backend middleware layer, before any
+            data reaches the model or an MCP tool. When a guardrail fires, the backend emits a
+            <code className={styles.inlineCode}> 🚫</code> trace event with the rule name and action so the
+            live-test panel shows the safety system working, not just the final answer.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.guardrailTable} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <div className={styles.guardrailHeader}>
+            <span>Guardrail</span>
+            <span>Phase</span>
+            <span>Action</span>
+            <span>Scope</span>
+          </div>
+          {GUARDRAIL_ROWS.map((row) => (
+            <div key={row.name} className={styles.guardrailRow}>
+              <code className={styles.guardrailName}>{row.name}</code>
+              <span className={styles.guardrailPhase}>{row.phase}</span>
+              <span className={styles.guardrailAction}>{row.action}</span>
+              <span className={styles.guardrailTier}>{row.tier}</span>
+            </div>
+          ))}
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
+        {/* ── REAL WORLD PROOF ────────────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          Governance pillar 4 · Real-world proof
+        </motion.p>
+
+        <AnimWord>The ChatDock assistant was configured inside ChatDock.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            The chat widget running on the ChatDock website is the exact output of the builder
+            flow: widget design, gateway config, MCP tool selection, and guardrail attachment -
+            all configured through the same UI judges are viewing right now. This is a
+            self-referential proof: the product that builds chatbots was tested by building itself.
+          </p>
+          <p>
+            Three user tiers, each with a different model route, rate limit policy, tool allowlist,
+            and guardrail set all controlled through TrueFoundry AI Gateway. The tier the
+            assistant operates under is determined by the request context. Governance is centrally
+            declared, not scattered across routes.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.tierTable} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <div className={styles.tierTableHead}>
+            <span>Tier</span>
+            <span>Model</span>
+            <span>Rate limit</span>
+            <span>Guardrails</span>
+            <span>MCP tools</span>
+          </div>
+          {TIERS.map((tier) => (
+            <div key={tier.key} className={styles.tierTableRow}>
+              <span>
+                <span className={styles.tierPill} style={{ background: tier.color }}>{tier.key}</span>
+              </span>
+              <code className={styles.tierCode}>{tier.model}</code>
+              <span className={styles.tierMuted}>{tier.rateLimit}</span>
+              <span className={styles.tierMuted}>{tier.guardrails}</span>
+              <span className={styles.tierMuted}>{tier.tools}</span>
+            </div>
+          ))}
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
+        {/* ── DEMO FLOW ───────────────────────────────────────── */}
+        <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
+          Governance pillar 5 · Observability & demo clarity
+        </motion.p>
+
+        <AnimWord>Every failure mode is observable in one panel.</AnimWord>
+
+        <motion.div className={styles.prose} variants={fade(0.06)} initial="hidden" whileInView="show" viewport={vp}>
+          <p>
+            The live-test panel in the ChatDock builder is the demo surface. It runs the real
+            widget against the real TrueFoundry gateway. Every step of every request model route,
+            MCP tool call, guardrail result, fallback event appears as a labelled, collapsible
+            trace card alongside the streamed response. Judges do not need to read logs or inspect
+            network requests: the recovery story is inline with the answer.
+          </p>
+        </motion.div>
+
+        <motion.div className={styles.logCard} variants={fadeUp(0.08)} initial="hidden" whileInView="show" viewport={vp}>
+          <div className={styles.logCardHeader}>
+            <p className={styles.logCardTitle}>Demo run-of-show</p>
+            <p className={styles.logCardMeta}>normal request → tool call → guardrail block → rate-limit recovery → trace</p>
+          </div>
+          <div className={styles.logPanel}>
+            {DEMO_STEPS.map((step, i) => (
+              <motion.div key={step.title} className={styles.logStep} variants={fadeUp(i * 0.05)} initial="hidden" whileInView="show" viewport={vp}>
+                <div className={styles.logBulletCol}>
+                  <span className={styles.logBullet} />
+                  {i < DEMO_STEPS.length - 1 && <span className={styles.logLine} />}
+                </div>
+                <div className={styles.logStepContent}>
+                  <p className={styles.logStepTitle}>{step.title}</p>
+                  <p className={styles.logStepDetail}>{step.detail}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.hr className={styles.divider} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp} />
+
         {/* ── ARCHITECTURE ────────────────────────────────────── */}
         <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
           Architecture
@@ -656,7 +656,7 @@ export default function DemoPage() {
 
         {/* ── JUDGING CRITERIA MAP ────────────────────────────── */}
         <motion.p className={styles.chapterKicker} variants={fade(0)} initial="hidden" whileInView="show" viewport={vp}>
-          Judging criteria · How ChatDock covers each one
+          Coverage map · Six hard problems, six answers
         </motion.p>
 
         <AnimWord>Six criteria. Six answers.</AnimWord>
@@ -708,7 +708,7 @@ export default function DemoPage() {
       <SiteAssistant />
 
       <footer className={styles.footer}>
-        <p>© 2026 ChatDock · Built for the TrueFoundry Resilient Agents Hackathon</p>
+        <p>© 2026 ChatDock · Built in the open for TestSprite Hackathon S3 · Tested live by the TestSprite loop</p>
         <div className={styles.footerLinks}>
           <Link href="/">Home</Link>
           <Link href="/builder">Builder</Link>
