@@ -1,0 +1,18 @@
+{
+  "testId": "298643b4-cf01-4509-b12e-e5c32a775aca",
+  "status": "blocked",
+  "startedAt": "2026-07-02T13:18:02.794Z",
+  "finishedAt": "2026-07-02T13:30:59.682Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782999059340854//tmp/8b0751a4-8834-4853-a581-91d327ff93e7/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_ff36c88e09a51451",
+  "runIdIfAvailable": "4c29cbcc-c7c4-415c-97c0-3098982d8c6e",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 23,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Text 'npm install openai' not found or not visible on page"
+}

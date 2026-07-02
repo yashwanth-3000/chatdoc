@@ -1,0 +1,18 @@
+{
+  "testId": "2eb6cff8-bb92-4e67-918e-effd09730a72",
+  "status": "blocked",
+  "startedAt": "2026-07-02T13:38:36.151Z",
+  "finishedAt": "2026-07-02T13:40:48.933Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782999648710746//tmp/8a2d490f-284e-4b71-ade4-35193fcb910f/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_b200ab579a00eb10",
+  "runIdIfAvailable": "27cf6fbc-8330-4d68-ba94-e8796b5d1381",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 4,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: PASS: The demo-tenant, credential-free connection succeeded.\n\nObservations made during this session (all directly from the current page state):\n- The page at https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user was opened and the 'Continue as judge — use demo tenant' action was performed.\n- The UI now shows the label 'demo tenant (judge mode)' and demo tenant controls (for example, a 'Disconnect' button), confirming the…"
+}

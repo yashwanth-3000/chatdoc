@@ -1,0 +1,5 @@
+{
+  "rootCauseHypothesis": "TEST BLOCKED: Completed all requested checks on https://chatdock-app.vercel.app/builder/final:\n\n- 'Install the OpenAI SDK' section expanded and the code block contains the text: 'npm install openai'.\n- 'ChatDockWidget.tsx' section expanded and the expanded content shows the filename 'components/ChatDockWidget.tsx' and the ChatDockWidget source code (code block header and source visible).\n\nBoth assertions from the user's steps are met and verified against the visible page content and screenshot. No further actions will be taken.",
+  "recommendedFixTarget": null,
+  "evidence": []
+}

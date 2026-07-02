@@ -1,0 +1,8 @@
+[
+  {
+    "kind": "snapshot",
+    "stepIndex": 6,
+    "summary": "Step 6 'The 'Disconnect' button is visible, indicating the inventory view replaced the connect form.' failed. Error: TEST BLOCKED: TEST PASS: The Connect Foundry Gateway demo-tenant flow completed.\n\nObservations (directly from the live UI and screenshot):\n- The page URL is https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user (current tab).\n- The main heading 'Foundry inventory' is visible in the page content.\n- A demo tenant label 'demo tenant (judge mode)' (displayed as 'DEMO TENANT (JUDGE MODE)') is visible near the inventory banner, and the inventory UI (sections, 'Disconnect' button, sidebar items) is present, indicating the connect form was replaced by the inventory view.\n\nResult: All required assertions in the test steps are satisfied. The task is complete.",
+    "path": "steps/06-snapshot.html"
+  }
+]

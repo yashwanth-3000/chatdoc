@@ -1,0 +1,18 @@
+{
+  "testId": "ea874791-9132-4302-b5e8-1ba47568a5df",
+  "status": "blocked",
+  "startedAt": "2026-07-02T13:18:16.986Z",
+  "finishedAt": "2026-07-02T13:21:02.641Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782998462371503//tmp/8cfc4cb0-6ee1-4d69-b742-20438d885109/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_e06164388584c6f5",
+  "runIdIfAvailable": "84b7306a-02ba-4baf-89e9-ba2796601608",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 6,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: TEST PASS: The Connect Foundry Gateway demo-tenant flow completed.\n\nObservations (directly from the live UI and screenshot):\n- The page URL is https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user (current tab).\n- The main heading 'Foundry inventory' is visible in the page content.\n- A demo tenant label 'demo tenant (judge mode)' (displayed as 'DEMO TENANT (JUDGE MODE)') is visible near the inventory banner, and the inve…"
+}

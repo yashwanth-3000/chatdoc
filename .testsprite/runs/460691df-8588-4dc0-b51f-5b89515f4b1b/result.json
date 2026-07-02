@@ -1,0 +1,18 @@
+{
+  "testId": "17eaea60-7594-4d9d-bb80-eeb37d8c183d",
+  "status": "blocked",
+  "startedAt": "2026-07-02T13:38:37.558Z",
+  "finishedAt": "2026-07-02T13:51:03.787Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1783000262780588//tmp/334a18ad-b42a-409f-8454-15c4f79c6a82/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_f9ceef0fea5cab16",
+  "runIdIfAvailable": "460691df-8588-4dc0-b51f-5b89515f4b1b",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 12,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Clicked button \"Error\nsystem\nerror\n437ms\n23\""
+}

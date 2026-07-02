@@ -1,0 +1,9 @@
+{
+  "rootCauseHypothesis": "TEST BLOCKED: PASS: The demo-tenant, credential-free connection succeeded.\n\nObservations made during this session (all directly from the current page state):\n- The page at https://chatdock-app.vercel.app/builder/step-two/existing-foundry-user was opened and the 'Continue as judge — use demo tenant' action was performed.\n- The UI now shows the label 'demo tenant (judge mode)' and demo tenant controls (for example, a 'Disconnect' button), confirming the inventory/browser is displaying the demo tenant in judge mode.\n\nConclusion: The assertion that the inventory browser shows the exact label 'demo tenant (judge mode)' is satisfied. The task is complete.",
+  "recommendedFixTarget": {
+    "kind": "env",
+    "reference": null,
+    "rationale": null
+  },
+  "evidence": []
+}

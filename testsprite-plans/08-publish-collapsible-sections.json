@@ -9,19 +9,19 @@
     },
     {
       "type": "action",
-      "description": "Click the 'Install the OpenAI SDK' section heading button"
+      "description": "Click the 'Install the OpenAI SDK' section heading button to expand it"
     },
     {
       "type": "assertion",
-      "description": "A code block appears below the heading containing the text 'npm install openai'"
+      "description": "A code block appears containing the text 'npm install openai'"
     },
     {
       "type": "action",
-      "description": "Click the 'Install the OpenAI SDK' section heading button again"
+      "description": "Click the 'ChatDockWidget.tsx' section heading button to expand it"
     },
     {
       "type": "assertion",
-      "description": "The code block containing 'npm install openai' is no longer visible (section collapsed)"
+      "description": "The expanded section reveals its code, showing the filename 'components/ChatDockWidget.tsx' in the code block header"
     }
   ]
 }

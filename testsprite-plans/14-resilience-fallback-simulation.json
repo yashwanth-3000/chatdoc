@@ -9,7 +9,7 @@
     },
     {
       "type": "action",
-      "description": "Click the button 'Continue as judge — use demo tenant' and wait up to 60 seconds for the 'Foundry inventory' browser to load"
+      "description": "Click the button 'Continue as judge — use demo tenant' and wait up to 90 seconds for the 'demo tenant (judge mode)' inventory to load"
     },
     {
       "type": "action",
@@ -20,16 +20,16 @@
       "description": "The live test page loads: the heading 'Test your chatbot live' is visible"
     },
     {
-      "type": "assertion",
-      "description": "A section with the exact heading 'Simulate failure' is visible"
-    },
-    {
       "type": "action",
       "description": "Click the button whose accessible name is 'Simulate failure: Rate limit (429)'"
     },
     {
+      "type": "assertion",
+      "description": "The control is now armed: a note containing the word 'Armed' appears (confirming the next message will inject a 429). Do NOT send a message until this armed note is confirmed visible."
+    },
+    {
       "type": "action",
-      "description": "In the chat widget input (placeholder 'Type a message…'), type 'What is ChatDock?' and press Enter"
+      "description": "Now, with the control armed, type 'What is ChatDock?' into the chat input (placeholder 'Type a message…') and press Enter"
     },
     {
       "type": "assertion",
@@ -37,7 +37,7 @@
     },
     {
       "type": "assertion",
-      "description": "Despite the injected failure, a final assistant reply bubble still appears in the chat widget (the conversation recovered rather than showing a hard error)"
+      "description": "Despite the injected failure, a final assistant reply bubble still appears in the chat widget (the conversation recovered)"
     }
   ]
 }

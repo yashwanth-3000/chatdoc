@@ -1,0 +1,18 @@
+{
+  "testId": "c0de2228-c103-4871-abc3-20fd45382143",
+  "status": "blocked",
+  "startedAt": "2026-07-02T13:38:34.509Z",
+  "finishedAt": "2026-07-02T13:41:50.949Z",
+  "videoUrl": "https://testsprite-videos.s3.us-east-1.amazonaws.com/04d8c498-3001-70fa-b2dc-4efece2f7bf4/1782999710657535//tmp/377fdfe6-e064-438f-a346-4037e59c2009/result.webm",
+  "failureAnalysisUrl": null,
+  "snapshotId": "snap_6cff8e3dfef7c1a9",
+  "runIdIfAvailable": "c2d6f11a-0807-45c0-9555-61f4f7804551",
+  "codeVersion": "v1",
+  "targetUrl": "https://chatdock-app.vercel.app",
+  "targetUrlSource": "run",
+  "failedStepIndex": 6,
+  "failureKind": null,
+  "verdict": "blocked",
+  "executionStatus": "completed",
+  "summary": "Blocked before a verdict could be produced: TEST BLOCKED: Completed all requested checks on https://chatdock-app.vercel.app/builder/final:\n\n- 'Install the OpenAI SDK' section expanded and the code block contains the text: 'npm install openai'.\n- 'ChatDockWidget.tsx' section expanded and the expanded content shows the filename 'components/ChatDockWidget.tsx' and the ChatDockWidget source code (code block header and source visible).\n\nBoth assertions from the user's steps are met and verified agai…"
+}

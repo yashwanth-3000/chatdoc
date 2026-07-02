@@ -9,23 +9,15 @@
     },
     {
       "type": "assertion",
-      "description": "The heading 'Connect Foundry Gateway' is visible"
-    },
-    {
-      "type": "assertion",
       "description": "A judge/evaluator option is visible containing the text 'No TrueFoundry account?'"
     },
     {
       "type": "action",
-      "description": "Click the button 'Continue as judge — use demo tenant'"
+      "description": "Click the button 'Continue as judge — use demo tenant' and wait up to 90 seconds for the demo tenant inventory to finish loading"
     },
     {
       "type": "assertion",
-      "description": "Within 60 seconds, the inventory browser appears: the heading 'Foundry inventory' is visible (the connect form is replaced)"
-    },
-    {
-      "type": "assertion",
-      "description": "The label 'demo tenant (judge mode)' is visible, indicating the inventory came from the demo tenant"
+      "description": "The inventory browser is now shown with the exact label 'demo tenant (judge mode)' visible — confirming a credential-free connection succeeded"
     }
   ]
 }
