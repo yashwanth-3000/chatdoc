@@ -35,10 +35,14 @@ jobs:
       - name: Deploy to Vercel (production)
         if: env.HAS_VERCEL_TOKEN == 'true'
         run: |
-          vercel --prod --yes \
+          DEPLOY_URL=$(vercel --prod --yes \
             --token ${{ secrets.VERCEL_TOKEN }} \
-            --cwd frontend
-          echo "Deployed to ${{ env.PRODUCTION_URL }}"
+            --cwd frontend 2>/dev/null | tail -1)
+          echo "Deployed to $DEPLOY_URL"
+          # chatdock-app.vercel.app is a manual alias, not the project's
+          # production domain — vercel --prod does not move it automatically
+          vercel alias set "$DEPLOY_URL" chatdock-app.vercel.app \
+            --token ${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
