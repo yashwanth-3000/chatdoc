@@ -2,6 +2,7 @@ import { Router } from "express";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { DEMO_SENTINEL, resolveApiKey } from "../demo-credentials.js";
 
 const router = Router();
 
@@ -258,11 +259,15 @@ async function streamGatewayRequest({ url, apiKey, tfyMetadata, messages, tools,
 
 router.post("/", async (req, res) => {
   const {
-    messages, gatewayUrl, modelId, apiKey,
+    messages, gatewayUrl, modelId,
     chaosMode, primaryModelLabel, fallbackModelLabel,
     userTier, controlPlaneUrl, systemPrompt, guardrailNames,
   } = req.body;
 
+  const apiKey = resolveApiKey(req.body.apiKey);
+  if (req.body.apiKey === DEMO_SENTINEL && !apiKey) {
+    return res.status(503).json({ error: "Judge demo mode is not configured on this server." });
+  }
   if (!messages?.length || !gatewayUrl || !modelId || !apiKey) {
     return res.status(400).json({ error: "messages, gatewayUrl, modelId and apiKey are required." });
   }
@@ -539,7 +544,11 @@ router.get("/mcp-tools", async (_req, res) => {
 // chat response, in call order, with the gateway's own per-attempt error reason —
 // e.g. "Rate limit exceeded for model: openai/gpt-5 with rule: guests".
 router.post("/model-trace", async (req, res) => {
-  const { traceId, controlPlaneUrl, apiKey, dataRoutingDestination } = req.body;
+  const { traceId, controlPlaneUrl, dataRoutingDestination } = req.body;
+  const apiKey = resolveApiKey(req.body.apiKey);
+  if (req.body.apiKey === DEMO_SENTINEL && !apiKey) {
+    return res.status(503).json({ error: "Judge demo mode is not configured on this server." });
+  }
   if (!traceId || !controlPlaneUrl || !apiKey) {
     return res.status(400).json({ error: "traceId, controlPlaneUrl and apiKey are required." });
   }

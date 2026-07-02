@@ -5,6 +5,7 @@ import {
   getSavedExistingFoundryInventory,
   applyGuardrailPolicy,
 } from "./service.js";
+import { DEMO_SENTINEL, demoConfig, resolveApiKey } from "../demo-credentials.js";
 
 const connectSchema = z.object({
   controlPlaneUrl: z.string().trim().min(1, "TrueFoundry control plane URL is required."),
@@ -23,13 +24,35 @@ existingFoundryUserRouter.get("/saved-inventory", async (_request, response, nex
   }
 });
 
+// Judge/demo mode — evaluators without a TrueFoundry tenant connect with
+// ChatDock's own credentials, which never leave the server.
+existingFoundryUserRouter.get("/demo-availability", (_request, response) => {
+  response.json({ available: Boolean(demoConfig()) });
+});
+
+existingFoundryUserRouter.post("/demo-connect", async (_request, response, next) => {
+  const demo = demoConfig();
+  if (!demo) {
+    return response.status(503).json({ error: "Judge demo mode is not configured on this server." });
+  }
+  try {
+    response.json(await connectExistingFoundryUser(demo));
+  } catch (error) {
+    next(error);
+  }
+});
+
 existingFoundryUserRouter.post("/apply-guardrail-policy", async (request, response, next) => {
   try {
-    const { apiKey } = request.body;
-    if (!apiKey || typeof apiKey !== "string" || !apiKey.trim()) {
+    const rawKey = request.body.apiKey;
+    if (!rawKey || typeof rawKey !== "string" || !rawKey.trim()) {
       return response.status(400).json({ error: "apiKey is required." });
     }
-    const result = await applyGuardrailPolicy({ apiKey: apiKey.trim() });
+    const apiKey = resolveApiKey(rawKey.trim());
+    if (rawKey.trim() === DEMO_SENTINEL && !apiKey) {
+      return response.status(503).json({ error: "Judge demo mode is not configured on this server." });
+    }
+    const result = await applyGuardrailPolicy({ apiKey });
     response.json(result);
   } catch (error) {
     next(error);

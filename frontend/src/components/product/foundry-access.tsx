@@ -5,7 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import {
   connectExistingFoundryUser,
+  connectDemoFoundry,
+  fetchDemoAvailability,
   fetchSavedExistingFoundryInventory,
+  DEMO_API_KEY_SENTINEL,
 } from "@/lib/frontend-api";
 import type {
   ExistingFoundryConnectResponse,
@@ -300,7 +303,9 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
   const [loading, setLoading] = useState(false);
   const [layoutLoading, setLayoutLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [inventorySource, setInventorySource] = useState<"live" | "saved" | null>(null);
+  const [inventorySource, setInventorySource] = useState<"live" | "saved" | "demo" | null>(null);
+  const [demoAvailable, setDemoAvailable] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [activeSectionKey, setActiveSectionKey] = useState<string>("availableModels");
   const [addedItems, setAddedItems] = useState<Map<string, string>>(new Map());
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
@@ -349,6 +354,31 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
       }
     } catch { /* ignore */ }
   }, []);
+
+  // Judge/demo mode is only offered when the backend has demo credentials configured
+  useEffect(() => {
+    if (!isExisting) return;
+    fetchDemoAvailability()
+      .then((r) => setDemoAvailable(r.available))
+      .catch(() => setDemoAvailable(false));
+  }, [isExisting]);
+
+  async function handleDemoConnect() {
+    setDemoLoading(true);
+    setError(null);
+    try {
+      const result = await connectDemoFoundry();
+      // Sentinel instead of a real key — the backend swaps it server-side
+      try { sessionStorage.setItem("chatdock_api_key", DEMO_API_KEY_SENTINEL); } catch { /* ignore */ }
+      setInventory(result);
+      setInventorySource("demo");
+    } catch (e) {
+      setInventory(null);
+      setError(e instanceof Error ? e.message : "Unable to connect with the demo tenant.");
+    } finally {
+      setDemoLoading(false);
+    }
+  }
 
   async function handleExistingSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -833,19 +863,38 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
               ) : null}
 
               <div className={`${styles.gwFormActions} ${styles.gwFormFieldFull}`}>
-                <button type="submit" className={styles.gwPrimaryBtn} disabled={loading || layoutLoading}>
+                <button type="submit" className={styles.gwPrimaryBtn} disabled={loading || layoutLoading || demoLoading}>
                   {loading ? "Connecting..." : "Fetch inventory"}
                 </button>
                 <button
                   type="button"
                   className={styles.gwSecondaryBtn}
-                  disabled={loading || layoutLoading}
+                  disabled={loading || layoutLoading || demoLoading}
                   onClick={handleLoadSavedInventory}
                 >
                   {layoutLoading ? "Loading…" : "Test with saved data"}
                 </button>
               </div>
             </form>
+            {demoAvailable ? (
+              <div className={styles.gwConnectBody} style={{ paddingTop: 0 }}>
+                <div className={styles.gwFormFieldFull} style={{ borderTop: "1px solid rgba(0,0,0,0.08)", paddingTop: 14 }}>
+                  <p style={{ fontSize: 13, color: "#6b7280", margin: "0 0 10px" }}>
+                    <strong>No TrueFoundry account?</strong> Judges and evaluators can connect
+                    with ChatDock&apos;s own demo tenant — credentials stay on the server and are
+                    never sent to your browser.
+                  </p>
+                  <button
+                    type="button"
+                    className={styles.gwSecondaryBtn}
+                    disabled={loading || layoutLoading || demoLoading}
+                    onClick={handleDemoConnect}
+                  >
+                    {demoLoading ? "Connecting…" : "Continue as judge — use demo tenant"}
+                  </button>
+                </div>
+              </div>
+            ) : null}
             <p className={styles.gwConnectFoot}>
               Credentials are only used during this request and are never stored by ChatDock.
             </p>
@@ -923,7 +972,7 @@ export function FoundryAccess({ mode = "chooser" }: FoundryAccessProps) {
                   </span>
                 )}
                 <span className={styles.gwStatSource}>
-                  {inventorySource === "saved" ? "saved snapshot" : "live"}
+                  {inventorySource === "saved" ? "saved snapshot" : inventorySource === "demo" ? "demo tenant (judge mode)" : "live"}
                 </span>
               </div>
             </div>

@@ -83,6 +83,24 @@ export async function fetchSavedExistingFoundryInventory() {
   );
 }
 
+// Judge/demo mode — the backend connects with ChatDock's own TrueFoundry
+// credentials (env vars on the server). The browser stores this sentinel in
+// place of an API key; the real key never reaches the frontend.
+export const DEMO_API_KEY_SENTINEL = "__chatdock_demo__";
+
+export async function fetchDemoAvailability() {
+  return fetchBackend<{ available: boolean }>(
+    "/api/existing-foundry-user/demo-availability",
+  );
+}
+
+export async function connectDemoFoundry() {
+  return fetchBackend<ExistingFoundryConnectResponse>(
+    "/api/existing-foundry-user/demo-connect",
+    { method: "POST", body: "{}" },
+  );
+}
+
 export async function generateBot(mode: GenerateMode, payload: JsonBody) {
   await waitForDemoData();
 
